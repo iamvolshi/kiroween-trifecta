@@ -1,0 +1,16 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Audit UI: No God Files (500-line limit)",
+      "trigger": "PostFileSave",
+      "description": "After any source file under audit-ui/src/ is saved, checks its line count and reports loudly if it exceeds 500 lines.",
+      "matcher": "audit-ui/src/.*",
+      "action": {
+        "type": "command",
+        "command": "cd d:\\kiroween-trifecta\\kiroween-trifecta && $file = $env:KIRO_FILE_PATH; if (-not $file) { $input_json = $input | ConvertFrom-Json -ErrorAction SilentlyContinue; $file = $input_json.file_path }; if ($file -and (Test-Path $file)) { $lines = (Get-Content $file | Measure-Object -Line).Lines; if ($lines -gt 500) { Write-Output \"GOD-FILE VIOLATION: '$file' has $lines lines (limit: 500). Split this file before continuing.\"; exit 1 } else { exit 0 } } else { exit 0 }",
+        "timeout": 10
+      }
+    }
+  ]
+}

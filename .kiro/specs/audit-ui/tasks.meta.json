@@ -1,0 +1,581 @@
+{
+  "pbtResults": {
+    "2.3 Write contract-conformance test for Mock and Live adapters": {
+      "status": "passed",
+      "lastRunTimestamp": 1794775255099
+    },
+    "3.4 Write property-based tests for `renderKid`": {
+      "status": "passed",
+      "lastRunTimestamp": 1794775434539
+    },
+    "3.6 Write property-based tests for `formatLabel`": {
+      "status": "passed",
+      "lastRunTimestamp": 1794775471065
+    },
+    "4.2 Write property-based tests for the router": {
+      "status": "passed",
+      "lastRunTimestamp": 1794776145652
+    },
+    "6.2 Write property-based tests for ActionListView": {
+      "status": "passed",
+      "lastRunTimestamp": 1794777541926
+    },
+    "7.2 Write property-based tests for TimeTravelView": {
+      "status": "passed",
+      "lastRunTimestamp": 1794777746686
+    },
+    "8.2 Write property-based tests for EntryDetailView": {
+      "status": "passed",
+      "lastRunTimestamp": 1794777852227
+    },
+    "10.3 Write property-based tests for empty vs error state distinction": {
+      "status": "passed",
+      "lastRunTimestamp": 1794778724516
+    }
+  },
+  "executionHistory": {
+    "1.1 Initialise Vite + TypeScript project": [
+      {
+        "executionId": "4545959c-a0f9-448e-945f-b990e9a6d95e",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794773483178
+      },
+      {
+        "executionId": "4545959c-a0f9-448e-945f-b990e9a6d95e",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794773488760
+      },
+      {
+        "executionId": "4545959c-a0f9-448e-945f-b990e9a6d95e",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794774430040
+      }
+    ],
+    "1.2 Establish src/ directory layout": [
+      {
+        "executionId": "4545959c-a0f9-448e-945f-b990e9a6d95e",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794773483386
+      },
+      {
+        "executionId": "4545959c-a0f9-448e-945f-b990e9a6d95e",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794773490279
+      },
+      {
+        "executionId": "4545959c-a0f9-448e-945f-b990e9a6d95e",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794774450726
+      }
+    ],
+    "2.1 Define the SeamAdapter TypeScript contract": [
+      {
+        "executionId": "4545959c-a0f9-448e-945f-b990e9a6d95e",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794773483471
+      },
+      {
+        "executionId": "4545959c-a0f9-448e-945f-b990e9a6d95e",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794774453859
+      },
+      {
+        "executionId": "4545959c-a0f9-448e-945f-b990e9a6d95e",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794774483649
+      }
+    ],
+    "2.2 Implement the Mock Adapter": [
+      {
+        "executionId": "4545959c-a0f9-448e-945f-b990e9a6d95e",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794773483599
+      },
+      {
+        "executionId": "4545959c-a0f9-448e-945f-b990e9a6d95e",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794774485692
+      },
+      {
+        "executionId": "4545959c-a0f9-448e-945f-b990e9a6d95e",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794774870658
+      }
+    ],
+    "2.3 Write contract-conformance test for Mock and Live adapters": [
+      {
+        "executionId": "4545959c-a0f9-448e-945f-b990e9a6d95e",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794773483688
+      },
+      {
+        "executionId": "4545959c-a0f9-448e-945f-b990e9a6d95e",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794774877333
+      },
+      {
+        "executionId": "4545959c-a0f9-448e-945f-b990e9a6d95e",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794775539187
+      }
+    ],
+    "3.1 Implement `isLiveAt` interval predicate (`src/util/interval.ts`)": [
+      {
+        "executionId": "4545959c-a0f9-448e-945f-b990e9a6d95e",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794773483745
+      },
+      {
+        "executionId": "4545959c-a0f9-448e-945f-b990e9a6d95e",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794774487405
+      },
+      {
+        "executionId": "4545959c-a0f9-448e-945f-b990e9a6d95e",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794774872208
+      }
+    ],
+    "3.2 Write property-based tests for `isLiveAt`": [
+      {
+        "executionId": "4545959c-a0f9-448e-945f-b990e9a6d95e",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794773483800
+      },
+      {
+        "executionId": "4545959c-a0f9-448e-945f-b990e9a6d95e",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794774878850
+      },
+      {
+        "executionId": "4545959c-a0f9-448e-945f-b990e9a6d95e",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794775541231
+      }
+    ],
+    "3.3 Implement `renderKid` utility (`src/util/kid-display.ts`)": [
+      {
+        "executionId": "4545959c-a0f9-448e-945f-b990e9a6d95e",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794773483857
+      },
+      {
+        "executionId": "4545959c-a0f9-448e-945f-b990e9a6d95e",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794774489045
+      },
+      {
+        "executionId": "4545959c-a0f9-448e-945f-b990e9a6d95e",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794774873790
+      }
+    ],
+    "3.4 Write property-based tests for `renderKid`": [
+      {
+        "executionId": "4545959c-a0f9-448e-945f-b990e9a6d95e",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794773483916
+      },
+      {
+        "executionId": "4545959c-a0f9-448e-945f-b990e9a6d95e",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794774880400
+      },
+      {
+        "executionId": "4545959c-a0f9-448e-945f-b990e9a6d95e",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794775543081
+      }
+    ],
+    "3.5 Implement `formatLabel` utility (`src/util/format.ts`)": [
+      {
+        "executionId": "4545959c-a0f9-448e-945f-b990e9a6d95e",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794773483969
+      },
+      {
+        "executionId": "4545959c-a0f9-448e-945f-b990e9a6d95e",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794774490660
+      },
+      {
+        "executionId": "4545959c-a0f9-448e-945f-b990e9a6d95e",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794774875346
+      }
+    ],
+    "3.6 Write property-based tests for `formatLabel`": [
+      {
+        "executionId": "4545959c-a0f9-448e-945f-b990e9a6d95e",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794773484033
+      },
+      {
+        "executionId": "4545959c-a0f9-448e-945f-b990e9a6d95e",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794774882146
+      },
+      {
+        "executionId": "4545959c-a0f9-448e-945f-b990e9a6d95e",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794775544779
+      }
+    ],
+    "4.1 Implement the client-side router (`src/router/router.ts`)": [
+      {
+        "executionId": "4545959c-a0f9-448e-945f-b990e9a6d95e",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794773484126
+      },
+      {
+        "executionId": "4545959c-a0f9-448e-945f-b990e9a6d95e",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794774883731
+      },
+      {
+        "executionId": "4545959c-a0f9-448e-945f-b990e9a6d95e",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794775546491
+      }
+    ],
+    "4.2 Write property-based tests for the router": [
+      {
+        "executionId": "4545959c-a0f9-448e-945f-b990e9a6d95e",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794773484181
+      },
+      {
+        "executionId": "4545959c-a0f9-448e-945f-b990e9a6d95e",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794775549830
+      },
+      {
+        "executionId": "4545959c-a0f9-448e-945f-b990e9a6d95e",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794777092256
+      }
+    ],
+    "5. Checkpoint — core infrastructure": [
+      {
+        "executionId": "4545959c-a0f9-448e-945f-b990e9a6d95e",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794773484237
+      }
+    ],
+    "6.1 Implement `ActionListView` (`src/views/action-list.ts`)": [
+      {
+        "executionId": "4545959c-a0f9-448e-945f-b990e9a6d95e",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794773484292
+      },
+      {
+        "executionId": "4545959c-a0f9-448e-945f-b990e9a6d95e",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794775551488
+      },
+      {
+        "executionId": "4545959c-a0f9-448e-945f-b990e9a6d95e",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794777094035
+      }
+    ],
+    "6.2 Write property-based tests for ActionListView": [
+      {
+        "executionId": "4545959c-a0f9-448e-945f-b990e9a6d95e",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794773484344
+      },
+      {
+        "executionId": "538af9dd-be28-425a-a08a-cc8f435807b2",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794777101145
+      },
+      {
+        "executionId": "538af9dd-be28-425a-a08a-cc8f435807b2",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794778461732
+      }
+    ],
+    "7.1 Implement `TimeTravelView` (`src/views/time-travel.ts`)": [
+      {
+        "executionId": "4545959c-a0f9-448e-945f-b990e9a6d95e",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794773484397
+      },
+      {
+        "executionId": "4545959c-a0f9-448e-945f-b990e9a6d95e",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794775553146
+      },
+      {
+        "executionId": "4545959c-a0f9-448e-945f-b990e9a6d95e",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794777095621
+      }
+    ],
+    "7.2 Write property-based tests for TimeTravelView": [
+      {
+        "executionId": "4545959c-a0f9-448e-945f-b990e9a6d95e",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794773484452
+      },
+      {
+        "executionId": "538af9dd-be28-425a-a08a-cc8f435807b2",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794777102825
+      },
+      {
+        "executionId": "538af9dd-be28-425a-a08a-cc8f435807b2",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794778463520
+      }
+    ],
+    "8.1 Implement `EntryDetailView` (`src/views/entry-detail.ts`)": [
+      {
+        "executionId": "4545959c-a0f9-448e-945f-b990e9a6d95e",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794773484507
+      },
+      {
+        "executionId": "4545959c-a0f9-448e-945f-b990e9a6d95e",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794775554884
+      },
+      {
+        "executionId": "4545959c-a0f9-448e-945f-b990e9a6d95e",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794777097225
+      },
+      {
+        "executionId": "538af9dd-be28-425a-a08a-cc8f435807b2",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794778473065
+      },
+      {
+        "executionId": "538af9dd-be28-425a-a08a-cc8f435807b2",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794778474773
+      }
+    ],
+    "8.2 Write property-based tests for EntryDetailView": [
+      {
+        "executionId": "4545959c-a0f9-448e-945f-b990e9a6d95e",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794773484560
+      },
+      {
+        "executionId": "538af9dd-be28-425a-a08a-cc8f435807b2",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794777104630
+      },
+      {
+        "executionId": "538af9dd-be28-425a-a08a-cc8f435807b2",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794778465394
+      }
+    ],
+    "9. Checkpoint — all views": [
+      {
+        "executionId": "4545959c-a0f9-448e-945f-b990e9a6d95e",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794773484618
+      }
+    ],
+    "10.1 Implement `NotFoundView` (`src/views/not-found.ts`)": [
+      {
+        "executionId": "4545959c-a0f9-448e-945f-b990e9a6d95e",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794773484684
+      },
+      {
+        "executionId": "538af9dd-be28-425a-a08a-cc8f435807b2",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794777106341
+      },
+      {
+        "executionId": "538af9dd-be28-425a-a08a-cc8f435807b2",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794778467057
+      }
+    ],
+    "10.2 Audit all views for empty-state and error-state CSS class correctness": [
+      {
+        "executionId": "4545959c-a0f9-448e-945f-b990e9a6d95e",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794773484789
+      },
+      {
+        "executionId": "538af9dd-be28-425a-a08a-cc8f435807b2",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794778478188
+      },
+      {
+        "executionId": "538af9dd-be28-425a-a08a-cc8f435807b2",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794778652705
+      }
+    ],
+    "10.3 Write property-based tests for empty vs error state distinction": [
+      {
+        "executionId": "4545959c-a0f9-448e-945f-b990e9a6d95e",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794773484843
+      },
+      {
+        "executionId": "538af9dd-be28-425a-a08a-cc8f435807b2",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794778654708
+      },
+      {
+        "executionId": "538af9dd-be28-425a-a08a-cc8f435807b2",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794778792500
+      }
+    ],
+    "11.1 Implement Live Adapter stub (`src/adapter/live.ts`)": [
+      {
+        "executionId": "4545959c-a0f9-448e-945f-b990e9a6d95e",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794773484897
+      },
+      {
+        "executionId": "538af9dd-be28-425a-a08a-cc8f435807b2",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794778656455
+      },
+      {
+        "executionId": "538af9dd-be28-425a-a08a-cc8f435807b2",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794778794464
+      }
+    ],
+    "11.2 Wire `main.ts`": [
+      {
+        "executionId": "4545959c-a0f9-448e-945f-b990e9a6d95e",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794773484954
+      },
+      {
+        "executionId": "538af9dd-be28-425a-a08a-cc8f435807b2",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794778797842
+      },
+      {
+        "executionId": "538af9dd-be28-425a-a08a-cc8f435807b2",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794778890518
+      }
+    ],
+    "12.1 Verify file line counts": [
+      {
+        "executionId": "4545959c-a0f9-448e-945f-b990e9a6d95e",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794773485013
+      },
+      {
+        "executionId": "538af9dd-be28-425a-a08a-cc8f435807b2",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794778892684
+      },
+      {
+        "executionId": "538af9dd-be28-425a-a08a-cc8f435807b2",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794778972734
+      }
+    ],
+    "12.2 Write final integration smoke tests": [
+      {
+        "executionId": "4545959c-a0f9-448e-945f-b990e9a6d95e",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794773485069
+      },
+      {
+        "executionId": "538af9dd-be28-425a-a08a-cc8f435807b2",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794778894436
+      },
+      {
+        "executionId": "538af9dd-be28-425a-a08a-cc8f435807b2",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794778974527
+      }
+    ],
+    "13. Final checkpoint": [
+      {
+        "executionId": "4545959c-a0f9-448e-945f-b990e9a6d95e",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794773485127
+      }
+    ],
+    "1. Repo foundation and project scaffold": [
+      {
+        "executionId": "4545959c-a0f9-448e-945f-b990e9a6d95e",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794774450799
+      }
+    ],
+    "2. Seam Adapter contract and Mock Implementation": [
+      {
+        "executionId": "4545959c-a0f9-448e-945f-b990e9a6d95e",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794775539272
+      }
+    ],
+    "3. Utility modules": [
+      {
+        "executionId": "4545959c-a0f9-448e-945f-b990e9a6d95e",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794775544849
+      }
+    ],
+    "4. Router": [
+      {
+        "executionId": "4545959c-a0f9-448e-945f-b990e9a6d95e",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794777092352
+      }
+    ],
+    "6. Action List View": [
+      {
+        "executionId": "538af9dd-be28-425a-a08a-cc8f435807b2",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794778461819
+      }
+    ],
+    "7. Time Travel View": [
+      {
+        "executionId": "538af9dd-be28-425a-a08a-cc8f435807b2",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794778463645
+      }
+    ],
+    "8. Entry Detail View": [
+      {
+        "executionId": "538af9dd-be28-425a-a08a-cc8f435807b2",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794778474865
+      }
+    ],
+    "10. NotFoundView and global empty/error state polish": [
+      {
+        "executionId": "538af9dd-be28-425a-a08a-cc8f435807b2",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794778792614
+      }
+    ],
+    "11. Live Adapter stub and main.ts wiring": [
+      {
+        "executionId": "538af9dd-be28-425a-a08a-cc8f435807b2",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794778890632
+      }
+    ],
+    "12. Build validation and CI lint": [
+      {
+        "executionId": "538af9dd-be28-425a-a08a-cc8f435807b2",
+        "chatSessionId": "sess_2ae8275b-b5e8-4bd6-a6c6-83ead9de693b",
+        "timestamp": 1794778974642
+      }
+    ]
+  }
+}

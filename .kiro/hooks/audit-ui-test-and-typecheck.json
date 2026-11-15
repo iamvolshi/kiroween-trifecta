@@ -1,0 +1,16 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Audit UI: Test & Typecheck on Save",
+      "trigger": "PostFileSave",
+      "description": "When a .ts file under audit-ui/ is saved, runs npm test and tsc --noEmit from audit-ui/. Reports failures in chat.",
+      "matcher": "audit-ui/.*\\.ts$",
+      "action": {
+        "type": "command",
+        "command": "cd d:\\kiroween-trifecta\\kiroween-trifecta\\audit-ui && echo '--- Typecheck ---' && npx tsc --noEmit 2>&1; TSC_EXIT=$LASTEXITCODE; echo '--- Tests ---' && npm test -- --run 2>&1; TEST_EXIT=$LASTEXITCODE; if ($TSC_EXIT -ne 0 -or $TEST_EXIT -ne 0) { exit 1 } else { exit 0 }",
+        "timeout": 120
+      }
+    }
+  ]
+}
