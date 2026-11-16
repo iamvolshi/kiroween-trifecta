@@ -196,7 +196,7 @@ Build a read-only Vanilla TypeScript + Vite single-page application that present
     - Confirm `npm run build` produces a `dist/index.html`
     - _Requirements: 8.1, 8.5_
 
-- [-] 13. Final checkpoint
+- [x] 13. Final checkpoint
   - Ensure all tests pass, ask the user if questions arise.
 
 ## Notes
