@@ -28,7 +28,11 @@ export class Router {
       const target = (event.target as HTMLElement).closest('a');
       if (!target) return;
       const href = target.getAttribute('href');
-      if (href && href.startsWith('/')) {
+      if (target.hasAttribute('download')) return;
+      const tgt = target.getAttribute('target');
+      if (tgt && tgt !== '_self') return;
+      // '//host' is protocol-relative (cross-origin), not an in-app path.
+      if (href && href.startsWith('/') && !href.startsWith('//')) {
         event.preventDefault();
         this.navigate(href);
       }
@@ -68,7 +72,10 @@ export class Router {
     this.currentView.mount(this.container);
   }
 
-  private match(path: string): View {
+  private match(rawPath: string): View {
+    // Match on the path only: drop query and hash, and a trailing slash.
+    let path = rawPath.split(/[?#]/)[0]!;
+    if (path.length > 1 && path.endsWith('/')) path = path.slice(0, -1);
     if (path === '/actions') {
       return new ActionListView(this.adapter);
     }

@@ -151,3 +151,21 @@ describe('isLiveAt edge cases', () => {
     expect(isLiveAt(entry, kTimeMs - 1)).toBe(true);
   });
 });
+
+import { parseMs } from './interval';
+
+describe('parseMs year-only regression', () => {
+  it('bare year string is parsed as a date, not as milliseconds', () => {
+    expect(parseMs('2026')).toBe(Date.parse('2026'));
+    expect(parseMs('2026')).not.toBe(2026);
+  });
+
+  it('13-digit numeric string is still Unix ms', () => {
+    expect(parseMs('1700000000000')).toBe(1700000000000);
+    expect(parseMs(' 1700000000000 ')).toBe(1700000000000);
+  });
+
+  it('ISO string still parses', () => {
+    expect(parseMs('1970-01-01T00:00:01.000Z')).toBe(1000);
+  });
+});

@@ -7,7 +7,7 @@ import type { Entry } from '../adapter/seam';
 export function parseMs(value: string): number {
   // A purely numeric string (possibly with leading/trailing whitespace) is a
   // Unix-ms timestamp; everything else is treated as ISO-8601.
-  return /^\s*-?\d+\s*$/.test(value) ? Number(value) : Date.parse(value);
+  return /^\s*-?\d{10,}\s*$/.test(value) ? Number(value) : Date.parse(value);
 }
 
 /**
