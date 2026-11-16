@@ -21,6 +21,10 @@ export class Router {
     this.container = container;
 
     this.clickHandler = (event: MouseEvent) => {
+      // Only plain left clicks navigate in-app; modified and non-left clicks
+      // (new tab, new window, download, middle-click) pass through to the browser.
+      if (event.button !== 0) return;
+      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
       const target = (event.target as HTMLElement).closest('a');
       if (!target) return;
       const href = target.getAttribute('href');
@@ -78,9 +82,14 @@ export class Router {
     );
     if (entryMatch) {
       const kid = parseInt(entryMatch[1]!, 10);
-      const subject = decodeURIComponent(entryMatch[2]!);
-      const id = decodeURIComponent(entryMatch[3]!);
-      return new EntryDetailView(this.adapter, kid, subject, id);
+      try {
+        const subject = decodeURIComponent(entryMatch[2]!);
+        const id = decodeURIComponent(entryMatch[3]!);
+        return new EntryDetailView(this.adapter, kid, subject, id);
+      } catch {
+        // Malformed percent-encoding (URIError): no such route.
+        return new NotFoundView();
+      }
     }
 
     return new NotFoundView();
