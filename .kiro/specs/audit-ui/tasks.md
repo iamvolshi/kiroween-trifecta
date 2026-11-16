@@ -92,7 +92,7 @@ Build a read-only Vanilla TypeScript + Vite single-page application that present
     - Also add example-based test: push two routes, trigger `popstate` back, assert correct view mounts (Requirement 2.6)
     - _Requirements: 2.3, 2.4, 2.5, 2.6, 2.7_
 
-- [ ] 5. Checkpoint — core infrastructure
+- [x] 5. Checkpoint — core infrastructure
   - Ensure all tests pass, ask the user if questions arise.
 
 - [x] 6. Action List View
@@ -152,7 +152,7 @@ Build a read-only Vanilla TypeScript + Vite single-page application that present
     - Also add example-based tests: empty-state on empty chain (Req 5.5, 9.4); error-state on error (Req 5.6); each field value matches fixture exactly (Req 9.1); no KID label rendered when KID absent from KIDMAP (Req 9.5)
     - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 9.1, 9.3, 9.4, 9.5_
 
-- [ ] 9. Checkpoint — all views
+- [x] 9. Checkpoint — all views
   - Ensure all tests pass, ask the user if questions arise.
 
 - [x] 10. NotFoundView and global empty/error state polish
@@ -191,12 +191,12 @@ Build a read-only Vanilla TypeScript + Vite single-page application that present
     - Run a line-count check (e.g., via a small script or `wc -l`) on every `src/**/*.ts` file; confirm none exceeds 500 lines
     - _Requirements: 8.2_
 
-  - [ ] 12.2 Write final integration smoke tests
+  - [x] 12.2 Write final integration smoke tests
     - Confirm `vitest --run` exits cleanly (exit code 0) with all tests passing
     - Confirm `npm run build` produces a `dist/index.html`
     - _Requirements: 8.1, 8.5_
 
-- [ ] 13. Final checkpoint
+- [-] 13. Final checkpoint
   - Ensure all tests pass, ask the user if questions arise.
 
 ## Notes
