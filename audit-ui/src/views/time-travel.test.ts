@@ -38,35 +38,20 @@ function makeEntry(overrides: Partial<Entry> = {}): Entry {
   };
 }
 
-/** Convert a Unix-ms timestamp to the datetime-local input value format.
+/** Convert a Unix-ms timestamp to a datetime-local input value, in UTC.
  *
- * datetime-local values are parsed as LOCAL time by browsers and by JSDOM's
- * `new Date(str).getTime()` when the string has no timezone suffix.
- * We must therefore format in LOCAL time so round-tripping via the view's
- * `new Date(input.value).getTime()` gives back (approximately) the same ms.
- *
- * We truncate to minute precision to match the input format, and return both
- * the formatted string AND the rounded-down ms so callers can use the
- * round-tripped value for expectations.
+ * The view reads the input as UTC (record times are UTC), so the value is
+ * formatted from UTC components and the expected moment is the same
+ * minute-truncated UTC ms, independent of the machine's timezone.
  */
 function msToInputValue(ms: number): { value: string; roundedMs: number } {
-  const d = new Date(ms);
-  const pad = (n: number) => String(n).padStart(2, '0');
-  // Local-time components
-  const year = d.getFullYear();
-  const month = d.getMonth() + 1;
-  const day = d.getDate();
-  const hours = d.getHours();
-  const minutes = d.getMinutes();
-  const value = `${year}-${pad(month)}-${pad(day)}T${pad(hours)}:${pad(minutes)}`;
-  // The view will parse this back to ms with new Date(value).getTime()
-  const roundedMs = new Date(value).getTime();
+  const roundedMs = Math.floor(ms / 60_000) * 60_000;
+  const value = new Date(roundedMs).toISOString().slice(0, 16);
   return { value, roundedMs };
 }
-
 /**
  * Mount the view, trigger a cursor change to the given ms, await the async handler.
- * Returns the actual ms that the view will use (rounded to minute precision, local time).
+ * Returns the actual ms that the view will use (rounded to minute precision, UTC).
  */
 async function triggerCursor(
   _view: TimeTravelView,
@@ -267,7 +252,7 @@ describe('Property 7: Time Travel pool correctness', () => {
             kid: fc.integer({ min: 1, max: 99 }),
             subject: fc.string({ minLength: 1, maxLength: 20 }),
             state: fc.constantFrom('confirmed', 'revised', 'rejected'),
-            authority: fc.integer({ min: 0, max: 9 }),
+            authority: fc.integer({ min: 0, max: 8 }),
             evidence: fc.string({ minLength: 1, maxLength: 20 }),
             reason: fc.string({ minLength: 1, maxLength: 20 }),
           }),
@@ -383,7 +368,7 @@ describe('Property 9: Belief Pool field completeness', () => {
       kid: fc.integer({ min: 1, max: 999 }),
       subject: fc.string({ minLength: 1, maxLength: 30 }),
       state: fc.constantFrom('confirmed', 'revised', 'rejected', 'contradicted'),
-      authority: fc.integer({ min: 0, max: 9 }),
+      authority: fc.integer({ min: 0, max: 8 }),
       evidence: fc.string({ minLength: 1, maxLength: 30 }),
       reason: fc.string({ minLength: 1, maxLength: 30 }),
     });

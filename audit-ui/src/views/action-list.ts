@@ -2,9 +2,12 @@ import type { View } from '../router/router.ts';
 import type { SeamAdapter, KidMap } from '../adapter/seam.ts';
 import { renderKid } from '../util/kid-display.ts';
 import { formatLabel } from '../util/format.ts';
+import { compareKStart } from '../util/interval.ts';
+import { createNav } from './nav.ts';
 
 export class ActionListView implements View {
   private container: HTMLElement | null = null;
+  private body: HTMLElement | null = null;
   private adapter: SeamAdapter;
 
   constructor(adapter: SeamAdapter) {
@@ -13,37 +16,48 @@ export class ActionListView implements View {
 
   mount(container: HTMLElement): void {
     this.container = container;
-    container.innerHTML = '<h1>Action List</h1>';
+    container.innerHTML = '';
+    container.appendChild(createNav());
+    const h1 = document.createElement('h1');
+    h1.textContent = 'Action List';
+    container.appendChild(h1);
+    this.body = document.createElement('div');
+    this.body.className = 'view-body';
+    container.appendChild(this.body);
     void this.load(container);
   }
 
   async load(container: HTMLElement): Promise<void> {
     const kidMapResult = await this.adapter.fetchKidMap();
+    if (this.container !== container) return;
     const kidMap: KidMap | null = kidMapResult.ok ? kidMapResult.data : null;
 
     const entriesResult = await this.adapter.fetchAllEntries();
+    if (this.container !== container) return;
+
+    const body = this.body;
+    if (!body) return;
 
     if (!entriesResult.ok) {
-      container.innerHTML = '';
       const errP = document.createElement('p');
       errP.className = 'error-state';
       errP.textContent = entriesResult.error;
-      container.appendChild(errP);
+      body.replaceChildren(errP);
       return;
     }
 
     const entries = entriesResult.data;
 
     if (entries.length === 0) {
-      container.innerHTML = '<p class="empty-state">No entries in the record.</p>';
+      const p = document.createElement('p');
+      p.className = 'empty-state';
+      p.textContent = 'No entries in the record.';
+      body.replaceChildren(p);
       return;
     }
 
-    const sorted = [...entries].sort((a, b) => {
-      if (a.k_start < b.k_start) return 1;
-      if (a.k_start > b.k_start) return -1;
-      return 0;
-    });
+    // Newest first, by parsed k_start
+    const sorted = [...entries].sort((a, b) => compareKStart(b, a));
 
     const ul = document.createElement('ul');
     ul.className = 'action-list';
@@ -52,8 +66,7 @@ export class ActionListView implements View {
       const li = document.createElement('li');
 
       const a = document.createElement('a');
-      a.href = `/entry/${entry.kid}/${encodeURIComponent(entry.subject)}/${entry.id}`;
-
+      a.href = `/entry/${entry.kid}/${encodeURIComponent(entry.subject)}/${encodeURIComponent(entry.id)}`;
       const kidSpan = document.createElement('span');
       kidSpan.className = 'kid';
       kidSpan.textContent = renderKid(entry.kid, kidMap);
@@ -94,7 +107,7 @@ export class ActionListView implements View {
       ul.appendChild(li);
     }
 
-    container.appendChild(ul);
+    body.replaceChildren(ul);
   }
 
   unmount(): void {
@@ -102,5 +115,6 @@ export class ActionListView implements View {
       this.container.innerHTML = '';
       this.container = null;
     }
+    this.body = null;
   }
 }

@@ -1,5 +1,7 @@
 import type { View } from '../router/router.ts';
 import type { SeamAdapter, Entry, KidMap } from '../adapter/seam.ts';
+import { compareKStart } from '../util/interval.ts';
+import { createNav } from './nav.ts';
 
 export class EntryDetailView implements View {
   private adapter: SeamAdapter;
@@ -7,6 +9,7 @@ export class EntryDetailView implements View {
   private subject: string;
   private id: string;
   private container: HTMLElement | null = null;
+  private body: HTMLElement | null = null;
 
   constructor(adapter: SeamAdapter, kid: number, subject: string, id: string) {
     this.adapter = adapter;
@@ -18,6 +21,10 @@ export class EntryDetailView implements View {
   mount(container: HTMLElement): void {
     this.container = container;
     container.innerHTML = '';
+    container.appendChild(createNav());
+    this.body = document.createElement('div');
+    this.body.className = 'view-body';
+    container.appendChild(this.body);
     void this.render(container);
   }
 
@@ -26,6 +33,7 @@ export class EntryDetailView implements View {
       this.container.innerHTML = '';
       this.container = null;
     }
+    this.body = null;
   }
 
   private async render(container: HTMLElement): Promise<void> {
@@ -36,37 +44,53 @@ export class EntryDetailView implements View {
 
     // Guard: container may have been unmounted while awaiting
     if (this.container !== container) return;
+    const body = this.body;
+    if (!body) return;
 
     if (!chainResult.ok) {
-      container.innerHTML = '';
       const errP = document.createElement('p');
       errP.className = 'error-state';
       errP.textContent = chainResult.error;
-      container.appendChild(errP);
+      body.replaceChildren(errP);
       return;
     }
 
     const chain = chainResult.data;
 
     if (chain.length === 0) {
-      container.innerHTML = `<p class="empty-state">No chain entries found.</p>`;
+      const p = document.createElement('p');
+      p.className = 'empty-state';
+      p.textContent = 'No chain entries found.';
+      body.replaceChildren(p);
       return;
     }
 
     const kidMap: KidMap | null = kidMapResult.ok ? kidMapResult.data : null;
 
-    const primary = chain.find(e => e.id === this.id) ?? chain[0]!;
+    const primary = chain.find(e => e.id === this.id);
+    if (!primary) {
+      // Never show another entry's data for an id that matched nothing.
+      const section = document.createElement('section');
+      section.className = 'not-found entry-not-found';
+      const h1 = document.createElement('h1');
+      h1.textContent = 'Entry not found';
+      const p = document.createElement('p');
+      p.textContent = `No entry with id "${this.id}" exists for KID ${this.kid}, subject "${this.subject}".`;
+      section.appendChild(h1);
+      section.appendChild(p);
+      body.replaceChildren(section);
+      return;
+    }
 
-    const primarySection = this.renderPrimary(primary, kidMap);
-    const chainSection = this.renderChain(chain);
-
-    container.appendChild(primarySection);
-    container.appendChild(chainSection);
+    body.replaceChildren(
+      this.renderPrimary(primary, kidMap),
+      this.renderChain(chain),
+    );
   }
 
   private renderKidField(kid: number, kidMap: KidMap | null): string {
     if (kidMap !== null && kidMap[kid] !== undefined) {
-      return `${kid} <span class="kid-label">${kidMap[kid]}</span>`;
+      return `${kid} <span class="kid-label">${escapeHtml(kidMap[kid])}</span>`;
     }
     return String(kid);
   }
@@ -124,11 +148,7 @@ export class EntryDetailView implements View {
     ol.className = 'chain-list';
 
     // Ascending order: oldest first by k_start
-    const sorted = [...chain].sort((a, b) => {
-      if (a.k_start < b.k_start) return -1;
-      if (a.k_start > b.k_start) return 1;
-      return 0;
-    });
+    const sorted = [...chain].sort(compareKStart);
 
     for (const e of sorted) {
       const li = document.createElement('li');

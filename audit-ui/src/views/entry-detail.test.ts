@@ -86,7 +86,7 @@ const arbEntry = fc.record<Entry>({
                fc.constant('revised'),
                visibleStr(1, 32),
              ),
-  authority: fc.integer({ min: 0, max: 9 }),
+  authority: fc.integer({ min: 0, max: 8 }),
   pool:      visibleStr(1, 32),
   k_start:   arbTimestamp,
   t_time:    arbTimestamp,

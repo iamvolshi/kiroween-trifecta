@@ -1,6 +1,8 @@
 import type { View } from '../router/router.ts';
 import type { SeamAdapter } from '../adapter/seam.ts';
 import { renderKid } from '../util/kid-display.ts';
+import { parseUtcInput } from '../util/moment.ts';
+import { createNav } from './nav.ts';
 
 export class TimeTravelView implements View {
   private adapter: SeamAdapter;
@@ -8,6 +10,8 @@ export class TimeTravelView implements View {
   private cursorInput: HTMLInputElement | null = null;
   private beliefPool: HTMLElement | null = null;
   private changeHandler: (() => void) | null = null;
+  /** Incremented on every cursor change and on unmount; stale results are dropped. */
+  private requestToken = 0;
 
   constructor(adapter: SeamAdapter) {
     this.adapter = adapter;
@@ -18,12 +22,16 @@ export class TimeTravelView implements View {
 
     container.innerHTML = `
       <div class="time-travel-view">
+        <div id="tt-nav"></div>
         <h1>Time Travel</h1>
-        <label for="moment-cursor">Select moment:</label>
+        <label for="moment-cursor">Select moment (UTC):</label>
         <input type="datetime-local" id="moment-cursor">
         <div id="belief-pool"></div>
       </div>
     `;
+
+    const navSlot = container.querySelector('#tt-nav');
+    navSlot?.replaceWith(createNav());
 
     this.cursorInput = container.querySelector<HTMLInputElement>('#moment-cursor');
     this.beliefPool = container.querySelector<HTMLElement>('#belief-pool');
@@ -37,20 +45,34 @@ export class TimeTravelView implements View {
     const pool = this.beliefPool;
     if (!input || !pool) return;
 
-    const momentMs = new Date(input.value).getTime();
+    const token = ++this.requestToken;
+    const isCurrent = (): boolean =>
+      token === this.requestToken && this.beliefPool === pool;
+
+    // The input is read as UTC, the same moment that is displayed and queried.
+    const momentMs = parseUtcInput(input.value);
+
+    if (momentMs === null) {
+      pool.replaceChildren(
+        Object.assign(document.createElement('p'), {
+          className: 'prompt-state',
+          textContent: 'Select a moment',
+        }),
+      );
+      return;
+    }
 
     const result = await this.adapter.fetchBeliefPool(momentMs);
+    if (!isCurrent()) return;
 
-    pool.innerHTML = '';
-    pool.appendChild(
-      Object.assign(document.createElement('p'), {
-        className: 'cursor-display',
-        textContent: `Moment: ${input.value}`,
-      }),
-    );
+    const cursorP = Object.assign(document.createElement('p'), {
+      className: 'cursor-display',
+      textContent: `Moment (UTC): ${input.value}`,
+    });
 
     if (!result.ok) {
-      pool.appendChild(
+      pool.replaceChildren(
+        cursorP,
         Object.assign(document.createElement('p'), {
           className: 'error-state',
           textContent: result.error,
@@ -60,7 +82,8 @@ export class TimeTravelView implements View {
     }
 
     if (result.data.length === 0) {
-      pool.appendChild(
+      pool.replaceChildren(
+        cursorP,
         Object.assign(document.createElement('p'), {
           className: 'empty-state',
           textContent: 'No entries were live at this moment.',
@@ -70,6 +93,7 @@ export class TimeTravelView implements View {
     }
 
     const kidMapResult = await this.adapter.fetchKidMap();
+    if (!isCurrent()) return;
     const kidMap = kidMapResult.ok ? kidMapResult.data : null;
 
     const ul = document.createElement('ul');
@@ -118,10 +142,11 @@ export class TimeTravelView implements View {
       ul.appendChild(li);
     }
 
-    pool.appendChild(ul);
+    pool.replaceChildren(cursorP, ul);
   }
 
   unmount(): void {
+    this.requestToken++;
     if (this.cursorInput && this.changeHandler) {
       this.cursorInput.removeEventListener('change', this.changeHandler);
     }

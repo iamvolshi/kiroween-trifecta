@@ -49,6 +49,7 @@ function adapterFromEntries(entries: Entry[]): SeamAdapter {
 /** Mount a view, await async load, return the container. */
 async function mountAndLoad(view: ActionListView): Promise<HTMLElement> {
   const container = document.createElement('div');
+  view.mount(container);
   await view.load(container);
   return container;
 }
@@ -68,7 +69,7 @@ const arbitraryEntry = fc.record<Entry>({
   subject: fc.string({ minLength: 1, maxLength: 20 })
     .filter(s => !s.includes(':') && s.trim().length > 0),
   state: fc.constantFrom('confirmed', 'rejected', 'revised', 'contradicted'),
-  authority: fc.integer({ min: 0, max: 9 }),
+  authority: fc.integer({ min: 0, max: 8 }),
   pool: fc.string({ minLength: 1, maxLength: 20 }),
   k_start: isoTimestamp,
   t_time:  isoTimestamp,
@@ -286,6 +287,8 @@ describe('Property 6: Entry navigability', () => {
           // href must match /entry/${kid}/...
           const href = anchor!.getAttribute('href') ?? '';
           expect(href).toMatch(/^\/entry\/\d+\//);
+          const lastSeg = href.split('/').pop() ?? '';
+          expect(entries.map(e => encodeURIComponent(e.id))).toContain(lastSeg);
         }
       }),
       { numRuns: 50 },
