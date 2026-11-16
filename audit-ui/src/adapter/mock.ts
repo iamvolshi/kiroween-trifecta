@@ -1,6 +1,7 @@
 // MOCK ADAPTER — for development and testing only
 
 import type { AdapterResult, Entry, KidMap, SeamAdapter } from './seam';
+import { isLiveAt, compareKStart } from '../util/interval';
 
 export const MOCK_ADAPTER = 'mock' as const;
 
@@ -22,10 +23,6 @@ const T0_MS = Date.parse('2024-01-01T00:00:00.000Z'); // 1_704_067_200_000
 const T1_MS = Date.parse('2024-04-01T00:00:00.000Z'); // 1_711_929_600_000
 const T2_MS = Date.parse('2024-07-01T00:00:00.000Z'); // 1_719_792_000_000
 const T3_MS = Date.parse('2024-10-01T00:00:00.000Z'); // 1_727_740_800_000
-
-function ms(ts: string): number {
-  return Date.parse(ts);
-}
 
 // ---------------------------------------------------------------------------
 // Fixture entries
@@ -49,13 +46,13 @@ const ENTRIES: Entry[] = [
     prev_hash: '0000000000000000',
   },
 
-  // --- Entry B (kid=1, subject="temperature") — revised, authority=9
+  // --- Entry B (kid=1, subject="temperature") — revised, authority=8
   {
     id: 'entry-b1',
     kid: 1,
     subject: 'temperature',
     state: 'revised',
-    authority: 9,
+    authority: 8,
     pool: 'pool-alpha',
     k_start: '2024-04-01T00:00:00.000Z',
     t_time:  '2024-04-01T00:05:00.000Z',
@@ -103,34 +100,24 @@ const ENTRIES: Entry[] = [
 ];
 
 // ---------------------------------------------------------------------------
-// isLiveAt: k_start_ms ≤ momentMs < k_time_ms
-// ---------------------------------------------------------------------------
-
-function isLiveAt(entry: Entry, momentMs: number): boolean {
-  const kStartMs = ms(entry.k_start);
-  const kTimeMs  = ms(entry.k_time);
-  return kStartMs <= momentMs && momentMs < kTimeMs;
-}
-
-// ---------------------------------------------------------------------------
 // createMockAdapter
 // ---------------------------------------------------------------------------
 
-export function createMockAdapter(): SeamAdapter {
+export function createMockAdapter(entries: Entry[] = ENTRIES): SeamAdapter {
   return {
     async fetchAllEntries(): Promise<AdapterResult<Entry[]>> {
-      return { ok: true, data: [...ENTRIES] };
+      return { ok: true, data: [...entries] };
     },
 
     async fetchBeliefPool(momentMs: number): Promise<AdapterResult<Entry[]>> {
-      const live = ENTRIES.filter(e => isLiveAt(e, momentMs));
+      const live = entries.filter(e => isLiveAt(e, momentMs));
       return { ok: true, data: live };
     },
 
     async fetchChain(kid: number, subject: string): Promise<AdapterResult<Entry[]>> {
-      const chain = ENTRIES
+      const chain = entries
         .filter(e => e.kid === kid && e.subject === subject)
-        .sort((a, b) => ms(a.k_start) - ms(b.k_start));
+        .sort(compareKStart);
       return { ok: true, data: chain };
     },
 
