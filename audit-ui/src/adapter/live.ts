@@ -1,7 +1,20 @@
 // LIVE ADAPTER — wires to the trifecta FastAPI service.
 // All methods return { ok: false, error: 'Live adapter not wired' } until
 // the actual endpoint URL is confirmed and this stub is replaced with real fetch calls.
-import type { AdapterResult, Entry, KidMap, SeamAdapter } from './seam';
+import type {
+  AdapterResult,
+  AskResult,
+  ChatTurn,
+  Entry,
+  KidMap,
+  Lesson,
+  RecordResult,
+  SeamAdapter,
+  UpdateRequest,
+  UpdateResult,
+} from './seam';
+
+const NOT_WIRED = Object.freeze({ ok: false as const, error: 'Live adapter not wired' });
 
 export function createLiveAdapter(baseUrl: string): SeamAdapter {
   return {
@@ -66,6 +79,36 @@ export function createLiveAdapter(baseUrl: string): SeamAdapter {
       // }
       void baseUrl;
       return { ok: false, error: 'Live adapter not wired' };
+    },
+
+    // Assembly methods: stubs until the live seam is confirmed (unresolved GRAY).
+    async ask(question: string): Promise<AdapterResult<AskResult>> {
+      void baseUrl;
+      void question;
+      return NOT_WIRED;
+    },
+
+    async chat(message: string): Promise<AdapterResult<ChatTurn>> {
+      void baseUrl;
+      void message;
+      return NOT_WIRED;
+    },
+
+    async update(req: UpdateRequest): Promise<AdapterResult<UpdateResult>> {
+      void baseUrl;
+      void req;
+      return NOT_WIRED;
+    },
+
+    async fetchLessons(): Promise<AdapterResult<Lesson[]>> {
+      void baseUrl;
+      return NOT_WIRED;
+    },
+
+    async fetchRecord(accountId: string): Promise<AdapterResult<RecordResult>> {
+      void baseUrl;
+      void accountId;
+      return NOT_WIRED;
     },
   };
 }

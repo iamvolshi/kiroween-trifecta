@@ -7,6 +7,7 @@
 import { describe, it, expect } from 'vitest';
 import * as fc from 'fast-check';
 import type { AdapterResult, Entry, KidMap, SeamAdapter } from '../adapter/seam.ts';
+import { assemblyNotUsed } from '../test-helpers.ts';
 import { createErrorMock } from '../adapter/mock.ts';
 import { ActionListView } from './action-list.ts';
 import { TimeTravelView } from './time-travel.ts';
@@ -19,6 +20,7 @@ import { EntryDetailView } from './entry-detail.ts';
 /** Returns { ok: true, data: [] } from every method — simulates empty record. */
 function createEmptyMock(): SeamAdapter {
   return {
+    ...assemblyNotUsed(),
     async fetchAllEntries(): Promise<AdapterResult<Entry[]>> {
       return { ok: true, data: [] };
     },
@@ -38,6 +40,7 @@ function createEmptyMock(): SeamAdapter {
 function createCustomErrorMock(errorMessage: string): SeamAdapter {
   const err = { ok: false as const, error: errorMessage };
   return {
+    ...assemblyNotUsed(),
     async fetchAllEntries(): Promise<AdapterResult<Entry[]>> { return err; },
     async fetchBeliefPool(_momentMs: number): Promise<AdapterResult<Entry[]>> { return err; },
     async fetchChain(_kid: number, _subject: string): Promise<AdapterResult<Entry[]>> { return err; },

@@ -1,6 +1,13 @@
 // MOCK ADAPTER — for development and testing only
 
-import type { AdapterResult, Entry, KidMap, SeamAdapter } from './seam';
+import type {
+  AdapterResult, AskResult, ChatTurn, Entry, KidMap, Lesson, RecordResult,
+  SeamAdapter, UpdateResult,
+} from './seam';
+import type { ScenarioCursor } from '../scenario/types.ts';
+import { SCENARIO } from '../scenario/script.ts';
+import { createScenarioCursor } from '../scenario/stepper.ts';
+import { createAssemblyMethods } from './mock-assembly.ts';
 import { isLiveAt, compareKStart } from '../util/interval';
 
 export const MOCK_ADAPTER = 'mock' as const;
@@ -103,19 +110,34 @@ const ENTRIES: Entry[] = [
 // createMockAdapter
 // ---------------------------------------------------------------------------
 
-export function createMockAdapter(entries: Entry[] = ENTRIES): SeamAdapter {
+export interface MockOptions {
+  cursor?: ScenarioCursor | null;
+}
+
+export function createMockAdapter(entries?: Entry[], options: MockOptions = {}): SeamAdapter {
+  const base = entries ?? ENTRIES;
+  // No args = fixtures + a fresh scenario cursor. Explicit entries = no
+  // scenario unless a cursor is passed.
+  const cursor: ScenarioCursor | null =
+    options.cursor !== undefined
+      ? options.cursor
+      : entries === undefined
+        ? createScenarioCursor(SCENARIO)
+        : null;
+  const readAll = (): Entry[] => (cursor ? [...base, ...cursor.visibleEntries()] : [...base]);
+
   return {
     async fetchAllEntries(): Promise<AdapterResult<Entry[]>> {
-      return { ok: true, data: [...entries] };
+      return { ok: true, data: readAll() };
     },
 
     async fetchBeliefPool(momentMs: number): Promise<AdapterResult<Entry[]>> {
-      const live = entries.filter(e => isLiveAt(e, momentMs));
+      const live = readAll().filter(e => isLiveAt(e, momentMs));
       return { ok: true, data: live };
     },
 
     async fetchChain(kid: number, subject: string): Promise<AdapterResult<Entry[]>> {
-      const chain = entries
+      const chain = readAll()
         .filter(e => e.kid === kid && e.subject === subject)
         .sort(compareKStart);
       return { ok: true, data: chain };
@@ -127,8 +149,11 @@ export function createMockAdapter(entries: Entry[] = ENTRIES): SeamAdapter {
         1: 'sensor-alpha',
         3: 'pressure-gauge',
       };
+      if (cursor) Object.assign(map, cursor.scenario.kid_labels);
       return { ok: true, data: map };
     },
+
+    ...createAssemblyMethods(cursor, readAll),
   };
 }
 
@@ -143,6 +168,11 @@ export function createErrorMock(): SeamAdapter {
     async fetchBeliefPool(_momentMs):     Promise<AdapterResult<Entry[]>> { return err; },
     async fetchChain(_kid, _subject):     Promise<AdapterResult<Entry[]>> { return err; },
     async fetchKidMap():                  Promise<AdapterResult<KidMap>>  { return err; },
+    async ask(_question):                 Promise<AdapterResult<AskResult>> { return err; },
+    async chat(_message):                 Promise<AdapterResult<ChatTurn>> { return err; },
+    async update(_req):                   Promise<AdapterResult<UpdateResult>> { return err; },
+    async fetchLessons():                 Promise<AdapterResult<Lesson[]>> { return err; },
+    async fetchRecord(_accountId):        Promise<AdapterResult<RecordResult>> { return err; },
   };
 }
 

@@ -7,12 +7,14 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import * as fc from 'fast-check';
 import { Router } from './router.ts';
 import type { SeamAdapter } from '../adapter/seam.ts';
+import { assemblyNotUsed } from '../test-helpers.ts';
 
 // ---------------------------------------------------------------------------
 // Minimal stub adapter — views only need the adapter reference, not real data
 // ---------------------------------------------------------------------------
 function makeAdapter(): SeamAdapter {
   return {
+    ...assemblyNotUsed(),
     fetchAllEntries: () => Promise.resolve({ ok: true, data: [] }),
     fetchBeliefPool: () => Promise.resolve({ ok: true, data: [] }),
     fetchChain: () => Promise.resolve({ ok: true, data: [] }),

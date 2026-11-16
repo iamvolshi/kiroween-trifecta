@@ -9,6 +9,7 @@ import * as fc from 'fast-check';
 import { ActionListView } from './action-list';
 import { createMockAdapter, createErrorMock } from '../adapter/mock';
 import type { Entry, SeamAdapter, KidMap } from '../adapter/seam';
+import { assemblyNotUsed } from '../test-helpers';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -37,6 +38,7 @@ function makeEntry(overrides: Partial<Entry> = {}): Entry {
 /** Create a SeamAdapter that always returns the given entries (and empty kidMap). */
 function adapterFromEntries(entries: Entry[]): SeamAdapter {
   return {
+    ...assemblyNotUsed(),
     async fetchAllEntries() { return { ok: true, data: entries }; },
     async fetchBeliefPool() { return { ok: true, data: [] }; },
     async fetchChain() { return { ok: true, data: [] }; },

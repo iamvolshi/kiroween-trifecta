@@ -3,6 +3,10 @@ import { ActionListView } from '../views/action-list.ts';
 import { TimeTravelView } from '../views/time-travel.ts';
 import { EntryDetailView } from '../views/entry-detail.ts';
 import { NotFoundView } from '../views/not-found.ts';
+import { ChatView } from '../views/chat.ts';
+import { ChatLog } from '../views/chat-log.ts';
+import { CalendarView } from '../views/calendar.ts';
+import { parseCalendarPath } from '../util/calendar.ts';
 
 export interface View {
   mount(container: HTMLElement): void;
@@ -13,6 +17,8 @@ export class Router {
   private container: HTMLElement;
   private adapter: SeamAdapter;
   private currentView: View | null = null;
+  /** One chat transcript per Router, so the conversation survives navigation. */
+  private chatLog = new ChatLog();
   private clickHandler: (event: MouseEvent) => void;
   private popstateHandler: () => void;
 
@@ -82,6 +88,16 @@ export class Router {
 
     if (path === '/time-travel') {
       return new TimeTravelView(this.adapter);
+    }
+
+    if (path === '/chat') {
+      return new ChatView(this.adapter, this.chatLog);
+    }
+
+    if (path === '/calendar' || path.startsWith('/calendar/')) {
+      const target = parseCalendarPath(path);
+      if (target === null) return new NotFoundView();
+      return new CalendarView(this.adapter, target === 'default' ? null : target);
     }
 
     const entryMatch = path.match(

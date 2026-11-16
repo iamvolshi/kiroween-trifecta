@@ -8,6 +8,7 @@ import * as fc from 'fast-check';
 import { EntryDetailView } from './entry-detail';
 import { createErrorMock } from '../adapter/mock';
 import type { Entry, KidMap, SeamAdapter } from '../adapter/seam';
+import { assemblyNotUsed } from '../test-helpers';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -33,6 +34,7 @@ async function mountAndFlush(view: EntryDetailView, container: HTMLElement): Pro
 /** Build a minimal SeamAdapter that returns the given chain and kidMap. */
 function makeAdapter(chain: Entry[], kidMap: KidMap): SeamAdapter {
   return {
+    ...assemblyNotUsed(),
     fetchAllEntries: async () => ({ ok: true, data: chain }),
     fetchBeliefPool: async () => ({ ok: true, data: chain }),
     fetchChain: async () => ({ ok: true, data: chain }),

@@ -283,3 +283,165 @@ a {
     grid-template-columns: 1fr;
   }
 }
+
+/* Chat view */
+.chat-view .mock-note {
+  font-weight: 600;
+}
+
+.chat-view .step-progress {
+  margin: 0.5rem 0;
+}
+
+.chat-turn {
+  border: 1px solid #888;
+  border-radius: 0.25rem;
+  padding: 0.5rem 0.75rem;
+  margin: 0.75rem 0;
+}
+
+.chat-turn.not-knowing {
+  border-style: dashed;
+}
+
+.chat-turn .chat-user {
+  font-weight: 600;
+  margin: 0 0 0.25rem;
+}
+
+.chat-turn .chat-arche {
+  margin: 0 0 0.5rem;
+}
+
+.engines .engine {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.15rem 0;
+}
+
+.engines .engine-label {
+  min-width: 4.5rem;
+  font-weight: 700;
+}
+
+.engines .engine-action {
+  margin-right: 0.5rem;
+  font-style: italic;
+}
+
+.engines .provenance {
+  margin: 0.25rem 0 0;
+  padding-left: 1.25rem;
+}
+
+.engines .provenance span {
+  margin-right: 0.5rem;
+}
+
+.chat-form {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin-top: 1rem;
+}
+
+.chat-form input {
+  flex: 1;
+}
+
+/* Calendar view */
+.calendar-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.calendar-head .calendar-title {
+  margin: 0;
+}
+
+.calendar-grid {
+  width: 100%;
+  margin-top: 1rem;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.calendar-grid th,
+.calendar-grid td {
+  padding: 0.5rem;
+  border: 1px solid var(--rule);
+  text-align: center;
+}
+
+.calendar-grid .day-blank {
+  background: var(--faint);
+}
+
+.calendar-grid .day-link {
+  font-weight: 600;
+}
+
+.calendar-grid .day-dot {
+  margin-left: 0.25rem;
+  font-size: 0.7rem;
+  vertical-align: middle;
+}
+
+.hour-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(6rem, 1fr));
+  gap: 0.5rem;
+  margin: 1rem 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hour-list li {
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+}
+
+.calendar-entries {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.calendar-entries > li {
+  margin: 0 0 0.75rem;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  background: var(--faint);
+}
+
+.calendar-entries > li > a {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: 0.5rem 1.25rem;
+  padding: 0.75rem 1rem;
+  color: inherit;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+.calendar-entries .subject {
+  font-weight: 600;
+}
+
+/* Data-source label (nav) */
+.main-nav {
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.mock-badge {
+  margin-left: auto;
+  padding: 0.2rem 0.6rem;
+  border: 2px solid currentColor;
+  border-radius: 4px;
+  font-weight: 700;
+  font-size: 0.85rem;
+}

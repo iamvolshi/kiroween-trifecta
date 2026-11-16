@@ -14,6 +14,7 @@ import {
 } from '../adapter/mock';
 import { isLiveAt } from '../util/interval';
 import type { Entry, SeamAdapter } from '../adapter/seam';
+import { assemblyNotUsed } from '../test-helpers';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -70,6 +71,7 @@ async function triggerCursor(
 /** Build a custom SeamAdapter backed by a fixed entry array. */
 function createAdapterFromEntries(entries: Entry[]): SeamAdapter {
   return {
+    ...assemblyNotUsed(),
     async fetchAllEntries() {
       return { ok: true, data: [...entries] };
     },

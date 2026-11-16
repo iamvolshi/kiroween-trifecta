@@ -1,4 +1,4 @@
-import type { Entry } from './adapter/seam.ts';
+import type { Entry, SeamAdapter } from './adapter/seam.ts';
 
 /** Test-only helpers (mock data). Not imported by app code. */
 
@@ -32,4 +32,22 @@ export function deferred<T>(): { promise: Promise<T>; resolve: (v: T) => void } 
     resolve = r;
   });
   return { promise, resolve };
+}
+
+/**
+ * The five assembly methods, each answering a typed error. Spread into a
+ * hand-built record-only fake adapter so it still satisfies SeamAdapter.
+ */
+export function assemblyNotUsed(): Pick<
+  SeamAdapter,
+  'ask' | 'chat' | 'update' | 'fetchLessons' | 'fetchRecord'
+> {
+  const err = { ok: false as const, error: 'not used in this test' };
+  return {
+    ask: async () => err,
+    chat: async () => err,
+    update: async () => err,
+    fetchLessons: async () => err,
+    fetchRecord: async () => err,
+  };
 }
