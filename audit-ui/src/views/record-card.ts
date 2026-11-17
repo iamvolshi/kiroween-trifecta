@@ -46,6 +46,34 @@ function div(className: string, children: HTMLElement[]): HTMLDivElement {
   return d;
 }
 
+/**
+ * Spoken label for each field. Rendered as real (visually hidden) text in
+ * front of the value, so a screen reader announces it; the visible captions
+ * stay CSS and are marked decorative there, so nothing is read twice.
+ */
+export const FIELD_LABELS: Record<CardField, string> = {
+  kid: 'KID',
+  subject: 'Subject',
+  state: 'State',
+  authority: 'Authority',
+  evidence: 'Evidence',
+  reason: 'Why',
+  'k-start': 'Live from',
+  't-time': 'Wall time',
+  'e-time': 'Event time',
+  'k-time': 'Live until',
+};
+
+/** A visually hidden text node for assistive technology. */
+export function srOnly(text: string): HTMLSpanElement {
+  return span('sr-only', text);
+}
+
+/** [hidden spoken label, value span] for one field of `entry`. */
+function labelledField(entry: Entry, f: CardField, kidMap: KidMap | null): HTMLElement[] {
+  return [srOnly(`${FIELD_LABELS[f]}: `), span(f, value(entry, f, kidMap))];
+}
+
 function value(entry: Entry, f: CardField, kidMap: KidMap | null): string {
   switch (f) {
     case 'kid':
@@ -79,14 +107,14 @@ export function fillRecordCard(
   opts: CardOptions,
 ): void {
   const has = (f: CardField): boolean => opts.fields.includes(f);
-  const field = (f: CardField): HTMLSpanElement => span(f, value(entry, f, kidMap));
+  const field = (f: CardField): HTMLElement[] => labelledField(entry, f, kidMap);
 
   host.classList.add('record-card');
   host.dataset.state = entry.state;
 
   const chips: HTMLElement[] = [];
-  if (has('authority')) chips.push(field('authority'));
-  if (has('state')) chips.push(field('state'));
+  if (has('authority')) chips.push(...field('authority'));
+  if (has('state')) chips.push(...field('state'));
   host.appendChild(div('card-chips', chips));
 
   host.appendChild(
@@ -95,13 +123,13 @@ export function fillRecordCard(
     ]),
   );
 
-  const meta = (['kid', 'subject', 'k-start'] as CardField[]).filter(has).map(field);
+  const meta = (['kid', 'subject', 'k-start'] as CardField[]).filter(has).flatMap(field);
   if (meta.length > 0) host.appendChild(div('card-meta', meta));
 
-  const inset = (['reason', 'evidence'] as CardField[]).filter(has).map(field);
+  const inset = (['reason', 'evidence'] as CardField[]).filter(has).flatMap(field);
   if (inset.length > 0) host.appendChild(div('card-inset', inset));
 
-  const times = (['t-time', 'e-time', 'k-time'] as CardField[]).filter(has).map(field);
+  const times = (['t-time', 'e-time', 'k-time'] as CardField[]).filter(has).flatMap(field);
   const foot: HTMLElement[] = [div('card-times', times)];
   if (opts.link) foot.push(span('card-action', 'Inspect'));
   if (times.length > 0 || opts.link) host.appendChild(div('card-foot', foot));
@@ -130,7 +158,7 @@ export function fillCollapsibleCard(
   kidMap: KidMap | null,
   opts: CollapsibleOptions,
 ): void {
-  const field = (f: CardField): HTMLSpanElement => span(f, value(entry, f, kidMap));
+  const field = (f: CardField): HTMLElement[] => labelledField(entry, f, kidMap);
 
   host.classList.add('record-card', 'card-collapsible');
   host.dataset.state = entry.state;
@@ -141,9 +169,9 @@ export function fillCollapsibleCard(
   toggle.setAttribute('aria-expanded', 'false');
   toggle.setAttribute('aria-controls', opts.detailsId);
   toggle.append(
-    field('kid'),
+    ...field('kid'),
     span('label', formatLabel(entry.subject, entry.state)),
-    field('authority'),
+    ...field('authority'),
   );
 
   const inspect = document.createElement('a');
@@ -160,10 +188,10 @@ export function fillCollapsibleCard(
   details.setAttribute('aria-label', `Details: ${formatLabel(entry.subject, entry.state)}`);
   details.hidden = true;
   details.append(
-    div('card-chips', [field('state')]),
-    div('card-meta', [field('subject'), field('k-start')]),
-    div('card-inset', [field('reason'), field('evidence')]),
-    div('card-foot', [div('card-times', [field('t-time'), field('e-time'), field('k-time')])]),
+    div('card-chips', field('state')),
+    div('card-meta', [...field('subject'), ...field('k-start')]),
+    div('card-inset', [...field('reason'), ...field('evidence')]),
+    div('card-foot', [div('card-times', [...field('t-time'), ...field('e-time'), ...field('k-time')])]),
   );
   host.appendChild(details);
 

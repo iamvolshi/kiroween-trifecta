@@ -14,12 +14,9 @@ function at(hhmm: string): string {
   return `2026-11-16T${hhmm}:00.000Z`;
 }
 
-function before(hhmm: string): string {
-  const [h, m] = hhmm.split(':').map(Number);
-  const total = h * 60 + m - 1;
-  const hh = String(Math.floor(total / 60)).padStart(2, '0');
-  const mm = String(total % 60).padStart(2, '0');
-  return at(`${hh}:${mm}`);
+/** The ISO time one minute before `hhmm` on the scenario day. Safe at 00:00 (rolls back a day). */
+export function before(hhmm: string): string {
+  return new Date(Date.parse(at(hhmm)) - 60_000).toISOString();
 }
 
 function entry(

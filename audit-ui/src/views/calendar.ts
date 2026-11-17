@@ -122,9 +122,17 @@ export class CalendarView implements View {
     head.appendChild(link(calendarHref({ level: 'month', ...next }), 'Next month', 'cal-next'));
 
     const table = el('table', 'calendar-grid');
+    const thead = el('thead', '');
     const headRow = el('tr', '');
-    for (const h of WEEKDAY_HEADERS) headRow.appendChild(el('th', '', h));
-    table.appendChild(headRow);
+    for (const h of WEEKDAY_HEADERS) {
+      const th = el('th', '', h);
+      th.setAttribute('scope', 'col');
+      headRow.appendChild(th);
+    }
+    thead.appendChild(headRow);
+    table.appendChild(thead);
+    const tbody = el('tbody', '');
+    table.appendChild(tbody);
     for (const week of monthGrid(year, month)) {
       const tr = el('tr', '');
       for (const day of week) {
@@ -147,7 +155,7 @@ export class CalendarView implements View {
         }
         tr.appendChild(td);
       }
-      table.appendChild(tr);
+      tbody.appendChild(tr);
     }
     return [head, table];
   }

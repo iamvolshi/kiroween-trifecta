@@ -8,7 +8,7 @@ import { ChatLog } from '../views/chat-log.ts';
 import { CalendarView } from '../views/calendar.ts';
 import { parseCalendarPath } from '../util/calendar.ts';
 import { RecordView } from '../views/record.ts';
-import { createShell, type ShellSlots } from '../shell/shell.ts';
+import { createShell, setViewLabel, type ShellSlots } from '../shell/shell.ts';
 import { LeftPanel } from '../shell/left.ts';
 import { TelemetryPanel } from '../shell/telemetry.ts';
 import type { Panel } from '../shell/panel.ts';
@@ -102,6 +102,7 @@ export class Router {
     }
     this.currentView = view;
     this.currentView.mount(this.slots.center);
+    setViewLabel(this.slots);
     this.leftPanel.refresh();
   }
 

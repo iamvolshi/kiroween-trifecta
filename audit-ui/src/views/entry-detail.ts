@@ -22,6 +22,12 @@ export class EntryDetailView implements View {
   mount(container: HTMLElement): void {
     this.container = container;
     container.innerHTML = '';
+    // Heading and question mount at once, so every state (loading, empty,
+    // error, not found) still says where you are.
+    const h1 = document.createElement('h1');
+    h1.textContent = 'Entry Detail';
+    container.appendChild(h1);
+    container.appendChild(createIntro('entry'));
     this.body = document.createElement('div');
     this.body.className = 'view-body';
     container.appendChild(this.body);
@@ -72,12 +78,11 @@ export class EntryDetailView implements View {
       // Never show another entry's data for an id that matched nothing.
       const section = document.createElement('section');
       section.className = 'not-found entry-not-found';
-      const h1 = document.createElement('h1');
-      h1.textContent = 'Entry not found';
+      const h2 = document.createElement('h2');
+      h2.textContent = 'Entry not found';
       const p = document.createElement('p');
       p.textContent = `No entry with id "${this.id}" exists for KID ${this.kid}, subject "${this.subject}".`;
-      section.appendChild(h1);
-      section.appendChild(createIntro('entry'));
+      section.appendChild(h2);
       section.appendChild(p);
       body.replaceChildren(section);
       return;
@@ -99,11 +104,6 @@ export class EntryDetailView implements View {
   private renderPrimary(entry: Entry, kidMap: KidMap | null): HTMLElement {
     const section = document.createElement('section');
     section.className = 'entry-primary';
-
-    const h1 = document.createElement('h1');
-    h1.textContent = 'Entry Detail';
-    section.appendChild(h1);
-    section.appendChild(createIntro('entry'));
 
     const dl = document.createElement('dl');
 

@@ -1,3 +1,6 @@
+/* Captions written as `content: 'X'; content: 'X' / '';`: the first is the
+   fallback for browsers without CSS alt text; the second marks the caption
+   decorative, because a hidden .sr-only label already speaks it. */
 /*
  * Record card skeleton, used by the action list, belief pool, chain and
  * record view (views/record-card.ts builds the markup). Reading order:
@@ -71,7 +74,7 @@ a.record-card:focus-visible {
 }
 
 .record-card .authority::before {
-  content: 'Authority ';
+  content: 'Authority '; content: 'Authority ' / '';
   color: var(--muted);
 }
 
@@ -119,13 +122,13 @@ a.record-card:focus-visible {
 }
 
 .card-meta > *:not(:last-child)::after {
-  content: '\00b7';
+  content: '\00b7'; content: '\00b7' / '';
   margin-left: var(--s2);
   color: var(--faint);
 }
 
-.card-meta .kid::before { content: 'KID '; color: var(--faint); }
-.card-meta .k-start::before { content: 'live from '; color: var(--faint); }
+.card-meta .kid::before { content: 'KID '; content: 'KID ' / ''; color: var(--faint); }
+.card-meta .k-start::before { content: 'live from '; content: 'live from ' / ''; color: var(--faint); }
 
 /* 4. Inset: WHY and EVIDENCE, each labeled */
 .card-inset {
@@ -154,8 +157,8 @@ a.record-card:focus-visible {
   color: var(--faint);
 }
 
-.card-inset .reason::before { content: 'Why'; }
-.card-inset .evidence::before { content: 'Evidence'; }
+.card-inset .reason::before { content: 'Why'; content: 'Why' / ''; }
+.card-inset .evidence::before { content: 'Evidence'; content: 'Evidence' / ''; }
 
 .card-inset .reason {
   color: var(--text);
@@ -184,9 +187,9 @@ a.record-card:focus-visible {
   color: var(--muted);
 }
 
-.card-times .t-time::before { content: 'Wall time (t_time)'; }
-.card-times .e-time::before { content: 'Event time (e_time)'; }
-.card-times .k-time::before { content: 'Live until (k_time)'; }
+.card-times .t-time::before { content: 'Wall time (t_time)'; content: 'Wall time (t_time)' / ''; }
+.card-times .e-time::before { content: 'Event time (e_time)'; content: 'Event time (e_time)' / ''; }
+.card-times .k-time::before { content: 'Live until (k_time)'; content: 'Live until (k_time)' / ''; }
 
 .card-action {
   margin-left: auto;
@@ -199,7 +202,7 @@ a.record-card:focus-visible {
 }
 
 .card-action::after {
-  content: ' \2192';
+  content: ' \2192'; content: ' \2192' / '';
 }
 
 /* ---- Collapsible card (Action List only) ----------------------------- */
@@ -254,7 +257,7 @@ a.record-card:focus-visible {
 
 /* Open/closed cue: a plain chevron, drawn in CSS from aria-expanded. */
 .card-toggle .kid::before {
-  content: '\25B8';
+  content: '\25B8'; content: '\25B8' / '';
   display: inline-block;
   width: 1em;
   margin-right: var(--s1);
@@ -263,7 +266,7 @@ a.record-card:focus-visible {
 }
 
 .card-toggle[aria-expanded='true'] .kid::before {
-  content: '\25BE';
+  content: '\25BE'; content: '\25BE' / '';
   color: var(--accent);
 }
 
@@ -377,7 +380,7 @@ a.record-card:focus-visible {
 }
 
 .filter-chip[aria-pressed='true']::before {
-  content: '\2713 ';
+  content: '\2713 '; content: '\2713 ' / '';
   color: var(--accent);
 }
 
@@ -400,5 +403,5 @@ a.record-card:focus-visible {
 
 /* The entries are known, only filtered out: caption it as such. */
 .filter-empty::before {
-  content: 'No match';
+  content: 'No match'; content: 'No match' / '';
 }

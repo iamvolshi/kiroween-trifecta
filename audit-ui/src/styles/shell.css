@@ -71,15 +71,7 @@
   color: var(--muted);
 }
 
-.brand-view::before { content: 'View: '; color: var(--faint); }
-.shell:not(:has(.view-intro)) .brand-view { display: none; }
-.shell:has(.view-intro[data-view='Action List']) .brand-view::after { content: 'Action List'; }
-.shell:has(.view-intro[data-view='Chat']) .brand-view::after { content: 'Chat'; }
-.shell:has(.view-intro[data-view='Time Travel']) .brand-view::after { content: 'Time Travel'; }
-.shell:has(.view-intro[data-view='Calendar']) .brand-view::after { content: 'Calendar'; }
-.shell:has(.view-intro[data-view='Record']) .brand-view::after { content: 'Record'; }
-.shell:has(.view-intro[data-view='Entry Detail']) .brand-view::after { content: 'Entry Detail'; }
-.shell:has(.view-intro[data-view='Not Found']) .brand-view::after { content: 'Not Found'; }
+.brand-view[hidden] { display: none; }
 
 @media (max-width: 1300px) {
   .brand-tag {

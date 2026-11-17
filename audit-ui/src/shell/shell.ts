@@ -4,6 +4,8 @@ export interface ShellSlots {
   left: HTMLElement;
   center: HTMLElement;
   right: HTMLElement;
+  /** The header's "View: <name>" label; set by `setViewLabel`. */
+  view: HTMLElement;
 }
 
 /**
@@ -15,6 +17,13 @@ export function createShell(container: HTMLElement): ShellSlots {
   container.innerHTML = '';
   const shell = document.createElement('div');
   shell.className = 'shell';
+
+  // Skip link: first Tab stop, jumps keyboard focus past the left column.
+  // Handled here (no hash change), so the router never re-resolves on it.
+  const skip = document.createElement('a');
+  skip.className = 'skip-link';
+  skip.setAttribute('href', '#main-view');
+  skip.textContent = 'Skip to the view';
 
   // Presentational header: the app's name, the seam it reads, and where you are.
   const brand = document.createElement('header');
@@ -33,10 +42,11 @@ export function createShell(container: HTMLElement): ShellSlots {
     ACTIVE_ADAPTER_KIND === 'mock'
       ? 'Seam: mock adapter, active. Record is a scripted scenario.'
       : 'Seam: live adapter, active.';
-  // Current view: filled by CSS from the view's own intro (data-view), no logic.
+  // Current view: set in JS from the mounted view's own intro (setViewLabel).
   const view = document.createElement('span');
   view.className = 'brand-view';
   view.setAttribute('aria-hidden', 'true');
+  view.hidden = true;
   brand.append(mark, tag, seam, view);
 
   const left = document.createElement('aside');
@@ -45,13 +55,31 @@ export function createShell(container: HTMLElement): ShellSlots {
 
   const center = document.createElement('main');
   center.className = 'shell-center';
+  center.id = 'main-view';
+  center.tabIndex = -1;
   center.setAttribute('aria-label', 'View');
 
   const right = document.createElement('aside');
   right.className = 'shell-right';
   right.setAttribute('aria-label', 'Telemetry');
 
-  shell.append(brand, left, center, right);
+  skip.addEventListener('click', (e) => {
+    e.preventDefault();
+    center.focus();
+  });
+
+  shell.append(skip, brand, left, center, right);
   container.appendChild(shell);
-  return { left, center, right };
+  return { left, center, right, view };
+}
+
+/**
+ * Sets the header's "View: <name>" from the view mounted in the center
+ * (its intro's data-view). A view without an intro hides the label rather
+ * than showing a bare "View:".
+ */
+export function setViewLabel(slots: ShellSlots): void {
+  const name = slots.center.querySelector<HTMLElement>('.view-intro')?.dataset.view ?? '';
+  slots.view.textContent = name ? `View: ${name}` : '';
+  slots.view.hidden = name === '';
 }

@@ -1,3 +1,6 @@
+/* Captions written as `content: 'X'; content: 'X' / '';`: the first is the
+   fallback for browsers without CSS alt text; the second marks the caption
+   decorative, because a hidden .sr-only label already speaks it. */
 /*
  * Chat view: transcript of turns, each with the four-engine grid.
  * An engine that did not act is dimmed (.engine-idle) but stays listed.
@@ -54,7 +57,7 @@
 }
 
 .chat-turn .chat-user::before {
-  content: 'You';
+  content: 'You'; content: 'You' / '';
   margin-right: var(--s3);
   font-size: var(--fs-caption);
   font-weight: 700;

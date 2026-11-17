@@ -48,7 +48,7 @@ describe('collapsed by default', () => {
     for (const li of lis) {
       const t = toggleOf(li);
       expect(t.getAttribute('aria-expanded')).toBe('false');
-      expect(Array.from(t.children).map((s) => s.className)).toEqual(['kid', 'label', 'authority']);
+      expect(Array.from(t.children).filter((s) => !s.classList.contains('sr-only')).map((s) => s.className)).toEqual(['kid', 'label', 'authority']);
       expect(detailsOf(li).hidden).toBe(true);
       // The highlights carry real values from the entry.
       expect(t.querySelector('.kid')!.textContent).toMatch(/^\d+/);

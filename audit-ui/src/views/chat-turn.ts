@@ -21,8 +21,12 @@ function engineRow(cls: string, label: string): { row: HTMLElement; body: HTMLEl
 export function renderChatTurn(turn: ChatTurn): HTMLElement {
   const root = el('div', turn.known ? 'chat-turn' : 'chat-turn not-knowing');
 
-  root.appendChild(el('p', 'chat-user', turn.message));
-  root.appendChild(el('p', 'chat-arche', turn.engines.arche.reply));
+  const user = el('p', 'chat-user');
+  user.append(el('span', 'sr-only', 'You said: '), document.createTextNode(turn.message));
+  root.appendChild(user);
+  const reply = el('p', 'chat-arche');
+  reply.append(el('span', 'sr-only', 'ARCHE replied: '), document.createTextNode(turn.engines.arche.reply));
+  root.appendChild(reply);
 
   const engines = el('div', 'engines');
 

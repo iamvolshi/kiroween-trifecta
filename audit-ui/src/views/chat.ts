@@ -100,7 +100,14 @@ export class ChatView implements View {
     btn.disabled = true;
     this.errorSlot?.replaceChildren();
 
-    const result = await this.adapter.chat(message);
+    let result: Awaited<ReturnType<SeamAdapter['chat']>>;
+    try {
+      result = await this.adapter.chat(message);
+    } catch (e) {
+      // An adapter that throws (a live fetch path, say) must not leave Send
+      // disabled forever: show the error in words and give the button back.
+      result = { ok: false, error: `The chat request failed: ${e instanceof Error ? e.message : String(e)}` };
+    }
     // The turn already happened on the agent's side (the scenario advanced),
     // so it is logged even when this view is gone; only the DOM work is skipped.
     if (result.ok) this.log.push(result.data);

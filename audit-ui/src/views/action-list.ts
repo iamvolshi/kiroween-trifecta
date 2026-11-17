@@ -1,6 +1,6 @@
 import type { View } from '../router/router.ts';
 import type { SeamAdapter, KidMap } from '../adapter/seam.ts';
-import { fillCollapsibleCard } from './record-card.ts';
+import { fillCollapsibleCard, srOnly } from './record-card.ts';
 import { createIntro } from './intro.ts';
 import { compareKStart } from '../util/interval.ts';
 import {
@@ -99,8 +99,16 @@ export class ActionListView implements View {
       });
       count.textContent = `Showing ${shown} of ${sorted.length} entries`;
       noMatch.hidden = shown > 0;
-      noMatch.textContent =
-        shown > 0 ? '' : `No entries match ${describeFilters(f)}. Clear the filters to see all ${sorted.length}.`;
+      noMatch.replaceChildren(
+        ...(shown > 0
+          ? []
+          : [
+              srOnly('No match: '),
+              document.createTextNode(
+                `No entries match ${describeFilters(f)}. Clear the filters to see all ${sorted.length}.`,
+              ),
+            ]),
+      );
       ul.hidden = shown === 0;
       const prev = document.activeElement as HTMLElement | null;
       const keep = prev && barSlot.contains(prev) ? { filter: prev.dataset.filter, value: prev.dataset.value } : null;
