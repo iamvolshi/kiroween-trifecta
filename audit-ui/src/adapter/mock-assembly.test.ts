@@ -56,7 +56,7 @@ describe('mock adapter with scenario', () => {
     const out = await a.chat('Where is the parcel now?');
     expect(out.ok && out.data.known).toBe(false);
     expect(out.ok && out.data.engines.arche.reply).toBe(SCENARIO.not_knowing_reply);
-    expect(out.ok && out.data.total_steps).toBe(4);
+    expect(out.ok && out.data.total_steps).toBe(SCENARIO.steps.length);
 
     for (const [i, s] of SCENARIO.steps.entries()) {
       const r = await a.chat(s.prompt);
@@ -144,6 +144,101 @@ describe('mock adapter with scenario', () => {
     await a.chat('delivery');
     expect(cursor.position()).toBe(1);
     expect(await ids(a)).toEqual(['scn-s1']);
+  });
+});
+
+describe('lessons: promotion and injection (mock)', () => {
+  const sought = 'what is the delivery date';
+  async function play(a: ReturnType<typeof createMockAdapter>, n: number): Promise<void> {
+    for (const s of SCENARIO.steps.slice(0, n)) await a.chat(s.prompt);
+  }
+  async function turn(a: ReturnType<typeof createMockAdapter>, msg: string) {
+    const r = await a.chat(msg);
+    if (!r.ok) throw new Error(r.error);
+    return r.data.engines;
+  }
+
+  it('lesson is a candidate after step 4, promoted after step 5; script stays frozen', async () => {
+    const a = createMockAdapter();
+    await play(a, 4);
+    const l4 = await a.fetchLessons();
+    expect(l4.ok && l4.data.map(l => l.status)).toEqual(['candidate']);
+    await play(a, 0);
+    await a.chat(SCENARIO.steps[4].prompt);
+    const l5 = await a.fetchLessons();
+    expect(l5.ok && l5.data.map(l => l.status)).toEqual(['promoted']);
+    expect(l5.ok && l5.data[0].subject).toBe('order-1042.delivery_date');
+    expect(SCENARIO.steps[3].elle?.status).toBe('candidate');
+    expect(Object.isFrozen(SCENARIO.steps[3].elle)).toBe(true);
+  });
+
+  it('step 1 injects nothing; step 4 turn records the candidate', async () => {
+    const a = createMockAdapter();
+    const e1 = await turn(a, SCENARIO.steps[0].prompt);
+    expect(e1.lessons_in_prompt.injected).toEqual([]);
+    expect(e1.lessons_in_prompt.held).toEqual([]);
+    expect(e1.elle_promoted).toBeNull();
+    await play(a, 0);
+    await a.chat(SCENARIO.steps[1].prompt);
+    await a.chat(SCENARIO.steps[2].prompt);
+    const e4 = await turn(a, SCENARIO.steps[3].prompt);
+    expect(e4.elle?.status).toBe('candidate');
+    expect(e4.elle_promoted).toBeNull();
+  });
+
+  it('a delivery-date prompt after step 4 holds the lesson, not injects', async () => {
+    const a = createMockAdapter();
+    await play(a, 4);
+    const e = await turn(a, sought);
+    expect(e.lessons_in_prompt.subjects).toEqual(['order-1042.delivery_date']);
+    expect(e.lessons_in_prompt.held.map(l => l.event_id)).toEqual(['mock:lesson-1']);
+    expect(e.lessons_in_prompt.injected).toEqual([]);
+    expect(e.elle).toBeNull();
+    expect(e.elle_promoted).toBeNull();
+  });
+
+  it('step 5 promotes without injecting; step 6 injects', async () => {
+    const a = createMockAdapter();
+    await play(a, 4);
+    const e5 = await turn(a, SCENARIO.steps[4].prompt);
+    expect(e5.elle_promoted?.event_id).toBe('mock:lesson-1');
+    expect(e5.elle_promoted?.status).toBe('promoted');
+    expect(e5.lessons_in_prompt.injected).toEqual([]);
+    const e6 = await turn(a, SCENARIO.steps[5].prompt);
+    expect(e6.lessons_in_prompt.injected.map(l => l.event_id)).toEqual(['mock:lesson-1']);
+    expect(e6.lessons_in_prompt.held).toEqual([]);
+    expect(e6.erie?.provenance.map(p => p.source)).toEqual(['mock:katie-record', 'mock:carrier-feed']);
+    expect(e6.katie).toEqual([]);
+  });
+
+  it('after step 6 an unmatched prompt still injects; a parcel-only prompt never does', async () => {
+    const a = createMockAdapter();
+    await play(a, SCENARIO.steps.length);
+    const e = await turn(a, sought);
+    expect(e.arche.reply).toBe(SCENARIO.not_knowing_reply);
+    expect(e.lessons_in_prompt.injected.map(l => l.event_id)).toEqual(['mock:lesson-1']);
+    const p = await turn(a, 'where is the parcel');
+    expect(p.lessons_in_prompt.subjects).toEqual(['parcel-77.status']);
+    expect(p.lessons_in_prompt.injected).toEqual([]);
+    expect(p.lessons_in_prompt.held).toEqual([]);
+  });
+
+  it('update-played steps count the same as chat-played steps', async () => {
+    const a = createMockAdapter();
+    await a.update({ kid: 4, subject: 'order-1042.delivery_date', value: '2026-11-18', reason: 'x', authority: 6 });
+    await a.update({ kid: 5, subject: 'parcel-77.status', value: 'in transit', reason: 'x', authority: 7 });
+    await a.update({ kid: 4, subject: 'order-1042.delivery_date', value: '2026-11-19', reason: 'x', authority: 7 });
+    await a.update({ kid: 5, subject: 'parcel-77.status', value: 'held at depot', reason: 'x', authority: 8 });
+    const l = await a.fetchLessons();
+    expect(l.ok && l.data.map(x => x.status)).toEqual(['candidate']);
+    const e = await turn(a, sought);
+    expect(e.lessons_in_prompt.held).toHaveLength(1);
+  });
+
+  it('no cursor: empty lessons_in_prompt', async () => {
+    const e = await turn(createMockAdapter(undefined, { cursor: null }), sought);
+    expect(e.lessons_in_prompt).toEqual({ subjects: [], injected: [], held: [] });
+    expect(e.elle_promoted).toBeNull();
   });
 });
 

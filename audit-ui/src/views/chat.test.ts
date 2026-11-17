@@ -3,6 +3,8 @@ import type { SeamAdapter, ChatTurn, AdapterResult } from '../adapter/seam.ts';
 import { ChatView } from './chat.ts';
 import { ChatLog } from './chat-log.ts';
 import { tick, deferred } from '../test-helpers.ts';
+import { renderChatTurn } from './chat-turn.ts';
+import type { Lesson } from '../adapter/seam.ts';
 
 function turn1(): ChatTurn {
   return {
@@ -19,6 +21,8 @@ function turn1(): ChatTurn {
         provenance: [{ source: 'order system', content: 'order-1042', excerpt: 'delivery 2026-11-18' }],
       },
       elle: null,
+      elle_promoted: null,
+      lessons_in_prompt: { subjects: [], injected: [], held: [] },
       katie: [{ kid: 4, subject: 'order-1042.delivery_date', entry_id: 'scn-s1', seated: true }],
     },
   };
@@ -34,6 +38,8 @@ function turnUnknown(): ChatTurn {
       arche: { reply: "I don't know. The script has no answer for that. (mock)" },
       erie: null,
       elle: null,
+      elle_promoted: null,
+      lessons_in_prompt: { subjects: [], injected: [], held: [] },
       katie: [],
     },
   };
@@ -48,7 +54,9 @@ function turnLesson(): ChatTurn {
     engines: {
       arche: { reply: 'ok' },
       erie: null,
-      elle: { event_id: 'l1', event_type: 'lesson', detail: 'detail text', rule: 'check the carrier feed' },
+      elle: { event_id: 'l1', event_type: 'lesson', detail: 'detail text', rule: 'check the carrier feed', subject: 'order-1042.delivery_date', status: 'candidate' },
+      elle_promoted: null,
+      lessons_in_prompt: { subjects: [], injected: [], held: [] },
       katie: [],
     },
   };
@@ -81,11 +89,11 @@ describe('ChatView', () => {
     document.body.appendChild(container);
   });
 
-  it('shows empty state, nav, labeled input, mock note before any turn', () => {
+  it('shows empty state, labeled input, mock note before any turn', () => {
     const { adapter } = fake(async () => ({ ok: true, data: turn1() }));
     new ChatView(adapter, new ChatLog()).mount(container);
     expect(container.querySelector('.empty-state')?.textContent).toMatch(/not started/);
-    expect(container.querySelector('nav.main-nav')).not.toBeNull();
+    expect(container.querySelector('nav.main-nav')).toBeNull(); // the shell owns the nav
     expect(container.querySelector('h1')?.textContent).toBe('Chat with the agent (ARCHE)');
     expect(container.querySelector('label[for="chat-message"]')?.textContent).toBe('Your message');
     expect(container.querySelector('.mock-note')?.textContent).toMatch(/mock/i);
@@ -122,7 +130,8 @@ describe('ChatView', () => {
     new ChatView(adapter, new ChatLog()).mount(container);
     send(container, 'thanks');
     await tick();
-    expect(container.querySelector('.engine-elle')?.textContent).toContain('learned');
+    expect(container.querySelector('.engine-elle')?.textContent).toContain('recorded a lesson (not learned yet)');
+    expect(container.querySelector('.engine-elle .lesson-candidate')).not.toBeNull();
     expect(container.querySelector('.engine-elle')?.textContent).toContain('check the carrier feed');
     expect(container.querySelector('.engine-erie')?.textContent).toContain('did not act this turn');
     expect(container.querySelector('.engine-katie')?.textContent).toContain('did not act this turn');
@@ -217,5 +226,56 @@ describe('ERIE not_found is shown as not found', () => {
     await tick();
     const action = c.querySelector('.engine-erie .engine-action')?.textContent;
     expect(action).toBe('looked, found nothing');
+  });
+});
+
+describe('ELLE row in a chat turn', () => {
+  const L = (rule: string, status: 'candidate' | 'promoted'): Lesson => ({
+    event_id: 'x',
+    event_type: 'lesson',
+    detail: 'd',
+    rule,
+    subject: 's',
+    status,
+  });
+  const elleText = (t: ChatTurn): string =>
+    renderChatTurn(t).querySelector('.engine-elle')?.textContent ?? '';
+
+  it('recorded', () => {
+    const t = turn1();
+    t.engines.elle = L('rule A', 'candidate');
+    const txt = elleText(t);
+    expect(txt).toContain('recorded a lesson (not learned yet)');
+    expect(txt).toContain('rule A');
+  });
+
+  it('promoted', () => {
+    const t = turn1();
+    t.engines.elle_promoted = L('rule B', 'promoted');
+    const root = renderChatTurn(t);
+    expect(root.querySelector('.engine-elle .lesson-promoted')).not.toBeNull();
+    expect(root.querySelector('.engine-elle')?.textContent).toContain('promoted a lesson (learned)');
+    expect(root.querySelector('.engine-elle')?.textContent).toContain('rule B');
+  });
+
+  it('injected', () => {
+    const t = turn1();
+    t.engines.lessons_in_prompt = { subjects: ['s'], injected: [L('rule C', 'promoted')], held: [] };
+    const txt = elleText(t);
+    expect(txt).toContain('injected into this prompt:');
+    expect(txt).toContain('rule C');
+  });
+
+  it('held', () => {
+    const t = turn1();
+    t.engines.lessons_in_prompt = { subjects: ['s'], injected: [], held: [L('rule D', 'candidate')] };
+    const txt = elleText(t);
+    expect(txt).toContain('held back (not learned yet):');
+    expect(txt).toContain('rule D');
+    expect(txt).not.toContain('injected');
+  });
+
+  it('none', () => {
+    expect(elleText(turn1())).toContain('did not act this turn');
   });
 });

@@ -1,12 +1,17 @@
 import { ACTIVE_ADAPTER_KIND } from '../adapter/active.ts';
 
+/** True when path is the destination href or sits under it (/calendar/2026/11). */
+function isCurrent(path: string, href: string): boolean {
+  return path === href || path.startsWith(href + '/');
+}
+
 /**
- * Navigation bar shown at the top of every view.
+ * Navigation, built once in the shell's left column (not by each view).
  * Plain links; the Router intercepts plain left clicks.
  * Carries a visible data-source label: while the mock adapter is active the
  * chrome says MOCK DATA, so mock never reads as the live record.
  */
-export function createNav(): HTMLElement {
+export function createNav(currentPath: string | null = null): HTMLElement {
   const nav = document.createElement('nav');
   nav.className = 'main-nav';
 
@@ -22,6 +27,7 @@ export function createNav(): HTMLElement {
     a.className = 'nav-link';
     a.setAttribute('href', href);
     a.textContent = text;
+    if (currentPath !== null && isCurrent(currentPath, href)) a.setAttribute('aria-current', 'page');
     nav.appendChild(a);
   }
 

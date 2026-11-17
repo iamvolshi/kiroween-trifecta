@@ -1,7 +1,6 @@
 import type { View } from '../router/router.ts';
 import type { SeamAdapter, Entry, KidMap } from '../adapter/seam.ts';
 import { compareKStart } from '../util/interval.ts';
-import { createNav } from './nav.ts';
 
 export class EntryDetailView implements View {
   private adapter: SeamAdapter;
@@ -21,7 +20,6 @@ export class EntryDetailView implements View {
   mount(container: HTMLElement): void {
     this.container = container;
     container.innerHTML = '';
-    container.appendChild(createNav());
     this.body = document.createElement('div');
     this.body.className = 'view-body';
     container.appendChild(this.body);

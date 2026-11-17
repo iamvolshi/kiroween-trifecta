@@ -2,7 +2,6 @@ import type { View } from '../router/router.ts';
 import type { SeamAdapter } from '../adapter/seam.ts';
 import { renderKid } from '../util/kid-display.ts';
 import { parseUtcInput } from '../util/moment.ts';
-import { createNav } from './nav.ts';
 
 export class TimeTravelView implements View {
   private adapter: SeamAdapter;
@@ -22,16 +21,12 @@ export class TimeTravelView implements View {
 
     container.innerHTML = `
       <div class="time-travel-view">
-        <div id="tt-nav"></div>
         <h1>Time Travel</h1>
         <label for="moment-cursor">Select moment (UTC):</label>
         <input type="datetime-local" id="moment-cursor">
         <div id="belief-pool"></div>
       </div>
     `;
-
-    const navSlot = container.querySelector('#tt-nav');
-    navSlot?.replaceWith(createNav());
 
     this.cursorInput = container.querySelector<HTMLInputElement>('#moment-cursor');
     this.beliefPool = container.querySelector<HTMLElement>('#belief-pool');

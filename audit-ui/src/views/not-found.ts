@@ -1,5 +1,4 @@
 import type { View } from '../router/router.ts';
-import { createNav } from './nav.ts';
 
 export class NotFoundView implements View {
   private container: HTMLElement | null = null;
@@ -7,7 +6,6 @@ export class NotFoundView implements View {
   mount(container: HTMLElement): void {
     this.container = container;
     container.innerHTML = '';
-    container.appendChild(createNav());
     const section = document.createElement('section');
     section.className = 'not-found';
     section.innerHTML = `

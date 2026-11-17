@@ -1,6 +1,5 @@
 import type { View } from '../router/router.ts';
 import type { SeamAdapter } from '../adapter/seam.ts';
-import { createNav } from './nav.ts';
 import { ChatLog } from './chat-log.ts';
 import { renderChatTurn } from './chat-turn.ts';
 
@@ -27,7 +26,6 @@ export class ChatView implements View {
     this.container = container;
     container.innerHTML = `
       <div class="chat-view">
-        <div id="chat-nav"></div>
         <h1>Chat with the agent (ARCHE)</h1>
         <p class="mock-note">Replies are scripted mock. No model is running.</p>
         <p class="step-progress"></p>
@@ -40,7 +38,6 @@ export class ChatView implements View {
         </form>
       </div>
     `;
-    container.querySelector('#chat-nav')?.replaceWith(createNav());
 
     this.transcript = container.querySelector<HTMLElement>('.chat-transcript');
     this.progress = container.querySelector<HTMLElement>('.step-progress');

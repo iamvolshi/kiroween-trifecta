@@ -18,8 +18,10 @@ export interface ScenarioStep {
   reply: string;
   /** ERIE's scripted retrieval for this turn, or null. */
   erie: AskResult | null;
-  /** ELLE's scripted lesson for this turn, or null. */
+  /** ELLE's scripted lesson recorded on this turn (status 'candidate'), or null. */
   elle: Lesson | null;
+  /** event_id of a lesson ELLE promotes on this turn (scripted, mock), or null. */
+  promotes: string | null;
   /** Record entries KATIE writes on this turn (revealed by playing the step). */
   entries: Entry[];
 }
@@ -30,6 +32,11 @@ export interface Scenario {
   steps: ScenarioStep[];
   /** KIDMAP labels for the scenario's KIDs (labels are mock). */
   kid_labels: Record<number, string>;
+  /**
+   * subject -> lower-case words. A prompt "seeks" a subject when it contains
+   * any of them (whole word, case-insensitive). Mock: no language model.
+   */
+  subject_keywords: Record<string, string[]>;
   /** The reply for any message the script has no answer for. */
   not_knowing_reply: string;
 }

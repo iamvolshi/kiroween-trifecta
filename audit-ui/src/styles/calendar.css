@@ -1,0 +1,81 @@
+/* Calendar view */
+.calendar-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.calendar-head .calendar-title {
+  margin: 0;
+}
+
+.calendar-grid {
+  width: 100%;
+  margin-top: 1rem;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.calendar-grid th,
+.calendar-grid td {
+  padding: 0.5rem;
+  border: 1px solid var(--rule);
+  text-align: center;
+}
+
+.calendar-grid .day-blank {
+  background: var(--faint);
+}
+
+.calendar-grid .day-link {
+  font-weight: 600;
+}
+
+.calendar-grid .day-dot {
+  margin-left: 0.25rem;
+  font-size: 0.7rem;
+  vertical-align: middle;
+}
+
+.hour-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(6rem, 1fr));
+  gap: 0.5rem;
+  margin: 1rem 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hour-list li {
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+}
+
+.calendar-entries {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.calendar-entries > li {
+  margin: 0 0 0.75rem;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  background: var(--faint);
+}
+
+.calendar-entries > li > a {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: 0.5rem 1.25rem;
+  padding: 0.75rem 1rem;
+  color: inherit;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+.calendar-entries .subject {
+  font-weight: 600;
+}

@@ -7,6 +7,11 @@ import { ChatView } from '../views/chat.ts';
 import { ChatLog } from '../views/chat-log.ts';
 import { CalendarView } from '../views/calendar.ts';
 import { parseCalendarPath } from '../util/calendar.ts';
+import { RecordView } from '../views/record.ts';
+import { createShell, type ShellSlots } from '../shell/shell.ts';
+import { LeftPanel } from '../shell/left.ts';
+import { TelemetryPanel } from '../shell/telemetry.ts';
+import type { Panel } from '../shell/panel.ts';
 
 export interface View {
   mount(container: HTMLElement): void;
@@ -21,10 +26,22 @@ export class Router {
   private chatLog = new ChatLog();
   private clickHandler: (event: MouseEvent) => void;
   private popstateHandler: () => void;
+  private slots: ShellSlots;
+  private leftPanel: Panel;
+  private rightPanel: Panel;
+  private unsubscribeLog: () => void;
 
   constructor(adapter: SeamAdapter, container: HTMLElement) {
     this.adapter = adapter;
     this.container = container;
+    this.slots = createShell(container);
+    const left = new LeftPanel(adapter);
+    this.leftPanel = left;
+    left.mount(this.slots.left);
+    this.unsubscribeLog = this.chatLog.subscribe(() => this.leftPanel.refresh());
+    // Right column: Curator + ELLE telemetry. It subscribes to the log itself.
+    this.rightPanel = new TelemetryPanel(adapter, this.chatLog);
+    this.rightPanel.mount(this.slots.right);
 
     this.clickHandler = (event: MouseEvent) => {
       // Only plain left clicks navigate in-app; modified and non-left clicks
@@ -60,6 +77,11 @@ export class Router {
     this.resolve(path);
   }
 
+  /** The one chat transcript; the parent wires the right column to it. */
+  getChatLog(): ChatLog {
+    return this.chatLog;
+  }
+
   destroy(): void {
     document.removeEventListener('click', this.clickHandler);
     window.removeEventListener('popstate', this.popstateHandler);
@@ -67,6 +89,10 @@ export class Router {
       this.currentView.unmount();
       this.currentView = null;
     }
+    this.unsubscribeLog();
+    this.leftPanel.unmount();
+    this.rightPanel.unmount();
+    this.container.innerHTML = '';
   }
 
   private resolve(path: string): void {
@@ -75,7 +101,8 @@ export class Router {
       this.currentView.unmount();
     }
     this.currentView = view;
-    this.currentView.mount(this.container);
+    this.currentView.mount(this.slots.center);
+    this.leftPanel.refresh();
   }
 
   private match(rawPath: string): View {
@@ -98,6 +125,15 @@ export class Router {
       const target = parseCalendarPath(path);
       if (target === null) return new NotFoundView();
       return new CalendarView(this.adapter, target === 'default' ? null : target);
+    }
+
+    const recordMatch = path.match(/^\/record\/([^/]+)$/);
+    if (recordMatch) {
+      try {
+        return new RecordView(this.adapter, decodeURIComponent(recordMatch[1]!));
+      } catch {
+        return new NotFoundView();
+      }
     }
 
     const entryMatch = path.match(

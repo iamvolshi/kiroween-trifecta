@@ -1,0 +1,64 @@
+/* Chat view */
+.chat-view .mock-note {
+  font-weight: 600;
+}
+
+.chat-view .step-progress {
+  margin: 0.5rem 0;
+}
+
+.chat-turn {
+  border: 1px solid #888;
+  border-radius: 0.25rem;
+  padding: 0.5rem 0.75rem;
+  margin: 0.75rem 0;
+}
+
+.chat-turn.not-knowing {
+  border-style: dashed;
+}
+
+.chat-turn .chat-user {
+  font-weight: 600;
+  margin: 0 0 0.25rem;
+}
+
+.chat-turn .chat-arche {
+  margin: 0 0 0.5rem;
+}
+
+.engines .engine {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.15rem 0;
+}
+
+.engines .engine-label {
+  min-width: 4.5rem;
+  font-weight: 700;
+}
+
+.engines .engine-action {
+  margin-right: 0.5rem;
+  font-style: italic;
+}
+
+.engines .provenance {
+  margin: 0.25rem 0 0;
+  padding-left: 1.25rem;
+}
+
+.engines .provenance span {
+  margin-right: 0.5rem;
+}
+
+.chat-form {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin-top: 1rem;
+}
+
+.chat-form input {
+  flex: 1;
+}

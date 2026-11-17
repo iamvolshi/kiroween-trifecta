@@ -1,0 +1,71 @@
+/* Data-source label (nav) */
+.main-nav {
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.mock-badge {
+  margin-left: auto;
+  padding: 0.2rem 0.6rem;
+  border: 2px solid currentColor;
+  border-radius: 4px;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+/* Telemetry */
+.telemetry { font-size: 0.9rem; }
+.telemetry h2, .telemetry h3 { margin: 0.6rem 0 0.3rem; }
+.telemetry ul { list-style: none; margin: 0; padding: 0; }
+.subject-folder { border: 1px solid var(--rule); border-radius: 4px; padding: 0.5rem; margin-bottom: 0.5rem; }
+.folder-value { font-weight: 700; font-size: 1.2rem; margin-right: 0.5rem; }
+.folder-history, .katie-from, .katie-evidence { color: var(--muted); }
+.katie-item span { display: block; }
+.lesson { padding: 0.25rem 0; }
+.lesson-status { font-weight: 700; margin-right: 0.4rem; }
+.lesson-candidate { color: var(--muted); font-style: italic; }
+.lesson-promoted { color: CanvasText; }
+
+/* Shell */
+.shell {
+  display: grid;
+  grid-template-columns: minmax(12rem, 16rem) minmax(0, 1fr) minmax(14rem, 20rem);
+  gap: 1rem;
+  align-items: start;
+}
+.shell-left,
+.shell-right {
+  min-width: 0;
+  text-align: left;
+}
+.shell-center {
+  min-width: 0;
+}
+.shell-left .main-nav {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+}
+.shell-left a[aria-current='page'] {
+  font-weight: bold;
+  text-decoration: underline;
+}
+.shell-left ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.shell-left .folder-count {
+  opacity: 0.7;
+}
+.record-view .record-entries a {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+@media (max-width: 800px) {
+  .shell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

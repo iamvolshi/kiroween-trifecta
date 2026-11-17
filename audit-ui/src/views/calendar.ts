@@ -12,7 +12,6 @@ import {
   monthGrid,
 } from '../util/calendar.ts';
 import { parseUtcInput } from '../util/moment.ts';
-import { createNav } from './nav.ts';
 import { renderEntryList } from './calendar-entries.ts';
 
 const p2 = (n: number): string => String(n).padStart(2, '0');
@@ -53,7 +52,6 @@ export class CalendarView implements View {
   mount(container: HTMLElement): void {
     this.container = container;
     container.innerHTML = '';
-    container.appendChild(createNav());
     container.appendChild(el('h1', '', 'Calendar'));
     const body = el('div', 'view-body calendar-view');
     this.body = body;

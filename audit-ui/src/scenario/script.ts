@@ -72,6 +72,7 @@ const STEPS: ScenarioStep[] = [
       ],
     },
     elle: null,
+    promotes: null,
     entries: [
       entry('scn-s1', 4, 'order-1042.delivery_date', 'confirmed', 6, '09:12', '14:30',
         '2026-11-18', 'Order system gives the delivery date.', 'mock:genesis'),
@@ -95,6 +96,7 @@ const STEPS: ScenarioStep[] = [
       ],
     },
     elle: null,
+    promotes: null,
     entries: [
       entry('scn-s2', 5, 'parcel-77.status', 'confirmed', 7, '10:05', '15:10',
         'in transit', 'Carrier feed shows the parcel moving.', 'mock:genesis'),
@@ -118,6 +120,7 @@ const STEPS: ScenarioStep[] = [
       ],
     },
     elle: null,
+    promotes: null,
     entries: [
       entry('scn-s3', 4, 'order-1042.delivery_date', 'revised', 7, '14:30', null,
         '2026-11-19', 'Carrier notice moved the delivery date.', 'mock:hash-s1'),
@@ -134,11 +137,50 @@ const STEPS: ScenarioStep[] = [
       event_type: 'trifecta.chat',
       detail: 'The first delivery date was replaced after a carrier delay notice. (mock)',
       rule: 'Check the carrier feed before promising a delivery date.',
+      subject: 'order-1042.delivery_date',
+      status: 'candidate',
     },
+    promotes: null,
     entries: [
       entry('scn-s4', 5, 'parcel-77.status', 'revised', 8, '15:10', null,
         'held at depot', 'Carrier feed shows the parcel held at the depot.', 'mock:hash-s2'),
     ],
+  },
+  {
+    step: 5,
+    prompt: 'Good. Remember that lesson.',
+    keywords: ['remember', 'keep'],
+    reply: 'I will use it from now on. (mock)',
+    erie: null,
+    elle: null,
+    promotes: 'mock:lesson-1',
+    entries: [],
+  },
+  {
+    step: 6,
+    prompt: 'When is the new delivery date?',
+    keywords: ['when', 'date', 'delivery', 'new'],
+    reply: 'The new delivery date is 2026-11-19. I checked the carrier feed first, as I learned. (mock)',
+    erie: {
+      question: 'When is the new delivery date?',
+      state: 'found',
+      text: 'The record has 2026-11-19 (revised, authority 7); the carrier feed shows parcel-77 held at the depot. (mock)',
+      provenance: [
+        {
+          source: 'mock:katie-record',
+          content: 'scn-s3',
+          excerpt: 'order-1042.delivery_date: 2026-11-19, revised, authority 7 (mock)',
+        },
+        {
+          source: 'mock:carrier-feed',
+          content: 'parcel-77',
+          excerpt: 'status: held at depot (mock)',
+        },
+      ],
+    },
+    elle: null,
+    promotes: null,
+    entries: [],
   },
 ];
 
@@ -156,5 +198,9 @@ export const SCENARIO: Scenario = deepFreeze({
   account_id: ACCOUNT,
   steps: STEPS,
   kid_labels: { 4: 'order-1042 (mock)', 5: 'parcel-77 (mock)' },
+  subject_keywords: {
+    'order-1042.delivery_date': ['delivery', 'date', 'arrive', 'arriving', 'when'],
+    'parcel-77.status': ['parcel', 'where', 'tracking', 'status', 'depot'],
+  },
   not_knowing_reply: NOT_KNOWING,
 });

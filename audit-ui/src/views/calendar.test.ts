@@ -54,7 +54,7 @@ describe('CalendarView', () => {
     expect(dotted[0].querySelector('.day-dot')?.getAttribute('title')).toBe('3 entries');
     expect(root.querySelector('.cal-prev')?.getAttribute('href')).toBe('/calendar/2026-10');
     expect(root.querySelector('.cal-next')?.getAttribute('href')).toBe('/calendar/2026-12');
-    expect(root.querySelector('nav.main-nav')).not.toBeNull();
+    expect(root.querySelector('nav.main-nav')).toBeNull(); // the shell owns the nav
   });
 
   it('day: empty day shows empty state, no dot in month', async () => {
@@ -65,7 +65,7 @@ describe('CalendarView', () => {
     const month = await mount(fakeAdapter(E), { level: 'month', year: 2026, month: 11 });
     const fifth = [...month.root.querySelectorAll('td')].find((td) => td.textContent?.trim() === '5');
     expect(fifth?.querySelector('.day-dot')).toBeNull();
-    expect(day.root.querySelector('nav.main-nav')).not.toBeNull();
+    expect(day.root.querySelector('nav.main-nav')).toBeNull();
   });
 
   it('day: hour links carry counts', async () => {
@@ -123,7 +123,7 @@ describe('CalendarView', () => {
     expect(root.querySelector('.calendar-title')?.textContent).toMatch(String(now.getUTCFullYear()));
   });
 
-  it('error state keeps nav at every level', async () => {
+  it('error state shows at every level', async () => {
     for (const t of [
       null,
       { level: 'month' as const, year: 2026, month: 11 },
@@ -132,7 +132,7 @@ describe('CalendarView', () => {
     ]) {
       const { root } = await mount(errorAdapter(), t);
       expect(root.querySelector('.error-state')?.textContent).toBe('boom');
-      expect(root.querySelector('nav.main-nav')).not.toBeNull();
+      expect(root.querySelector('nav.main-nav')).toBeNull(); // the shell owns the nav
     }
   });
 

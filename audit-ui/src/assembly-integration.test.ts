@@ -139,7 +139,7 @@ describe('task 5: scenario entries flow through the one seam', () => {
   });
 });
 
-describe('task 6: nav on every view links all four destinations', () => {
+describe('task 6: the shell nav links all four destinations on every route', () => {
   const destinations = ['/actions', '/time-travel', '/chat', '/calendar'];
   const paths = [
     '/actions',
@@ -150,12 +150,15 @@ describe('task 6: nav on every view links all four destinations', () => {
     '/calendar/2026-11-16',
     '/calendar/2026-11-16/14',
     '/entry/1/temperature/entry-a1',
+    '/record/order-1042',
     '/no-such-page',
   ];
   for (const path of paths) {
-    it(`${path} renders all four nav links and the mock label`, async () => {
+    it(`${path} renders one nav with all four links and the mock label`, async () => {
       start(path);
       await settle();
+      expect(container.querySelectorAll('nav')).toHaveLength(1);
+      expect(container.querySelector('.shell-left nav')).not.toBeNull();
       const hrefs = Array.from(container.querySelectorAll('nav a')).map((a) =>
         a.getAttribute('href'),
       );
@@ -176,6 +179,6 @@ describe('task 6: nav on every view links all four destinations', () => {
     router!.navigate('/actions');
     router!.navigate('/chat');
     await settle();
-    expect(container.querySelector('.step-progress')?.textContent).toBe('Step 1 of 4');
+    expect(container.querySelector('.step-progress')?.textContent).toBe('Step 1 of 6');
   });
 });

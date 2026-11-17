@@ -8,12 +8,14 @@ import type {
   ChatTurn,
   Entry,
   Lesson,
+  LessonsInPrompt,
   RecordResult,
   UpdateRequest,
   UpdateResult,
 } from './seam';
 import type { ScenarioCursor, ScenarioStep } from '../scenario/types.ts';
-import { matchesStep } from '../scenario/match.ts';
+import { matchesStep, seeksSubjects } from '../scenario/match.ts';
+import { currentLesson, currentLessons, lessonsInPrompt } from '../scenario/lessons.ts';
 import { compareKStart } from '../util/interval';
 
 export interface AssemblyMethods {
@@ -39,6 +41,14 @@ function seated(e: Entry): UpdateResult {
   return { kid: e.kid, subject: e.subject, entry_id: e.id, seated: true };
 }
 
+const NO_LESSONS: LessonsInPrompt = { subjects: [], injected: [], held: [] };
+
+// Read BEFORE the turn plays: lessons as they stood when the message arrived.
+function injectionFor(cursor: ScenarioCursor | null, message: string): LessonsInPrompt {
+  if (!cursor) return NO_LESSONS;
+  return lessonsInPrompt(cursor.playedSteps(), seeksSubjects(message, cursor.scenario));
+}
+
 function play(cursor: ScenarioCursor): ScenarioStep | null {
   return cursor.advance();
 }
@@ -62,6 +72,7 @@ export function createAssemblyMethods(
     async chat(message: string): Promise<AdapterResult<ChatTurn>> {
       const total = cursor ? cursor.total() : 0;
       const next = cursor ? cursor.next() : null;
+      const lessons_in_prompt = injectionFor(cursor, message);
       if (!cursor || !next || !matchesStep(message, next)) {
         return {
           ok: true,
@@ -74,12 +85,16 @@ export function createAssemblyMethods(
               arche: { reply: notKnowing(cursor) },
               erie: null,
               elle: null,
+              elle_promoted: null,
+              lessons_in_prompt,
               katie: [],
             },
           },
         };
       }
       const step = play(cursor) as ScenarioStep;
+      const elle_promoted =
+        step.promotes !== null ? currentLesson(cursor.playedSteps(), step.promotes) : null;
       return {
         ok: true,
         data: {
@@ -91,6 +106,8 @@ export function createAssemblyMethods(
             arche: { reply: step.reply },
             erie: step.erie ? { ...step.erie, question: message } : null,
             elle: step.elle,
+            elle_promoted,
+            lessons_in_prompt,
             katie: step.entries.map(seated),
           },
         },
@@ -121,9 +138,7 @@ export function createAssemblyMethods(
     },
 
     async fetchLessons(): Promise<AdapterResult<Lesson[]>> {
-      const lessons = cursor
-        ? cursor.playedSteps().flatMap(s => (s.elle ? [s.elle] : []))
-        : [];
+      const lessons = cursor ? currentLessons(cursor.playedSteps()) : [];
       return { ok: true, data: lessons };
     },
 

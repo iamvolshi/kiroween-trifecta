@@ -40,12 +40,24 @@ export interface AskResult {
   provenance: Provenance[];
 }
 
-/** An ELLE lesson (mirrors one item of GET /lessons). */
+/**
+ * An ELLE lesson (mirrors one item of GET /lessons).
+ * `subject` and `status` are a MOCK extension decided 2026-11-16 (GRAY-2):
+ * the trifecta /lessons shape does not carry them today.
+ */
 export interface Lesson {
   event_id: string;
   event_type: string;
   detail: string;
   rule: string | null;
+  /** The subject this lesson is about, named by the script (mock). null = no subject. */
+  subject: string | null;
+  /**
+   * 'candidate' = recorded but not learned yet: shown grey, never injected.
+   * 'promoted'  = learned: injected into any prompt that seeks its subject.
+   * Promotion is a new event; the recorded lesson is never edited.
+   */
+  status: 'candidate' | 'promoted';
 }
 
 /** A KATIE write request (mirrors POST /update). Authority 0..9; the machine ceiling is 8. */
@@ -71,11 +83,23 @@ export interface RecordResult {
   fields: Record<string, Entry[]>;
 }
 
+/** Lessons on the subjects one prompt seeks, read BEFORE the turn plays. */
+export interface LessonsInPrompt {
+  /** Subjects this prompt seeks (mock: matched by the script's subject keywords). */
+  subjects: string[];
+  /** Promoted lessons on those subjects: injected into this prompt. */
+  injected: Lesson[];
+  /** Candidate lessons on those subjects: held back, not learned yet. */
+  held: Lesson[];
+}
+
 /** What each engine did on one chat turn. null means the engine did not act. */
 export interface EngineActivity {
   arche: { reply: string };          // ARCHE talked (always acts)
   erie: AskResult | null;            // ERIE found
-  elle: Lesson | null;               // ELLE learned
+  elle: Lesson | null;               // ELLE recorded a lesson (as a candidate)
+  elle_promoted: Lesson | null;      // ELLE promoted a lesson on this turn (now learned)
+  lessons_in_prompt: LessonsInPrompt; // ELLE: what was injected into this prompt
   katie: UpdateResult[];             // KATIE recorded (empty = did not act)
 }
 

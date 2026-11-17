@@ -1,14 +1,14 @@
 import { describe, it, expect } from 'vitest';
 import { SCENARIO } from './script.ts';
 import { createScenarioCursor } from './stepper.ts';
-import { matchesStep } from './match.ts';
+import { matchesStep, seeksSubjects } from './match.ts';
 import { parseMs } from '../util/interval';
 
 const allEntries = SCENARIO.steps.flatMap(s => s.entries);
 
 describe('scenario script', () => {
-  it('has 4 steps with ids scn-s1..scn-s4 and at least 3 entries, 2 KIDs', () => {
-    expect(SCENARIO.steps).toHaveLength(4);
+  it('has 6 steps; entries scn-s1..scn-s4 and 2 KIDs', () => {
+    expect(SCENARIO.steps).toHaveLength(6);
     expect(allEntries.map(e => e.id)).toEqual(['scn-s1', 'scn-s2', 'scn-s3', 'scn-s4']);
     expect(new Set(allEntries.map(e => e.kid)).size).toBe(2);
   });
@@ -54,10 +54,11 @@ describe('scenario cursor', () => {
     const c = createScenarioCursor(SCENARIO);
     expect(c.position()).toBe(0);
     expect(c.visibleEntries()).toEqual([]);
-    for (let n = 1; n <= 4; n++) {
+    const perStep = SCENARIO.steps.map(s => s.entries.length);
+    for (let n = 1; n <= SCENARIO.steps.length; n++) {
       c.advance();
       expect(c.position()).toBe(n);
-      expect(c.visibleEntries().map(e => e.id)).toEqual(allEntries.slice(0, n).map(e => e.id));
+      expect(c.visibleEntries().map(e => e.id)).toEqual(allEntries.slice(0, perStep.slice(0, n).reduce((a, b) => a + b, 0)).map(e => e.id));
     }
   });
 
@@ -77,7 +78,7 @@ describe('scenario cursor', () => {
     expect(c.visibleEntries()).toEqual(allEntries);
     expect(c.next()).toBeNull();
     expect(c.advance()).toBeNull();
-    expect(c.playedSteps()).toHaveLength(4);
+    expect(c.playedSteps()).toHaveLength(SCENARIO.steps.length);
   });
 });
 
@@ -95,5 +96,44 @@ describe('matchesStep', () => {
   });
   it('every suggested prompt matches its own step', () => {
     for (const s of SCENARIO.steps) expect(matchesStep(s.prompt, s)).toBe(true);
+  });
+});
+
+describe('shell additions (mock)', () => {
+  it('step 4 lesson has a subject and is a candidate; step 5 promotes it', () => {
+    const lesson = SCENARIO.steps[3].elle;
+    expect(lesson?.subject).toBe('order-1042.delivery_date');
+    expect(lesson?.status).toBe('candidate');
+    expect(SCENARIO.steps[4].promotes).toBe('mock:lesson-1');
+    expect(SCENARIO.steps.filter(s => s.promotes !== null)).toHaveLength(1);
+  });
+
+  it('steps 5 and 6 add no entries; the record is still 4 entries', () => {
+    expect(SCENARIO.steps[4].entries).toEqual([]);
+    expect(SCENARIO.steps[5].entries).toEqual([]);
+    expect(allEntries).toHaveLength(4);
+  });
+
+  it('every suggested prompt matches only its own keywords in order', () => {
+    expect(SCENARIO.steps[4].prompt).toBe('Good. Remember that lesson.');
+    expect(SCENARIO.steps[5].prompt).toBe('When is the new delivery date?');
+    expect(Object.isFrozen(SCENARIO.subject_keywords)).toBe(true);
+  });
+});
+
+describe('seeksSubjects', () => {
+  const D = 'order-1042.delivery_date';
+  const P = 'parcel-77.status';
+  it('matches whole words, case-insensitive, punctuation stripped', () => {
+    expect(seeksSubjects('What is the DELIVERY date?', SCENARIO)).toEqual([D]);
+    expect(seeksSubjects('where, exactly... is the parcel!', SCENARIO)).toEqual([P]);
+  });
+  it('returns subjects in script order and can match both', () => {
+    expect(seeksSubjects('parcel arriving when', SCENARIO)).toEqual([D, P]);
+  });
+  it('does not match substrings, blanks or unrelated words', () => {
+    expect(seeksSubjects('arrived', SCENARIO)).toEqual([]);
+    expect(seeksSubjects('  ', SCENARIO)).toEqual([]);
+    expect(seeksSubjects('hello', SCENARIO)).toEqual([]);
   });
 });

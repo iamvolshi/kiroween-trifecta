@@ -3,7 +3,6 @@ import type { SeamAdapter, KidMap } from '../adapter/seam.ts';
 import { renderKid } from '../util/kid-display.ts';
 import { formatLabel } from '../util/format.ts';
 import { compareKStart } from '../util/interval.ts';
-import { createNav } from './nav.ts';
 
 export class ActionListView implements View {
   private container: HTMLElement | null = null;
@@ -17,7 +16,6 @@ export class ActionListView implements View {
   mount(container: HTMLElement): void {
     this.container = container;
     container.innerHTML = '';
-    container.appendChild(createNav());
     const h1 = document.createElement('h1');
     h1.textContent = 'Action List';
     container.appendChild(h1);

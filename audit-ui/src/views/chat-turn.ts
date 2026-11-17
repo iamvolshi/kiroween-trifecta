@@ -1,4 +1,4 @@
-import type { ChatTurn } from '../adapter/seam.ts';
+import type { ChatTurn, Lesson } from '../adapter/seam.ts';
 
 const NOT_ACTED = 'did not act this turn';
 
@@ -52,13 +52,23 @@ export function renderChatTurn(turn: ChatTurn): HTMLElement {
   engines.appendChild(erie.row);
 
   const elle = engineRow('engine-elle', 'ELLE');
-  const lesson = turn.engines.elle;
-  if (lesson) {
-    elle.body.appendChild(el('span', 'engine-action', 'learned'));
-    elle.body.appendChild(el('span', 'engine-text', lesson.rule ?? lesson.detail));
-  } else {
-    elle.body.textContent = NOT_ACTED;
-  }
+  const recorded = turn.engines.elle;
+  const promoted = turn.engines.elle_promoted;
+  const injected = turn.engines.lessons_in_prompt.injected;
+  const held = turn.engines.lessons_in_prompt.held;
+  let acted = false;
+  const part = (cls: string, action: string, rules: Lesson[]): void => {
+    acted = true;
+    const wrap = el('div', `elle-part ${cls}`);
+    wrap.appendChild(el('span', 'engine-action', action));
+    for (const l of rules) wrap.appendChild(el('span', 'engine-text', l.rule ?? l.detail));
+    elle.body.appendChild(wrap);
+  };
+  if (recorded) part('lesson-candidate', 'recorded a lesson (not learned yet)', [recorded]);
+  if (promoted) part('lesson-promoted', 'promoted a lesson (learned)', [promoted]);
+  if (injected.length > 0) part('lesson-injected', 'injected into this prompt:', injected);
+  if (held.length > 0) part('lesson-candidate', 'held back (not learned yet):', held);
+  if (!acted) elle.body.textContent = NOT_ACTED;
   engines.appendChild(elle.row);
 
   const katie = engineRow('engine-katie', 'KATIE');
