@@ -316,3 +316,89 @@ a.record-card:focus-visible {
 .card-details[hidden] {
   display: none;
 }
+
+/* ---- Action List filters --------------------------------------------- */
+
+.action-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s2) var(--s4);
+  margin: 0 0 var(--s2);
+  padding: var(--s2) var(--s3);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+}
+
+.filter-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s1);
+}
+
+.filter-label {
+  margin-right: var(--s1);
+  font-family: var(--mono);
+  font-size: var(--fs-caption);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+.filter-chip,
+.filter-clear {
+  padding: 2px var(--s2);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: var(--fs-caption);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  line-height: 1.6;
+}
+
+.filter-chip:hover,
+.filter-clear:hover {
+  border-color: var(--accent);
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.filter-chip[aria-pressed='true'] {
+  border-color: var(--accent);
+  background: var(--accent-bg);
+  color: var(--text);
+}
+
+.filter-chip[aria-pressed='true']::before {
+  content: '\2713 ';
+  color: var(--accent);
+}
+
+.filter-clear {
+  margin-left: auto;
+}
+
+.filter-count {
+  margin: 0 0 var(--s2);
+  font-family: var(--mono);
+  font-size: var(--fs-meta);
+  color: var(--muted);
+}
+
+.action-list > li[hidden],
+.action-list[hidden],
+.filter-empty[hidden] {
+  display: none;
+}
+
+/* The entries are known, only filtered out: caption it as such. */
+.filter-empty::before {
+  content: 'No match';
+}
