@@ -83,8 +83,24 @@ drops to 12. Below 1300px the hour tables wrap headers and shrink cells.
   record view): chips (authority + state, state coloured by meaning), the
   headline (subject: state), one mono meta line (KID . subject . live
   from), an inset with WHY and EVIDENCE, a foot with times and, on linked
-  cards, "Inspect". Each view keeps exactly the fields it showed before.
-  The hour view keeps its tables from the last round.
+  cards, "Inspect". The hour view keeps its tables from the last round.
+- **Decision: the skeleton fills each card from its own entry.** The order
+  (item 6) asks every card to carry the same parts: authority + state chips,
+  a headline, the meta line, WHY and EVIDENCE, times. So cards now show
+  fields of the SAME entry that some views did not print before. Nothing is
+  added from outside the entry, no entry is added or dropped, and list order
+  (newest first / oldest first / k_start) is unchanged. Per view:
+
+  | View | Fields before | Added by the skeleton |
+  |---|---|---|
+  | Action List | kid, subject: state, authority, k_start, t_time, e_time, k_time | state chip, subject in meta, reason (WHY), evidence |
+  | Time Travel pool | kid, subject, state, authority, evidence, reason | headline (subject: state), k_start (live from), k_time (live until) |
+  | Entry Detail chain | state, authority, k_start, reason | headline, evidence, k_time |
+  | Record view | kid, state, authority, evidence, k_start, k_time | headline (subject: state) |
+
+  Field ORDER inside a card follows the skeleton (chips, headline, meta,
+  inset, foot) rather than the old flat order; that is the point of one
+  skeleton. Every class hook the views and tests use is kept.
 - **Not-knowing**: empty states are dashed inset boxes captioned "NOT
   KNOWN"; prompts are captioned "WAITING FOR INPUT"; errors "ERROR". The
   sentences are unchanged.

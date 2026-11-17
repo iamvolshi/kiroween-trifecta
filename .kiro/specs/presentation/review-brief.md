@@ -26,10 +26,11 @@ played in-page first; 1440 px, plus 1000 px for four views) are in
 5. Presentation only: CSS plus presentational markup hooks. Inspect each
    `.ts` diff: `views/record-card.ts` (shared card markup), `views/intro.ts`
    (question + how-to line per view), `shell/shell.ts` (seam chip, view
-   slot), and the views' calls into them. Confirm each view shows the SAME
-   entries and the SAME fields as before (no field added or dropped), the
-   same order, same hrefs, and no change to adapter / scenario / router /
-   seam / data flow.
+   slot), and the views' calls into them. The card skeleton fills each card
+   from its own entry (see the "Decision" table in `notes.md`): check that
+   every value shown comes from that same entry, that no entry is added or
+   dropped, that list order and hrefs are unchanged, and that adapter /
+   scenario / router / seam / data flow are untouched.
 6. The brief's language: deep blue-black planes, 1px lines, near-sharp
    corners; three type roles (display / body / mono, mono caps labels);
    colour by meaning (cyan signal, amber warning, emerald good); header

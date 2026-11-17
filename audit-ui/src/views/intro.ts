@@ -26,7 +26,7 @@ export const INTROS = {
   record: {
     view: 'Record',
     question: 'What does the record hold for this account?',
-    how: 'Every entry per subject, oldest first. Nothing here is ever edited or removed.',
+    how: 'Every entry per subject, oldest first.',
   },
   entry: {
     view: 'Entry Detail',
