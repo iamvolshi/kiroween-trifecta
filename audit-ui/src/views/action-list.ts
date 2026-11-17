@@ -1,6 +1,6 @@
 import type { View } from '../router/router.ts';
 import type { SeamAdapter, KidMap } from '../adapter/seam.ts';
-import { fillRecordCard } from './record-card.ts';
+import { fillCollapsibleCard } from './record-card.ts';
 import { createIntro } from './intro.ts';
 import { compareKStart } from '../util/interval.ts';
 
@@ -61,18 +61,12 @@ export class ActionListView implements View {
     const ul = document.createElement('ul');
     ul.className = 'action-list';
 
-    for (const entry of sorted) {
+    for (const [i, entry] of sorted.entries()) {
       const li = document.createElement('li');
-
-      const a = document.createElement('a');
-      a.href = `/entry/${entry.kid}/${encodeURIComponent(entry.subject)}/${encodeURIComponent(entry.id)}`;
-      fillRecordCard(a, entry, kidMap, {
-        fields: ['authority', 'state', 'kid', 'subject', 'k-start', 'reason', 'evidence', 't-time', 'e-time', 'k-time'],
-        headlineClass: 'label',
-        link: true,
+      fillCollapsibleCard(li, entry, kidMap, {
+        href: `/entry/${entry.kid}/${encodeURIComponent(entry.subject)}/${encodeURIComponent(entry.id)}`,
+        detailsId: `action-details-${i}`,
       });
-
-      li.appendChild(a);
       ul.appendChild(li);
     }
 

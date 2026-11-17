@@ -201,3 +201,118 @@ a.record-card:focus-visible {
 .card-action::after {
   content: ' \2192';
 }
+
+/* ---- Collapsible card (Action List only) ----------------------------- */
+
+.action-list > li {
+  margin: 0 0 2px;
+}
+
+.record-card.card-collapsible {
+  gap: 0;
+  padding: 0;
+}
+
+.record-card.card-collapsible:hover,
+.record-card.card-collapsible.is-open {
+  border-color: var(--line-strong);
+}
+
+/* Title row: [toggle: KID | headline | authority] [Inspect]. */
+.card-row {
+  display: flex;
+  align-items: stretch;
+  min-width: 0;
+}
+
+.card-toggle {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 11rem) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--s3);
+  padding: var(--s1) var(--s3);
+  border: 0;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  letter-spacing: normal;
+  text-align: left;
+  text-transform: none;
+  cursor: pointer;
+}
+
+.card-toggle:hover {
+  background: var(--surface-2);
+}
+
+.card-toggle:focus-visible {
+  outline-offset: -2px;
+}
+
+/* Open/closed cue: a plain chevron, drawn in CSS from aria-expanded. */
+.card-toggle .kid::before {
+  content: '\25B8';
+  display: inline-block;
+  width: 1em;
+  margin-right: var(--s1);
+  font-size: var(--fs-dense);
+  color: var(--muted);
+}
+
+.card-toggle[aria-expanded='true'] .kid::before {
+  content: '\25BE';
+  color: var(--accent);
+}
+
+.card-toggle .kid {
+  font-family: var(--mono);
+  font-size: var(--fs-meta);
+  color: var(--muted);
+  /* Never cut the highlight: a long KID label wraps. */
+  overflow-wrap: break-word;
+}
+
+.card-toggle .label {
+  font-size: var(--fs-body);
+  line-height: 1.3;
+  /* Never cut the highlight: on a narrow column the headline wraps. */
+  overflow-wrap: break-word;
+}
+
+.card-row .card-action {
+  display: flex;
+  align-items: center;
+  margin: 0;
+  padding: 0 var(--s3);
+  border-left: 1px solid var(--line);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.card-row .card-action:hover {
+  background: var(--surface-2);
+}
+
+.card-row .card-action:focus-visible {
+  outline-offset: -2px;
+}
+
+.card-toggle .authority {
+  line-height: 1.4;
+}
+
+/* Details: the rest of the skeleton, under the title row. */
+.card-details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+  padding: var(--s2) var(--s3) var(--s3);
+  border-top: 1px solid var(--line);
+}
+
+.card-details[hidden] {
+  display: none;
+}

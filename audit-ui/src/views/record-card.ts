@@ -106,3 +106,71 @@ export function fillRecordCard(
   if (opts.link) foot.push(span('card-action', 'Inspect'));
   if (times.length > 0 || opts.link) host.appendChild(div('card-foot', foot));
 }
+
+export interface CollapsibleOptions {
+  /** Entry Detail href for the separate "Inspect" link. */
+  href: string;
+  /** Unique id for the details region (aria-controls target). */
+  detailsId: string;
+}
+
+/**
+ * Collapsible variant of the card (Action List only). Two separate
+ * controls, never nested:
+ *   - the title row is a <button> toggle (aria-expanded, aria-controls),
+ *     carrying the highlights: KID, headline (subject: state), authority;
+ *   - "Inspect" is a real <a> to Entry Detail, always visible.
+ * Underneath, the details region holds the rest of the skeleton: the
+ * state chip, the meta line (subject . live from), the WHY/EVIDENCE inset,
+ * and the times footer. It starts hidden; each card toggles on its own.
+ */
+export function fillCollapsibleCard(
+  host: HTMLElement,
+  entry: Entry,
+  kidMap: KidMap | null,
+  opts: CollapsibleOptions,
+): void {
+  const field = (f: CardField): HTMLSpanElement => span(f, value(entry, f, kidMap));
+
+  host.classList.add('record-card', 'card-collapsible');
+  host.dataset.state = entry.state;
+
+  const toggle = document.createElement('button');
+  toggle.type = 'button';
+  toggle.className = 'card-toggle';
+  toggle.setAttribute('aria-expanded', 'false');
+  toggle.setAttribute('aria-controls', opts.detailsId);
+  toggle.append(
+    field('kid'),
+    span('label', formatLabel(entry.subject, entry.state)),
+    field('authority'),
+  );
+
+  const inspect = document.createElement('a');
+  inspect.className = 'card-action';
+  inspect.setAttribute('href', opts.href);
+  inspect.textContent = 'Inspect';
+
+  host.appendChild(div('card-row', [toggle, inspect]));
+
+  const details = document.createElement('div');
+  details.className = 'card-details';
+  details.id = opts.detailsId;
+  details.setAttribute('role', 'region');
+  details.setAttribute('aria-label', `Details: ${formatLabel(entry.subject, entry.state)}`);
+  details.hidden = true;
+  details.append(
+    div('card-chips', [field('state')]),
+    div('card-meta', [field('subject'), field('k-start')]),
+    div('card-inset', [field('reason'), field('evidence')]),
+    div('card-foot', [div('card-times', [field('t-time'), field('e-time'), field('k-time')])]),
+  );
+  host.appendChild(details);
+
+  toggle.addEventListener('click', () => {
+    const open = toggle.getAttribute('aria-expanded') === 'true';
+    toggle.setAttribute('aria-expanded', String(!open));
+    details.hidden = open;
+    host.classList.toggle('is-open', !open);
+  });
+}
