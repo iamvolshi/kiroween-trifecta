@@ -17,7 +17,7 @@ loop through a connector.
 | ELLE | Records lessons, holds them back until learned, promotes them, and reads learned ones into later prompts. One ELLE serves every persona. | Bot loop |
 | KATIE | Records each fact as an append-only entry in the record. | Bot loop |
 | KID | The number that names each thing in the record. | Bot loop (the record) |
-| TEMPE | Named in the assembly by Darren. This page records no claim about it beyond its place here. | Bot loop |
+| TEMPE | Temporal data store. | Bot loop |
 | Connector | Lets the app talk to the bot loop over plain JSON. Built separately, to the contract below. | Outside this repo |
 | Audit UI | Shows the conversation, the engines' work and the record. Sends names, never voices or prompts. | This repo |
 
