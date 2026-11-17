@@ -88,12 +88,11 @@ describe('live adapter against the connector contract', () => {
     expect(await down.chat('x', { persona: 'Elara' })).toEqual({ ok: false, error: 'Connector unreachable: refused' });
   });
 
-  it('reads outside the contract say so instead of guessing an endpoint', async () => {
+  it('update is outside the contract and says so instead of guessing an endpoint', async () => {
     const s = stubFetch({});
     const a = createLiveAdapter('http://connector.test', s.fetch);
-    const r = await a.fetchAllEntries();
-    expect(r.ok).toBe(false);
-    expect(!r.ok && r.error).toMatch(/not in the connector contract/);
+    const r = await a.update({ kid: 1, subject: 's', value: 'v', reason: 'r', authority: 1 });
+    expect(r).toEqual({ ok: false, error: 'Live adapter: update is not in the connector contract yet' });
     expect(s.calls).toHaveLength(0);
   });
 });

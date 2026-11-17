@@ -4,8 +4,9 @@
 // docs/assembly-parts.md; the request/response shapes are the types in seam.ts.
 //
 // With no base URL, every call returns the typed "Live adapter not wired"
-// error, as before. Calls outside the connector contract (the record-wide
-// reads the viewer uses, and update) also return a typed error that says so.
+// error, as before. The record reads (entries, belief pool, chain, KID map)
+// are in the contract and their replies pass shape guards (live-guards.ts).
+// update is outside the contract and returns a typed error that says so.
 import type {
   AdapterResult,
   AskResult,
@@ -20,6 +21,7 @@ import type {
   UpdateResult,
 } from './seam';
 import { isChatTurn } from './seam';
+import { asEntries, asKidMap } from './live-guards';
 
 const NOT_WIRED = Object.freeze({ ok: false as const, error: 'Live adapter not wired' });
 
@@ -48,7 +50,17 @@ export function createLiveAdapter(baseUrl: string, fetchImpl?: FetchLike): SeamA
     if (base === '') return NOT_WIRED;
     try {
       const res = await doFetch(`${base}${path}`, init);
-      if (!res.ok) return { ok: false, error: `Connector answered HTTP ${res.status} for ${path}` };
+      if (!res.ok) {
+        // The connector's refusals carry an { "error": "..." } body; say it.
+        let words = '';
+        try {
+          const body = (await res.json()) as { error?: unknown } | null;
+          if (body && typeof body.error === 'string' && body.error !== '') words = `: ${body.error}`;
+        } catch {
+          // no JSON body: the status alone
+        }
+        return { ok: false, error: `Connector answered HTTP ${res.status} for ${path}${words}` };
+      }
       return { ok: true, data: (await res.json()) as T };
     } catch (e) {
       return { ok: false, error: `Connector unreachable: ${e instanceof Error ? e.message : String(e)}` };
@@ -64,18 +76,26 @@ export function createLiveAdapter(baseUrl: string, fetchImpl?: FetchLike): SeamA
   const outside = <T>(what: string): Promise<AdapterResult<T>> =>
     Promise.resolve(base === '' ? NOT_WIRED : notInContract(what));
 
+  async function entries(path: string): Promise<AdapterResult<Entry[]>> {
+    const r = await call<unknown>(path);
+    return r.ok ? asEntries(r.data, path.split('?')[0]!) : r;
+  }
+
   return {
-    fetchAllEntries: (): Promise<AdapterResult<Entry[]>> => outside('the whole-record read'),
+    fetchAllEntries: (): Promise<AdapterResult<Entry[]>> => entries('/entries'),
     fetchBeliefPool: (momentMs: number): Promise<AdapterResult<Entry[]>> => {
-      void momentMs;
-      return outside('the belief-pool read');
+      if (base === '') return Promise.resolve(NOT_WIRED);
+      if (!Number.isFinite(momentMs)) {
+        return Promise.resolve({ ok: false, error: 'Live adapter: the belief-pool moment is not a number' });
+      }
+      return entries(`/belief-pool?at=${Math.floor(momentMs)}`);
     },
-    fetchChain: (kid: number, subject: string): Promise<AdapterResult<Entry[]>> => {
-      void kid;
-      void subject;
-      return outside('the chain read');
+    fetchChain: (kid: number, subject: string): Promise<AdapterResult<Entry[]>> =>
+      entries(`/chain?kid=${encodeURIComponent(String(kid))}&subject=${encodeURIComponent(subject)}`),
+    fetchKidMap: async (): Promise<AdapterResult<KidMap>> => {
+      const r = await call<unknown>('/kidmap');
+      return r.ok ? asKidMap(r.data, '/kidmap') : r;
     },
-    fetchKidMap: (): Promise<AdapterResult<KidMap>> => outside('the KID map read'),
     update: (req: UpdateRequest): Promise<AdapterResult<UpdateResult>> => {
       void req;
       return outside('update');
