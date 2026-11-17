@@ -90,6 +90,12 @@ export function renderChatTurn(turn: ChatTurn): HTMLElement {
   }
   engines.appendChild(katie.row);
 
+  // Presentational hook: dim the engines that did not act (they stay listed).
+  for (const row of Array.from(engines.children)) {
+    const body = row.querySelector('.engine-body');
+    if (body && body.textContent === NOT_ACTED) row.classList.add('engine-idle');
+  }
+
   root.appendChild(engines);
   return root;
 }

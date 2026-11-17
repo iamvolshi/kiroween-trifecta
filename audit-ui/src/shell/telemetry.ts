@@ -29,7 +29,10 @@ function renderFolder(subject: string, entries: Entry[], lessons: Lesson[]): HTM
     value.appendChild(el('span', 'folder-value', '--'));
     value.appendChild(el('span', 'folder-history', 'no entry recorded'));
   } else {
-    value.appendChild(el('span', 'folder-value', String(mine[mine.length - 1].authority)));
+    const latest = mine[mine.length - 1].authority;
+    // Presentational hook: the CSS meter reads the same number, nothing else.
+    folder.dataset.authority = String(latest);
+    value.appendChild(el('span', 'folder-value', String(latest)));
     value.appendChild(
       el('span', 'folder-history', mine.map((e) => String(e.authority)).join(' -> ')),
     );

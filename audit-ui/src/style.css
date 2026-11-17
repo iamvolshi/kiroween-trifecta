@@ -1,17 +1,66 @@
 /*
- * Audit UI - readability styles.
- * System fonts and system colors only: no palette, typography, or branding.
- * Structure: layout, nav, headings, record rows (list / pool / chain),
- * entry detail, states.
+ * Audit UI - base styles: tokens, type, record rows, entry detail, states.
+ * Identity decided in .kiro/specs/face/notes.md (dark telemetry cockpit).
+ * Written fresh from that direction; no third-party design material.
+ * Shell, chat, calendar and telemetry live in styles/*.css.
  */
 
 :root {
-  color-scheme: light dark;
-  font: 16px/1.5 system-ui, sans-serif;
-  --rule: color-mix(in srgb, CanvasText 25%, Canvas);
-  --faint: color-mix(in srgb, CanvasText 8%, Canvas);
-  --muted: color-mix(in srgb, CanvasText 65%, Canvas);
-  --error: #b00020;
+  color-scheme: dark;
+
+  /* Surfaces */
+  --bg: #0a0d11;
+  --panel: #10151b;
+  --surface: #151b23;
+  --surface-2: #1b2330;
+  --line: #253042;
+  --line-strong: #3a4860;
+
+  /* Text */
+  --text: #e7ecf3;
+  --muted: #a7b2c2;
+  --faint: #8591a3;
+
+  /* Signals */
+  --accent: #5cc8ff;
+  --accent-bg: #0f2a3a;
+  --accent-bg-hover: #14394f;
+  --ok: #63d795;
+  --ok-bg: #10291c;
+  --error: #ff7a7a;
+  --error-bg: #2a1416;
+  --mock: #ffd23f;
+  --mock-text: #14110a;
+
+  /* Engines (label chips) */
+  --eng-arche: #5cc8ff;
+  --eng-erie: #c9a2ff;
+  --eng-elle: #63d795;
+  --eng-katie: #ff9e6b;
+
+  /* Kept names from the readability pass */
+  --rule: var(--line);
+
+  /* Type */
+  --sans: ui-sans-serif, system-ui, 'Segoe UI', Roboto, sans-serif;
+  --mono: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  --fs-caption: 11px;
+  --fs-meta: 12px;
+  --fs-dense: 13px;
+  --fs-body: 14px;
+  --fs-title: 16px;
+  --fs-view: 20px;
+
+  /* Space (4 px grid) */
+  --s1: 4px;
+  --s2: 8px;
+  --s3: 12px;
+  --s4: 16px;
+  --s5: 24px;
+  --radius: 6px;
+
+  font: var(--fs-body) / 1.5 var(--sans);
+  font-variant-numeric: tabular-nums;
 }
 
 * {
@@ -20,49 +69,96 @@
 
 body {
   margin: 0;
-  color: CanvasText;
-  background: Canvas;
+  color: var(--text);
+  background: var(--bg);
 }
 
 #app {
-  max-width: 64rem;
-  margin: 0 auto;
-  padding: 1rem 1.5rem 3rem;
+  min-height: 100vh;
 }
 
 h1 {
-  margin: 1.5rem 0 1rem;
-  font-size: 1.75rem;
-  line-height: 1.2;
+  margin: 0 0 var(--s4);
+  font-size: var(--fs-view);
+  font-weight: 650;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
 }
 
 h2 {
-  margin: 2rem 0 0.75rem;
-  font-size: 1.25rem;
+  margin: var(--s5) 0 var(--s2);
+  font-size: var(--fs-caption);
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
 }
 
-a {
-  color: LinkText;
-}
-
-/* ---- Navigation ------------------------------------------------------- */
-
-.main-nav {
-  display: flex;
-  gap: 1.5rem;
-  padding: 0.75rem 0;
-  border-bottom: 2px solid var(--rule);
-}
-
-.nav-link {
+h3 {
+  margin: 0;
+  font-size: var(--fs-title);
   font-weight: 600;
 }
 
-/* ---- Record rows: Action List, Belief Pool ---------------------------- */
+a {
+  color: var(--accent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+input,
+button {
+  font: inherit;
+  color: var(--text);
+}
+
+input[type='text'],
+input[type='datetime-local'] {
+  padding: var(--s2) var(--s3);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color-scheme: dark;
+}
+
+input:focus-visible {
+  outline-offset: 0;
+  border-color: var(--accent);
+}
+
+button {
+  padding: var(--s2) var(--s4);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  background: var(--accent-bg);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+button:hover {
+  background: var(--accent-bg-hover);
+}
+
+button:disabled {
+  border-color: var(--line-strong);
+  background: var(--surface);
+  color: var(--faint);
+  cursor: default;
+}
+
+/* ---- Record rows: action list, belief pool, chain, calendar, record ---- */
 
 .action-list,
 .belief-pool,
-.chain-list {
+.chain-list,
+.calendar-entries,
+.record-entries {
   margin: 0;
   padding: 0;
   list-style: none;
@@ -70,91 +166,186 @@ a {
 
 .action-list > li,
 .belief-pool > li,
-.chain-entry {
-  margin: 0 0 1rem;
-  border: 1px solid var(--rule);
-  border-radius: 4px;
-  background: var(--faint);
+.chain-entry,
+.calendar-entries > li,
+.record-entries > li {
+  margin: 0 0 var(--s2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
 }
 
-.action-list > li > a {
+.action-list > li > a,
+.belief-pool > li,
+.chain-entry,
+.calendar-entries > li > a,
+.record-entries > li > a {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
-  gap: 0.75rem 1.25rem;
-  padding: 0.75rem 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+  gap: var(--s2) var(--s4);
+  padding: var(--s3) var(--s4);
   color: inherit;
   text-decoration: none;
+  font-size: var(--fs-dense);
 }
 
 .action-list > li > a:hover,
-.action-list > li > a:focus-visible {
-  outline: 2px solid LinkText;
+.calendar-entries > li > a:hover,
+.record-entries > li > a:hover {
+  background: var(--surface-2);
+}
+
+.action-list > li:hover,
+.calendar-entries > li:hover,
+.record-entries > li:hover {
+  border-color: var(--line-strong);
+}
+
+.action-list > li > a:focus-visible,
+.calendar-entries > li > a:focus-visible,
+.record-entries > li > a:focus-visible {
   outline-offset: -2px;
+  border-radius: var(--radius);
 }
 
-.belief-pool > li {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
-  gap: 0.75rem 1.25rem;
-  padding: 0.75rem 1rem;
-}
-
-.chain-entry {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
-  gap: 0.75rem 1.25rem;
-  padding: 0.75rem 1rem;
-}
-
-/* Field caption above each value (record rows only). */
+/* Field caption above each value. */
 .action-list span::before,
 .belief-pool span::before,
-.chain-entry span::before {
+.chain-entry span::before,
+.calendar-entries span::before,
+.record-entries span::before {
   display: block;
-  font-size: 0.8rem;
+  margin-bottom: 2px;
+  font-family: var(--sans);
+  font-size: var(--fs-caption);
   font-weight: 600;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--muted);
+  color: var(--faint);
 }
 
 .action-list .kid::before { content: 'KID'; }
 .action-list .label::before { content: 'Subject: state'; }
-.action-list .authority::before { content: 'Authority (0-9)'; }
+.action-list .authority::before { content: 'Authority 0-9'; }
 .action-list .k-start::before { content: 'Live from (k_start)'; }
 .action-list .t-time::before { content: 'Wall time (t_time)'; }
 .action-list .e-time::before { content: 'Event time (e_time)'; }
 .action-list .k-time::before { content: 'Live until (k_time)'; }
 
-.belief-pool .kid::before { content: 'KID'; }
-.belief-pool .subject::before { content: 'Subject'; }
-.belief-pool .state::before { content: 'State'; }
-.belief-pool .authority::before { content: 'Authority (0-9)'; }
-.belief-pool .evidence::before { content: 'Evidence'; }
-.belief-pool .reason::before { content: 'Reason'; }
+.belief-pool .kid::before,
+.calendar-entries .kid::before,
+.record-entries .kid::before { content: 'KID'; }
+.belief-pool .subject::before,
+.calendar-entries .subject::before { content: 'Subject'; }
+.belief-pool .state::before,
+.calendar-entries .state::before,
+.record-entries .state::before { content: 'State'; }
+.belief-pool .authority::before,
+.calendar-entries .authority::before,
+.record-entries .authority::before { content: 'Authority 0-9'; }
+.belief-pool .evidence::before,
+.calendar-entries .evidence::before,
+.record-entries .evidence::before { content: 'Evidence'; }
+.belief-pool .reason::before,
+.calendar-entries .reason::before { content: 'Reason'; }
+.record-entries .k-start::before { content: 'Live from (k_start)'; }
+.record-entries .k-time::before { content: 'Live until (k_time)'; }
 
 .chain-entry .state::before { content: 'State'; }
-.chain-entry .authority::before { content: 'Authority (0-9)'; }
+.chain-entry .authority::before { content: 'Authority 0-9'; }
 .chain-entry .k-start::before { content: 'Live from (k_start)'; }
 .chain-entry .reason::before { content: 'Reason'; }
 
 .action-list .label,
-.belief-pool .subject {
+.belief-pool .subject,
+.calendar-entries .subject {
   font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+/* Fixed dense grids, so timestamps sit on one line and rows scan as columns. */
+.action-list > li > a,
+.record-entries > li > a {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.action-list .label {
+  grid-column: span 2;
+}
+
+.belief-pool > li,
+.calendar-entries > li > a {
+  grid-template-columns: minmax(8rem, 1fr) minmax(0, 1.6fr) minmax(5.5rem, 0.7fr) minmax(5.5rem, 0.6fr) minmax(0, 1.6fr);
+}
+
+.belief-pool .reason,
+.calendar-entries .reason {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 1100px) {
+  .action-list > li > a,
+  .record-entries > li > a,
+  .belief-pool > li,
+  .calendar-entries > li > a {
+    grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+  }
+
+  .action-list .label,
+  .belief-pool .reason,
+  .calendar-entries .reason {
+    grid-column: auto;
+  }
+}
+
+/* Machine values in mono. */
+.action-list .kid,
+.action-list .k-start,
+.action-list .t-time,
+.action-list .e-time,
+.action-list .k-time,
+.belief-pool .kid,
+.belief-pool .evidence,
+.chain-entry .k-start,
+.calendar-entries .kid,
+.calendar-entries .evidence,
+.record-entries .kid,
+.record-entries .evidence,
+.record-entries .k-start,
+.record-entries .k-time {
+  font-family: var(--mono);
+  font-size: var(--fs-meta);
+  overflow-wrap: anywhere;
 }
 
 .action-list .k-start,
 .action-list .t-time,
 .action-list .e-time,
 .action-list .k-time,
-.chain-entry .k-start {
-  font-variant-numeric: tabular-nums;
-  overflow-wrap: anywhere;
+.record-entries .k-start,
+.record-entries .k-time {
+  overflow-wrap: normal;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.belief-pool .evidence,
+/* Authority in a row: the number, big enough to scan down a list. */
+.action-list .authority,
+.belief-pool .authority,
+.chain-entry .authority,
+.calendar-entries .authority,
+.record-entries .authority {
+  font-family: var(--mono);
+  font-size: var(--fs-title);
+  font-weight: 700;
+  color: var(--text);
+}
+
 .belief-pool .reason,
-.chain-entry .reason {
+.chain-entry .reason,
+.calendar-entries .reason {
+  color: var(--muted);
   overflow-wrap: anywhere;
 }
 
@@ -162,40 +353,48 @@ a {
 
 .time-travel-view label {
   display: block;
-  margin-bottom: 0.25rem;
+  margin-bottom: var(--s1);
+  font-size: var(--fs-caption);
   font-weight: 600;
-}
-
-.time-travel-view input[type='datetime-local'] {
-  font: inherit;
-  padding: 0.35rem 0.5rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
 }
 
 #belief-pool {
-  margin-top: 1.5rem;
+  margin-top: var(--s5);
 }
 
 .cursor-display {
-  margin: 0 0 1rem;
+  display: inline-block;
+  margin: 0 0 var(--s4);
+  padding: var(--s1) var(--s3);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  background: var(--accent-bg);
+  font-family: var(--mono);
+  font-size: var(--fs-dense);
   font-weight: 600;
-  font-variant-numeric: tabular-nums;
 }
 
 /* ---- Entry detail ----------------------------------------------------- */
 
 .entry-primary dl {
   display: grid;
-  grid-template-columns: minmax(9rem, 14rem) 1fr;
+  grid-template-columns: minmax(9rem, 13rem) 1fr;
   margin: 0;
-  border: 1px solid var(--rule);
-  border-radius: 4px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  overflow: hidden;
+  font-size: var(--fs-dense);
 }
 
 .entry-primary dt,
 .entry-primary dd {
   margin: 0;
-  padding: 0.5rem 0.75rem;
-  border-top: 1px solid var(--rule);
+  padding: var(--s2) var(--s3);
+  border-top: 1px solid var(--line);
 }
 
 .entry-primary dt:first-of-type,
@@ -204,8 +403,12 @@ a {
 }
 
 .entry-primary dt {
+  font-size: var(--fs-caption);
   font-weight: 600;
-  background: var(--faint);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--faint);
+  background: var(--surface-2);
 }
 
 .entry-primary dd {
@@ -213,24 +416,30 @@ a {
 }
 
 .entry-primary .kid-label {
-  margin-left: 0.25rem;
+  margin-left: var(--s1);
   font-weight: 600;
 }
 
+.entry-primary .kid,
 .entry-primary .prev-hash,
 .entry-primary .pool,
-.entry-primary .evidence {
-  font-family: ui-monospace, Consolas, monospace;
-  font-size: 0.9rem;
+.entry-primary .evidence,
+.entry-primary .k-start,
+.entry-primary .t-time,
+.entry-primary .e-time,
+.entry-primary .k-time {
+  font-family: var(--mono);
+  font-size: var(--fs-meta);
 }
 
-/* Chain history sits below the primary entry. */
+.entry-primary .authority {
+  font-family: var(--mono);
+  font-size: var(--fs-title);
+  font-weight: 700;
+}
+
 .entry-chain {
-  margin-top: 2rem;
-}
-
-.entry-chain h2 {
-  margin-top: 0;
+  margin-top: var(--s5);
 }
 
 .view-body {
@@ -243,15 +452,18 @@ a {
 .empty-state,
 .prompt-state,
 .not-found {
-  margin: 1rem 0;
-  padding: 0.75rem 1rem;
-  border: 2px solid var(--rule);
-  border-radius: 4px;
+  margin: var(--s3) 0;
+  padding: var(--s3) var(--s4);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
+  font-size: var(--fs-dense);
 }
 
 .error-state {
   border-color: var(--error);
-  border-left-width: 8px;
+  border-left-width: 6px;
+  background: var(--error-bg);
   color: var(--error);
   font-weight: 600;
 }
@@ -275,10 +487,6 @@ a {
 }
 
 @media (max-width: 40rem) {
-  #app {
-    padding: 0.75rem 1rem 2rem;
-  }
-
   .entry-primary dl {
     grid-template-columns: 1fr;
   }

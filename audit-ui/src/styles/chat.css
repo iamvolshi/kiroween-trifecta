@@ -1,64 +1,231 @@
-/* Chat view */
+/*
+ * Chat view: transcript of turns, each with the four-engine grid.
+ * An engine that did not act is dimmed (.engine-idle) but stays listed.
+ */
+
+.chat-view {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+
 .chat-view .mock-note {
-  font-weight: 600;
+  margin: 0 0 var(--s3);
+  font-size: var(--fs-meta);
+  color: var(--muted);
 }
 
 .chat-view .step-progress {
-  margin: 0.5rem 0;
+  align-self: flex-start;
+  margin: 0 0 var(--s3);
+  padding: 2px var(--s3);
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  font-family: var(--mono);
+  font-size: var(--fs-meta);
+  color: var(--muted);
 }
 
+.chat-transcript {
+  flex: 1;
+}
+
+/* ---- One turn --------------------------------------------------------- */
+
 .chat-turn {
-  border: 1px solid #888;
-  border-radius: 0.25rem;
-  padding: 0.5rem 0.75rem;
-  margin: 0.75rem 0;
+  margin: 0 0 var(--s3);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  overflow: hidden;
 }
 
 .chat-turn.not-knowing {
   border-style: dashed;
+  border-color: var(--line-strong);
 }
 
 .chat-turn .chat-user {
+  margin: 0;
+  padding: var(--s2) var(--s4);
+  border-bottom: 1px solid var(--line);
+  background: var(--surface-2);
   font-weight: 600;
-  margin: 0 0 0.25rem;
+}
+
+.chat-turn .chat-user::before {
+  content: 'You';
+  margin-right: var(--s3);
+  font-size: var(--fs-caption);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--faint);
 }
 
 .chat-turn .chat-arche {
-  margin: 0 0 0.5rem;
+  margin: 0;
+  padding: var(--s3) var(--s4);
+  font-size: var(--fs-title);
+  line-height: 1.45;
 }
 
-.engines .engine {
-  display: flex;
-  gap: 0.75rem;
-  padding: 0.15rem 0;
-}
-
-.engines .engine-label {
-  min-width: 4.5rem;
-  font-weight: 700;
-}
-
-.engines .engine-action {
-  margin-right: 0.5rem;
+.chat-turn.not-knowing .chat-arche {
+  color: var(--muted);
   font-style: italic;
 }
 
+/* ---- Engine grid ------------------------------------------------------ */
+
+.engines {
+  display: grid;
+  gap: 1px;
+  border-top: 1px solid var(--line);
+  background: var(--line);
+}
+
+.engines .engine {
+  display: grid;
+  grid-template-columns: 4.75rem minmax(0, 1fr);
+  gap: var(--s3);
+  align-items: baseline;
+  padding: var(--s2) var(--s4);
+  background: var(--surface);
+  font-size: var(--fs-dense);
+}
+
+.engines .engine-label {
+  justify-self: start;
+  padding: 1px var(--s2);
+  border: 1px solid currentColor;
+  border-radius: 4px;
+  font-family: var(--mono);
+  font-size: var(--fs-caption);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.engine-arche .engine-label { color: var(--eng-arche); }
+.engine-erie .engine-label { color: var(--eng-erie); }
+.engine-elle .engine-label { color: var(--eng-elle); }
+.engine-katie .engine-label { color: var(--eng-katie); }
+
+.engines .engine-idle {
+  background: var(--panel);
+}
+
+.engines .engine-idle .engine-label {
+  color: var(--faint);
+}
+
+.engines .engine-idle .engine-body {
+  color: var(--faint);
+}
+
+.engines .engine-action {
+  margin-right: var(--s2);
+  font-weight: 600;
+  color: var(--text);
+}
+
+.engines .engine-text {
+  color: var(--muted);
+}
+
 .engines .provenance {
-  margin: 0.25rem 0 0;
-  padding-left: 1.25rem;
+  margin: var(--s2) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.engines .provenance li {
+  margin-top: var(--s1);
+  padding: var(--s1) var(--s2);
+  border-left: 2px solid var(--eng-erie);
+  background: var(--panel);
+  font-family: var(--mono);
+  font-size: var(--fs-meta);
 }
 
 .engines .provenance span {
-  margin-right: 0.5rem;
+  margin-right: var(--s2);
 }
+
+.prov-source {
+  color: var(--eng-erie);
+}
+
+.prov-content {
+  color: var(--text);
+}
+
+.prov-excerpt {
+  color: var(--muted);
+}
+
+.katie-link {
+  font-family: var(--mono);
+  margin-right: var(--s2);
+}
+
+/* ELLE parts inside a turn. */
+.elle-part {
+  margin-bottom: var(--s1);
+}
+
+.elle-part:last-child {
+  margin-bottom: 0;
+}
+
+.elle-part.lesson-candidate,
+.elle-part.lesson-held {
+  color: var(--faint);
+}
+
+.elle-part.lesson-candidate .engine-action,
+.elle-part.lesson-held .engine-action {
+  color: var(--faint);
+}
+
+.elle-part.lesson-promoted .engine-action {
+  color: var(--ok);
+}
+
+.elle-part.lesson-injected {
+  padding: var(--s1) var(--s2);
+  border: 1px solid var(--ok);
+  border-radius: 4px;
+  background: var(--ok-bg);
+}
+
+.elle-part.lesson-injected .engine-action {
+  color: var(--ok);
+}
+
+.elle-part.lesson-injected .engine-text {
+  color: var(--text);
+}
+
+/* ---- Composer --------------------------------------------------------- */
 
 .chat-form {
-  display: flex;
-  gap: 0.5rem;
+  position: sticky;
+  /* Stick over the column's bottom padding, so nothing shows beneath it. */
+  bottom: calc(-1 * var(--s5));
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: var(--s3);
   align-items: center;
-  margin-top: 1rem;
+  margin: var(--s3) calc(-1 * var(--s5)) calc(-1 * var(--s5));
+  padding: var(--s3) var(--s5) var(--s4);
+  border-top: 1px solid var(--line);
+  background: var(--panel);
 }
 
-.chat-form input {
-  flex: 1;
+.chat-form label {
+  font-size: var(--fs-caption);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
 }

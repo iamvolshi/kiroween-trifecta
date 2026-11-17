@@ -2,6 +2,7 @@ import './style.css';
 import './styles/chat.css';
 import './styles/calendar.css';
 import './styles/shell.css';
+import './styles/telemetry.css';
 import { createMockAdapter, MOCK_ADAPTER } from './adapter/mock.js';
 import { boot } from './boot.ts';
 
