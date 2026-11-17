@@ -13,6 +13,7 @@ import {
 } from '../util/calendar.ts';
 import { parseUtcInput } from '../util/moment.ts';
 import { renderEntryTable } from './calendar-entries.ts';
+import { createIntro } from './intro.ts';
 
 const p2 = (n: number): string => String(n).padStart(2, '0');
 
@@ -53,6 +54,7 @@ export class CalendarView implements View {
     this.container = container;
     container.innerHTML = '';
     container.appendChild(el('h1', '', 'Calendar'));
+    container.appendChild(createIntro('calendar'));
     const body = el('div', 'view-body calendar-view');
     this.body = body;
     container.appendChild(body);

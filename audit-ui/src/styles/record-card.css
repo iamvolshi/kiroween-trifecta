@@ -1,0 +1,203 @@
+/*
+ * Record card skeleton, used by the action list, belief pool, chain and
+ * record view (views/record-card.ts builds the markup). Reading order:
+ * chips, headline, one mono meta line, WHY/EVIDENCE inset, times + Inspect.
+ */
+
+/* ---- Record card skeleton (action list, pool, chain, record) -------- */
+
+.action-list,
+.belief-pool,
+.chain-list,
+.record-entries {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.action-list > li,
+.belief-pool > li,
+.chain-list > li,
+.record-entries > li {
+  margin: 0 0 var(--s2);
+}
+
+.record-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+  padding: var(--s3) var(--s4);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  text-decoration: none;
+  font-size: var(--fs-dense);
+}
+
+a.record-card:hover {
+  border-color: var(--accent);
+  background: var(--surface-2);
+}
+
+a.record-card:focus-visible {
+  outline-offset: 0;
+}
+
+/* 1. Chips: authority badge + state tag */
+.card-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s1);
+}
+
+.record-card .authority,
+.record-card .state {
+  padding: 1px var(--s2);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  font-family: var(--mono);
+  font-size: var(--fs-caption);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  line-height: 1.6;
+}
+
+.record-card .authority {
+  border-color: var(--accent);
+  background: var(--accent-bg);
+  color: var(--text);
+}
+
+.record-card .authority::before {
+  content: 'Authority ';
+  color: var(--muted);
+}
+
+.record-card .state {
+  color: var(--muted);
+}
+
+.record-card[data-state='confirmed'] .state {
+  border-color: var(--ok);
+  background: var(--ok-bg);
+  color: var(--ok);
+}
+
+.record-card[data-state='revised'] .state,
+.record-card[data-state='contradicted'] .state,
+.record-card[data-state='rejected'] .state {
+  border-color: var(--warn);
+  background: var(--warn-bg);
+  color: var(--warn);
+}
+
+/* 2. Headline: what happened */
+.card-headline,
+.record-card .label {
+  font-family: var(--display);
+  font-size: var(--fs-title);
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: -0.005em;
+  overflow-wrap: anywhere;
+}
+
+/* 3. One mono metadata line, values separated by dots */
+.card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--s2);
+  font-family: var(--mono);
+  font-size: var(--fs-meta);
+  color: var(--muted);
+}
+
+.card-meta > * {
+  overflow-wrap: anywhere;
+}
+
+.card-meta > *:not(:last-child)::after {
+  content: '\00b7';
+  margin-left: var(--s2);
+  color: var(--faint);
+}
+
+.card-meta .kid::before { content: 'KID '; color: var(--faint); }
+.card-meta .k-start::before { content: 'live from '; color: var(--faint); }
+
+/* 4. Inset: WHY and EVIDENCE, each labeled */
+.card-inset {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: var(--s2) var(--s4);
+  padding: var(--s2) var(--s3);
+  border: 1px solid var(--line);
+  border-left: 2px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--inset);
+}
+
+.card-inset > * {
+  overflow-wrap: anywhere;
+}
+
+.card-inset > *::before,
+.card-times > *::before {
+  display: block;
+  font-family: var(--mono);
+  font-size: var(--fs-caption);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+.card-inset .reason::before { content: 'Why'; }
+.card-inset .evidence::before { content: 'Evidence'; }
+
+.card-inset .reason {
+  color: var(--text);
+}
+
+.card-inset .evidence {
+  font-family: var(--mono);
+  font-size: var(--fs-meta);
+}
+
+/* 5. Foot: times on one side, the Inspect action on the other */
+.card-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--s2) var(--s4);
+}
+
+.card-times {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s1) var(--s4);
+  font-family: var(--mono);
+  font-size: var(--fs-meta);
+  color: var(--muted);
+}
+
+.card-times .t-time::before { content: 'Wall time (t_time)'; }
+.card-times .e-time::before { content: 'Event time (e_time)'; }
+.card-times .k-time::before { content: 'Live until (k_time)'; }
+
+.card-action {
+  margin-left: auto;
+  font-family: var(--mono);
+  font-size: var(--fs-caption);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.card-action::after {
+  content: ' \2192';
+}

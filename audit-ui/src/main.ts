@@ -1,4 +1,5 @@
 import './style.css';
+import './styles/record-card.css';
 import './styles/chat.css';
 import './styles/calendar.css';
 import './styles/shell.css';

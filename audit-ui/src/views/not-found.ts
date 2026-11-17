@@ -1,4 +1,5 @@
 import type { View } from '../router/router.ts';
+import { createIntro } from './intro.ts';
 
 export class NotFoundView implements View {
   private container: HTMLElement | null = null;
@@ -14,6 +15,7 @@ export class NotFoundView implements View {
         <p><a href="/actions">Back to Action List</a></p>
     `;
     container.appendChild(section);
+    section.querySelector('h1')?.after(createIntro('notFound'));
   }
 
   unmount(): void {

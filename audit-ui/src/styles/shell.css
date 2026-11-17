@@ -16,22 +16,75 @@
 .shell-brand {
   grid-column: 1 / -1;
   display: flex;
-  align-items: baseline;
-  gap: var(--s4);
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s2) var(--s4);
   padding: var(--s2) var(--s4);
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid var(--line-strong);
   background: var(--panel);
 }
 
 .brand-mark {
+  font-family: var(--display);
   font-size: var(--fs-title);
-  font-weight: 750;
-  letter-spacing: 0.02em;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .brand-tag {
   font-size: var(--fs-meta);
   color: var(--muted);
+}
+
+/* Seam chip: the active adapter, in words. The square is its active marker. */
+.seam-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s2);
+  padding: 2px var(--s2);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  background: var(--accent-bg);
+  font-family: var(--mono);
+  font-size: var(--fs-caption);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.seam-chip::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  background: var(--accent);
+}
+
+/* Current view: read from the mounted view's own intro (data-view). */
+.brand-view {
+  margin-left: auto;
+  font-family: var(--mono);
+  font-size: var(--fs-caption);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.brand-view::before { content: 'View: '; color: var(--faint); }
+.shell:not(:has(.view-intro)) .brand-view { display: none; }
+.shell:has(.view-intro[data-view='Action List']) .brand-view::after { content: 'Action List'; }
+.shell:has(.view-intro[data-view='Chat']) .brand-view::after { content: 'Chat'; }
+.shell:has(.view-intro[data-view='Time Travel']) .brand-view::after { content: 'Time Travel'; }
+.shell:has(.view-intro[data-view='Calendar']) .brand-view::after { content: 'Calendar'; }
+.shell:has(.view-intro[data-view='Record']) .brand-view::after { content: 'Record'; }
+.shell:has(.view-intro[data-view='Entry Detail']) .brand-view::after { content: 'Entry Detail'; }
+.shell:has(.view-intro[data-view='Not Found']) .brand-view::after { content: 'Not Found'; }
+
+@media (max-width: 1300px) {
+  .brand-tag {
+    display: none;
+  }
 }
 
 /* ---- Columns --------------------------------------------------------- */
@@ -151,7 +204,8 @@
   font-family: var(--mono);
   font-size: var(--fs-dense);
   text-decoration: none;
-  overflow-wrap: anywhere;
+  /* Break a name only when it cannot fit on its own line. */
+  overflow-wrap: break-word;
 }
 
 .left-links a {
@@ -195,7 +249,30 @@
 
 @media (max-width: 1100px) {
   .shell {
-    grid-template-columns: 13rem minmax(0, 1fr) 17rem;
+    grid-template-columns: 11.5rem minmax(0, 1fr) 15.5rem;
+  }
+
+  .shell-left,
+  .shell-right {
+    padding: var(--s3);
+  }
+
+  .folder-list .folder a {
+    padding: var(--s1);
+    font-size: var(--fs-meta);
+    overflow-wrap: normal;
+  }
+
+  .folder-list .folder a::before {
+    margin-right: var(--s1);
+  }
+
+  .folder-count {
+    padding-right: 0;
+  }
+
+  .shell-center {
+    padding: var(--s3) var(--s4) var(--s5);
   }
 }
 

@@ -1,6 +1,7 @@
 import type { View } from '../router/router.ts';
 import type { SeamAdapter } from '../adapter/seam.ts';
-import { renderKid } from '../util/kid-display.ts';
+import { fillRecordCard } from './record-card.ts';
+import { createIntro } from './intro.ts';
 import { parseUtcInput } from '../util/moment.ts';
 
 export class TimeTravelView implements View {
@@ -27,6 +28,7 @@ export class TimeTravelView implements View {
         <div id="belief-pool"></div>
       </div>
     `;
+    container.querySelector('.time-travel-view h1')?.after(createIntro('timeTravel'));
 
     this.cursorInput = container.querySelector<HTMLInputElement>('#moment-cursor');
     this.beliefPool = container.querySelector<HTMLElement>('#belief-pool');
@@ -96,44 +98,9 @@ export class TimeTravelView implements View {
 
     for (const entry of result.data) {
       const li = document.createElement('li');
-
-      li.appendChild(
-        Object.assign(document.createElement('span'), {
-          className: 'kid',
-          textContent: renderKid(entry.kid, kidMap),
-        }),
-      );
-      li.appendChild(
-        Object.assign(document.createElement('span'), {
-          className: 'subject',
-          textContent: entry.subject,
-        }),
-      );
-      li.appendChild(
-        Object.assign(document.createElement('span'), {
-          className: 'state',
-          textContent: entry.state,
-        }),
-      );
-      li.appendChild(
-        Object.assign(document.createElement('span'), {
-          className: 'authority',
-          textContent: String(entry.authority),
-        }),
-      );
-      li.appendChild(
-        Object.assign(document.createElement('span'), {
-          className: 'evidence',
-          textContent: entry.evidence,
-        }),
-      );
-      li.appendChild(
-        Object.assign(document.createElement('span'), {
-          className: 'reason',
-          textContent: entry.reason,
-        }),
-      );
-
+      fillRecordCard(li, entry, kidMap, {
+        fields: ['authority', 'state', 'kid', 'subject', 'k-start', 'reason', 'evidence', 'k-time'],
+      });
       ul.appendChild(li);
     }
 

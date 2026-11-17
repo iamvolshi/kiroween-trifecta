@@ -195,8 +195,8 @@
   top: 6px;
   width: 7px;
   height: 7px;
-  border-radius: 50%;
-  background: var(--eng-katie);
+  border-radius: 0;
+  background: var(--accent);
 }
 
 .katie-item span {

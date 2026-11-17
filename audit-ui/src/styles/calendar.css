@@ -155,7 +155,7 @@
 }
 
 .hour-did {
-  border-top: 3px solid var(--eng-katie);
+  border-top: 3px solid var(--warn);
 }
 
 .hour-believed {
@@ -276,26 +276,43 @@
 }
 
 .hour-did .entry-table th {
-  box-shadow: inset 0 2px 0 var(--eng-katie);
+  box-shadow: inset 0 2px 0 var(--warn);
 }
 
 .hour-believed .entry-table th {
   box-shadow: inset 0 2px 0 var(--accent);
 }
 
-/* Below ~1300px the centre column is too narrow for fixed widths: let
-   the columns size to content, so no header is clipped. */
+/* Below ~1300px the centre column is narrow: keep the fixed layout (so the
+   table never outgrows its section) and let headers and cells wrap. */
 @media (max-width: 1300px) {
-  .entry-table {
-    table-layout: auto;
+  .entry-table th {
+    white-space: normal;
   }
 
-  .entry-table .col-kid,
-  .entry-table .col-subject,
-  .entry-table .col-state,
-  .entry-table .col-authority,
-  .entry-table .col-evidence,
-  .entry-table .col-reason {
-    width: auto;
+  .entry-table th,
+  .entry-table td {
+    padding: var(--s2);
+  }
+
+  .entry-table td.authority {
+    font-size: var(--fs-dense);
+  }
+
+  /* Narrow centre: give short words (state) room, wrap long mono values
+     only at their own breaks. */
+  .entry-table .col-kid { width: 15%; }
+  .entry-table .col-subject { width: 19%; }
+  .entry-table .col-state { width: 13%; }
+  .entry-table .col-authority { width: 13%; }
+  .entry-table .col-evidence { width: 19%; }
+  .entry-table .col-reason { width: 21%; }
+
+  .entry-table th {
+    letter-spacing: 0.02em;
+  }
+
+  .entry-table td {
+    font-size: var(--fs-meta);
   }
 }

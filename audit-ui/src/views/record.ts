@@ -1,6 +1,7 @@
 import type { View } from '../router/router.ts';
 import type { SeamAdapter, KidMap, Entry } from '../adapter/seam.ts';
-import { renderKid } from '../util/kid-display.ts';
+import { fillRecordCard } from './record-card.ts';
+import { createIntro } from './intro.ts';
 import { compareKStart } from '../util/interval.ts';
 
 function el<K extends keyof HTMLElementTagNameMap>(
@@ -30,6 +31,7 @@ export class RecordView implements View {
     this.container = container;
     container.innerHTML = '';
     container.appendChild(el('h1', '', `Record: ${this.accountId}`));
+    container.appendChild(createIntro('record'));
     const body = el('div', 'view-body record-view');
     this.body = body;
     container.appendChild(body);
@@ -69,12 +71,10 @@ export class RecordView implements View {
           'href',
           `/entry/${e.kid}/${encodeURIComponent(e.subject)}/${encodeURIComponent(e.id)}`,
         );
-        a.appendChild(el('span', 'kid', renderKid(e.kid, kidMap)));
-        a.appendChild(el('span', 'state', e.state));
-        a.appendChild(el('span', 'authority', String(e.authority)));
-        a.appendChild(el('span', 'evidence', e.evidence));
-        a.appendChild(el('span', 'k-start', e.k_start));
-        a.appendChild(el('span', 'k-time', e.k_time));
+        fillRecordCard(a, e, kidMap, {
+          fields: ['authority', 'state', 'kid', 'k-start', 'evidence', 'k-time'],
+          link: true,
+        });
         li.appendChild(a);
         ul.appendChild(li);
       }

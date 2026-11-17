@@ -1,6 +1,8 @@
 import type { View } from '../router/router.ts';
 import type { SeamAdapter, Entry, KidMap } from '../adapter/seam.ts';
 import { compareKStart } from '../util/interval.ts';
+import { fillRecordCard } from './record-card.ts';
+import { createIntro } from './intro.ts';
 
 export class EntryDetailView implements View {
   private adapter: SeamAdapter;
@@ -75,6 +77,7 @@ export class EntryDetailView implements View {
       const p = document.createElement('p');
       p.textContent = `No entry with id "${this.id}" exists for KID ${this.kid}, subject "${this.subject}".`;
       section.appendChild(h1);
+      section.appendChild(createIntro('entry'));
       section.appendChild(p);
       body.replaceChildren(section);
       return;
@@ -100,6 +103,7 @@ export class EntryDetailView implements View {
     const h1 = document.createElement('h1');
     h1.textContent = 'Entry Detail';
     section.appendChild(h1);
+    section.appendChild(createIntro('entry'));
 
     const dl = document.createElement('dl');
 
@@ -151,28 +155,9 @@ export class EntryDetailView implements View {
     for (const e of sorted) {
       const li = document.createElement('li');
       li.className = 'chain-entry';
-
-      const stateSpan = document.createElement('span');
-      stateSpan.className = 'state';
-      stateSpan.textContent = e.state;
-
-      const authoritySpan = document.createElement('span');
-      authoritySpan.className = 'authority';
-      authoritySpan.textContent = String(e.authority);
-
-      const kStartSpan = document.createElement('span');
-      kStartSpan.className = 'k-start';
-      kStartSpan.textContent = e.k_start;
-
-      const reasonSpan = document.createElement('span');
-      reasonSpan.className = 'reason';
-      reasonSpan.textContent = e.reason;
-
-      li.appendChild(stateSpan);
-      li.appendChild(authoritySpan);
-      li.appendChild(kStartSpan);
-      li.appendChild(reasonSpan);
-
+      fillRecordCard(li, e, null, {
+        fields: ['authority', 'state', 'k-start', 'reason', 'evidence', 'k-time'],
+      });
       ol.appendChild(li);
     }
 

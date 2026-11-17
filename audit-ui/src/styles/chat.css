@@ -20,7 +20,7 @@
   margin: 0 0 var(--s3);
   padding: 2px var(--s3);
   border: 1px solid var(--line-strong);
-  border-radius: 999px;
+  border-radius: var(--radius);
   font-family: var(--mono);
   font-size: var(--fs-meta);
   color: var(--muted);
@@ -98,17 +98,17 @@
   justify-self: start;
   padding: 1px var(--s2);
   border: 1px solid currentColor;
-  border-radius: 4px;
+  border-radius: var(--radius);
   font-family: var(--mono);
   font-size: var(--fs-caption);
   font-weight: 700;
   letter-spacing: 0.06em;
 }
 
-.engine-arche .engine-label { color: var(--eng-arche); }
-.engine-erie .engine-label { color: var(--eng-erie); }
-.engine-elle .engine-label { color: var(--eng-elle); }
-.engine-katie .engine-label { color: var(--eng-katie); }
+.engines .engine-label { color: var(--text); border-color: var(--line-strong); }
+
+
+
 
 .engines .engine-idle {
   background: var(--panel);
@@ -141,7 +141,7 @@
 .engines .provenance li {
   margin-top: var(--s1);
   padding: var(--s1) var(--s2);
-  border-left: 2px solid var(--eng-erie);
+  border-left: 2px solid var(--accent);
   background: var(--panel);
   font-family: var(--mono);
   font-size: var(--fs-meta);
@@ -152,7 +152,7 @@
 }
 
 .prov-source {
-  color: var(--eng-erie);
+  color: var(--accent);
 }
 
 .prov-content {
@@ -194,7 +194,7 @@
 .elle-part.lesson-injected {
   padding: var(--s1) var(--s2);
   border: 1px solid var(--ok);
-  border-radius: 4px;
+  border-radius: var(--radius);
   background: var(--ok-bg);
 }
 
@@ -216,10 +216,10 @@
   grid-template-columns: auto minmax(0, 1fr) auto;
   gap: var(--s3);
   align-items: center;
-  margin: var(--s3) calc(-1 * var(--s5)) calc(-1 * var(--s5));
-  padding: var(--s3) var(--s5) var(--s4);
+  margin: var(--s3) 0 calc(-1 * var(--s5));
+  padding: var(--s3) 0 var(--s4);
   border-top: 1px solid var(--line);
-  background: var(--panel);
+  background: var(--bg);
 }
 
 .chat-form label {

@@ -2,6 +2,7 @@ import type { View } from '../router/router.ts';
 import type { SeamAdapter } from '../adapter/seam.ts';
 import { ChatLog } from './chat-log.ts';
 import { renderChatTurn } from './chat-turn.ts';
+import { createIntro } from './intro.ts';
 
 export class ChatView implements View {
   private adapter: SeamAdapter;
@@ -38,6 +39,7 @@ export class ChatView implements View {
         </form>
       </div>
     `;
+    container.querySelector('.chat-view h1')?.after(createIntro('chat'));
 
     this.transcript = container.querySelector<HTMLElement>('.chat-transcript');
     this.progress = container.querySelector<HTMLElement>('.step-progress');

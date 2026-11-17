@@ -1,7 +1,7 @@
 import type { View } from '../router/router.ts';
 import type { SeamAdapter, KidMap } from '../adapter/seam.ts';
-import { renderKid } from '../util/kid-display.ts';
-import { formatLabel } from '../util/format.ts';
+import { fillRecordCard } from './record-card.ts';
+import { createIntro } from './intro.ts';
 import { compareKStart } from '../util/interval.ts';
 
 export class ActionListView implements View {
@@ -19,6 +19,7 @@ export class ActionListView implements View {
     const h1 = document.createElement('h1');
     h1.textContent = 'Action List';
     container.appendChild(h1);
+    container.appendChild(createIntro('actions'));
     this.body = document.createElement('div');
     this.body.className = 'view-body';
     container.appendChild(this.body);
@@ -65,41 +66,11 @@ export class ActionListView implements View {
 
       const a = document.createElement('a');
       a.href = `/entry/${entry.kid}/${encodeURIComponent(entry.subject)}/${encodeURIComponent(entry.id)}`;
-      const kidSpan = document.createElement('span');
-      kidSpan.className = 'kid';
-      kidSpan.textContent = renderKid(entry.kid, kidMap);
-
-      const labelSpan = document.createElement('span');
-      labelSpan.className = 'label';
-      labelSpan.textContent = formatLabel(entry.subject, entry.state);
-
-      const authoritySpan = document.createElement('span');
-      authoritySpan.className = 'authority';
-      authoritySpan.textContent = String(entry.authority);
-
-      const kStartSpan = document.createElement('span');
-      kStartSpan.className = 'k-start';
-      kStartSpan.textContent = entry.k_start;
-
-      const tTimeSpan = document.createElement('span');
-      tTimeSpan.className = 't-time';
-      tTimeSpan.textContent = entry.t_time;
-
-      const eTimeSpan = document.createElement('span');
-      eTimeSpan.className = 'e-time';
-      eTimeSpan.textContent = entry.e_time;
-
-      const kTimeSpan = document.createElement('span');
-      kTimeSpan.className = 'k-time';
-      kTimeSpan.textContent = entry.k_time;
-
-      a.appendChild(kidSpan);
-      a.appendChild(labelSpan);
-      a.appendChild(authoritySpan);
-      a.appendChild(kStartSpan);
-      a.appendChild(tTimeSpan);
-      a.appendChild(eTimeSpan);
-      a.appendChild(kTimeSpan);
+      fillRecordCard(a, entry, kidMap, {
+        fields: ['authority', 'state', 'kid', 'subject', 'k-start', 'reason', 'evidence', 't-time', 'e-time', 'k-time'],
+        headlineClass: 'label',
+        link: true,
+      });
 
       li.appendChild(a);
       ul.appendChild(li);

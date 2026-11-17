@@ -1,63 +1,63 @@
 /*
- * Audit UI - base styles: tokens, type, record rows, entry detail, states.
- * Identity decided in .kiro/specs/face/notes.md (dark telemetry cockpit).
- * Written fresh from that direction; no third-party design material.
- * Shell, chat, calendar and telemetry live in styles/*.css.
+ * Audit UI - base styles: tokens, type roles, view intro, the record-card
+ * skeleton, entry detail, explicit states. Identity: .kiro/specs/presentation/
+ * notes.md (deep blue-black instrument). Written fresh from that brief; no
+ * third-party design material. Shell, chat, calendar and telemetry live in
+ * styles/*.css.
  */
 
 :root {
   color-scheme: dark;
 
-  /* Surfaces */
-  --bg: #0a0d11;
-  --panel: #10151b;
-  --surface: #151b23;
-  --surface-2: #1b2330;
-  --line: #253042;
-  --line-strong: #3a4860;
+  /* Planes: canvas, panel, card, raised, inset. Depth = layers + 1px lines. */
+  --bg: #060a11;
+  --panel: #0a111b;
+  --surface: #0f1825;
+  --surface-2: #152132;
+  --inset: #08101a;
+  --line: #1b2738;
+  --line-strong: #2c3c55;
 
   /* Text */
-  --text: #e7ecf3;
-  --muted: #a7b2c2;
-  --faint: #8591a3;
+  --text: #e4ecf7;
+  --muted: #9fb1c8;
+  --faint: #8698b2;
 
-  /* Signals */
-  --accent: #5cc8ff;
-  --accent-bg: #0f2a3a;
-  --accent-bg-hover: #14394f;
-  --ok: #63d795;
-  --ok-bg: #10291c;
-  --error: #ff7a7a;
-  --error-bg: #2a1416;
+  /* Meaning: signal (cyan), warning (amber), good (emerald), error, mock. */
+  --accent: #38d1f5;
+  --accent-bg: #08283a;
+  --accent-bg-hover: #0d3a52;
+  --warn: #ffb648;
+  --warn-bg: #2b1d06;
+  --ok: #3ddc97;
+  --ok-bg: #082a1d;
+  --error: #ff7d7d;
+  --error-bg: #2a1013;
   --mock: #ffd23f;
   --mock-text: #14110a;
 
-  /* Engines (label chips) */
-  --eng-arche: #5cc8ff;
-  --eng-erie: #c9a2ff;
-  --eng-elle: #63d795;
-  --eng-katie: #ff9e6b;
-
-  /* Kept names from the readability pass */
+  /* Kept name from the readability pass */
   --rule: var(--line);
 
-  /* Type */
+  /* Type roles (system stacks only, nothing downloaded) */
+  --display: system-ui, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   --sans: ui-sans-serif, system-ui, 'Segoe UI', Roboto, sans-serif;
-  --mono: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  --mono: ui-monospace, 'Cascadia Mono', 'Cascadia Code', 'SF Mono', Consolas,
+    'Liberation Mono', monospace;
   --fs-caption: 11px;
   --fs-meta: 12px;
   --fs-dense: 13px;
   --fs-body: 14px;
   --fs-title: 16px;
-  --fs-view: 20px;
+  --fs-view: 26px;
 
-  /* Space (4 px grid) */
+  /* Space: 4px rhythm */
   --s1: 4px;
   --s2: 8px;
   --s3: 12px;
   --s4: 16px;
   --s5: 24px;
-  --radius: 6px;
+  --radius: 2px;
 
   font: var(--fs-body) / 1.5 var(--sans);
   font-variant-numeric: tabular-nums;
@@ -77,27 +77,33 @@ body {
   min-height: 100vh;
 }
 
+/* Small mono caps label: names every section, chip and field. */
+.caps,
+h2,
+.shell-center h1 {
+  font-family: var(--mono);
+  font-size: var(--fs-caption);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* View title: the eyebrow above the question. */
 h1 {
-  margin: 0 0 var(--s4);
-  font-size: var(--fs-view);
-  font-weight: 650;
-  line-height: 1.25;
-  letter-spacing: -0.01em;
+  margin: 0 0 var(--s1);
+  color: var(--accent);
+  line-height: 1.4;
 }
 
 h2 {
   margin: var(--s5) 0 var(--s2);
-  font-size: var(--fs-caption);
-  font-weight: 650;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
   color: var(--muted);
 }
 
 h3 {
   margin: 0;
   font-size: var(--fs-title);
-  font-weight: 600;
+  font-weight: 700;
 }
 
 a {
@@ -109,7 +115,7 @@ a {
 :focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
-  border-radius: 2px;
+  border-radius: var(--radius);
 }
 
 input,
@@ -123,7 +129,8 @@ input[type='datetime-local'] {
   padding: var(--s2) var(--s3);
   border: 1px solid var(--line-strong);
   border-radius: var(--radius);
-  background: var(--bg);
+  background: var(--inset);
+  font-family: var(--mono);
   color-scheme: dark;
 }
 
@@ -137,7 +144,11 @@ button {
   border: 1px solid var(--accent);
   border-radius: var(--radius);
   background: var(--accent-bg);
-  font-weight: 600;
+  font-family: var(--mono);
+  font-size: var(--fs-meta);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   cursor: pointer;
 }
 
@@ -152,179 +163,29 @@ button:disabled {
   cursor: default;
 }
 
-/* ---- Record rows: action list, belief pool, chain, calendar, record ---- */
+/* ---- View intro: every view leads with its question ----------------- */
 
-.action-list,
-.belief-pool,
-.chain-list,
-.record-entries {
+.view-intro {
+  margin: 0 0 var(--s4);
+  padding-bottom: var(--s3);
+  border-bottom: 1px solid var(--line);
+}
+
+.view-question {
   margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.action-list > li,
-.belief-pool > li,
-.chain-entry,
-.record-entries > li {
-  margin: 0 0 var(--s2);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--surface);
-}
-
-.action-list > li > a,
-.belief-pool > li,
-.chain-entry,
-.record-entries > li > a {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
-  gap: var(--s2) var(--s4);
-  padding: var(--s3) var(--s4);
-  color: inherit;
-  text-decoration: none;
-  font-size: var(--fs-dense);
-}
-
-.action-list > li > a:hover,
-.record-entries > li > a:hover {
-  background: var(--surface-2);
-}
-
-.action-list > li:hover,
-.record-entries > li:hover {
-  border-color: var(--line-strong);
-}
-
-.action-list > li > a:focus-visible,
-.record-entries > li > a:focus-visible {
-  outline-offset: -2px;
-  border-radius: var(--radius);
-}
-
-/* Field caption above each value. */
-.action-list span::before,
-.belief-pool span::before,
-.chain-entry span::before,
-.record-entries span::before {
-  display: block;
-  margin-bottom: 2px;
-  font-family: var(--sans);
-  font-size: var(--fs-caption);
-  font-weight: 600;
-  letter-spacing: 0.08em;
+  font-family: var(--display);
+  font-size: var(--fs-view);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.015em;
   text-transform: uppercase;
-  color: var(--faint);
 }
 
-.action-list .kid::before { content: 'KID'; }
-.action-list .label::before { content: 'Subject: state'; }
-.action-list .authority::before { content: 'Authority 0-9'; }
-.action-list .k-start::before { content: 'Live from (k_start)'; }
-.action-list .t-time::before { content: 'Wall time (t_time)'; }
-.action-list .e-time::before { content: 'Event time (e_time)'; }
-.action-list .k-time::before { content: 'Live until (k_time)'; }
-
-.belief-pool .kid::before,
-.record-entries .kid::before { content: 'KID'; }
-.belief-pool .subject::before { content: 'Subject'; }
-.belief-pool .state::before,
-.record-entries .state::before { content: 'State'; }
-.belief-pool .authority::before,
-.record-entries .authority::before { content: 'Authority 0-9'; }
-.belief-pool .evidence::before,
-.record-entries .evidence::before { content: 'Evidence'; }
-.belief-pool .reason::before { content: 'Reason'; }
-.record-entries .k-start::before { content: 'Live from (k_start)'; }
-.record-entries .k-time::before { content: 'Live until (k_time)'; }
-
-.chain-entry .state::before { content: 'State'; }
-.chain-entry .authority::before { content: 'Authority 0-9'; }
-.chain-entry .k-start::before { content: 'Live from (k_start)'; }
-.chain-entry .reason::before { content: 'Reason'; }
-
-.action-list .label,
-.belief-pool .subject {
-  font-weight: 600;
-  overflow-wrap: anywhere;
-}
-
-/* Fixed dense grids, so timestamps sit on one line and rows scan as columns. */
-.action-list > li > a,
-.record-entries > li > a {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-
-.action-list .label {
-  grid-column: span 2;
-}
-
-.belief-pool > li {
-  grid-template-columns: minmax(8rem, 1fr) minmax(0, 1.6fr) minmax(5.5rem, 0.7fr) minmax(5.5rem, 0.6fr) minmax(0, 1.6fr);
-}
-
-.belief-pool .reason {
-  grid-column: 1 / -1;
-}
-
-@media (max-width: 1100px) {
-  .action-list > li > a,
-  .record-entries > li > a,
-  .belief-pool > li {
-    grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
-  }
-
-  .action-list .label,
-  .belief-pool .reason {
-    grid-column: auto;
-  }
-}
-
-/* Machine values in mono. */
-.action-list .kid,
-.action-list .k-start,
-.action-list .t-time,
-.action-list .e-time,
-.action-list .k-time,
-.belief-pool .kid,
-.belief-pool .evidence,
-.chain-entry .k-start,
-.record-entries .kid,
-.record-entries .evidence,
-.record-entries .k-start,
-.record-entries .k-time {
-  font-family: var(--mono);
-  font-size: var(--fs-meta);
-  overflow-wrap: anywhere;
-}
-
-.action-list .k-start,
-.action-list .t-time,
-.action-list .e-time,
-.action-list .k-time,
-.record-entries .k-start,
-.record-entries .k-time {
-  overflow-wrap: normal;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* Authority in a row: the number, big enough to scan down a list. */
-.action-list .authority,
-.belief-pool .authority,
-.chain-entry .authority,
-.record-entries .authority {
-  font-family: var(--mono);
-  font-size: var(--fs-title);
-  font-weight: 700;
-  color: var(--text);
-}
-
-.belief-pool .reason,
-.chain-entry .reason {
+.view-how {
+  margin: var(--s2) 0 0;
+  max-width: 62ch;
+  font-size: var(--fs-dense);
   color: var(--muted);
-  overflow-wrap: anywhere;
 }
 
 /* ---- Time Travel ------------------------------------------------------ */
@@ -332,34 +193,35 @@ button:disabled {
 .time-travel-view label {
   display: block;
   margin-bottom: var(--s1);
+  font-family: var(--mono);
   font-size: var(--fs-caption);
-  font-weight: 600;
-  letter-spacing: 0.08em;
+  font-weight: 700;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--muted);
 }
 
 #belief-pool {
-  margin-top: var(--s5);
+  margin-top: var(--s4);
 }
 
 .cursor-display {
   display: inline-block;
-  margin: 0 0 var(--s4);
+  margin: 0 0 var(--s3);
   padding: var(--s1) var(--s3);
   border: 1px solid var(--accent);
   border-radius: var(--radius);
   background: var(--accent-bg);
   font-family: var(--mono);
   font-size: var(--fs-dense);
-  font-weight: 600;
+  font-weight: 700;
 }
 
 /* ---- Entry detail ----------------------------------------------------- */
 
 .entry-primary dl {
   display: grid;
-  grid-template-columns: minmax(9rem, 13rem) 1fr;
+  grid-template-columns: minmax(9rem, 12rem) 1fr;
   margin: 0;
   border: 1px solid var(--line);
   border-radius: var(--radius);
@@ -381,12 +243,13 @@ button:disabled {
 }
 
 .entry-primary dt {
+  font-family: var(--mono);
   font-size: var(--fs-caption);
-  font-weight: 600;
-  letter-spacing: 0.08em;
+  font-weight: 700;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--faint);
-  background: var(--surface-2);
+  background: var(--inset);
 }
 
 .entry-primary dd {
@@ -395,7 +258,7 @@ button:disabled {
 
 .entry-primary .kid-label {
   margin-left: var(--s1);
-  font-weight: 600;
+  color: var(--muted);
 }
 
 .entry-primary .kid,
@@ -405,7 +268,8 @@ button:disabled {
 .entry-primary .k-start,
 .entry-primary .t-time,
 .entry-primary .e-time,
-.entry-primary .k-time {
+.entry-primary .k-time,
+.entry-primary .state {
   font-family: var(--mono);
   font-size: var(--fs-meta);
 }
@@ -413,7 +277,7 @@ button:disabled {
 .entry-primary .authority {
   font-family: var(--mono);
   font-size: var(--fs-title);
-  font-weight: 700;
+  font-weight: 800;
 }
 
 .entry-chain {
@@ -424,7 +288,7 @@ button:disabled {
   min-width: 0;
 }
 
-/* ---- States: each one visibly different ------------------------------- */
+/* ---- Explicit states: not-knowing is a labeled container ------------- */
 
 .error-state,
 .empty-state,
@@ -432,32 +296,54 @@ button:disabled {
 .not-found {
   margin: var(--s3) 0;
   padding: var(--s3) var(--s4);
-  border: 1px solid var(--line-strong);
+  border: 1px dashed var(--line-strong);
   border-radius: var(--radius);
-  background: var(--surface);
+  background: var(--inset);
   font-size: var(--fs-dense);
+  color: var(--muted);
+}
+
+.empty-state::before,
+.prompt-state::before,
+.error-state::before {
+  display: block;
+  margin-bottom: var(--s1);
+  font-family: var(--mono);
+  font-size: var(--fs-caption);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.empty-state::before {
+  content: 'Not known';
+  color: var(--faint);
+}
+
+.prompt-state::before {
+  content: 'Waiting for input';
+  color: var(--faint);
+}
+
+.prompt-state {
+  border-style: dotted;
 }
 
 .error-state {
-  border-color: var(--error);
-  border-left-width: 6px;
+  border: 1px solid var(--error);
+  border-left-width: 4px;
   background: var(--error-bg);
   color: var(--error);
   font-weight: 600;
 }
 
 .error-state::before {
-  content: 'Error: ';
+  content: 'Error';
 }
 
-.empty-state {
-  border-style: dashed;
-  color: var(--muted);
-}
-
-.prompt-state {
-  border-style: dotted;
-  color: var(--muted);
+.not-found {
+  border-style: solid;
+  color: var(--text);
 }
 
 .not-found h1 {
