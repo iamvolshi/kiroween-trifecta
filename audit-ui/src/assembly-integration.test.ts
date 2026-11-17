@@ -130,7 +130,7 @@ describe('task 5: scenario entries flow through the one seam', () => {
     const all = await adapter.fetchAllEntries();
     const moment = parseUtcInput('2026-11-16T14:00')!;
     const live = all.ok ? all.data.filter((e) => isLiveAt(e, moment)) : [];
-    const shown = container.querySelectorAll('.hour-believed li').length;
+    const shown = container.querySelectorAll('.hour-believed tbody tr').length;
     expect(live.length).toBe(2); // S1 [09:12,14:30) and S2 [10:05,15:10)
     expect(shown).toBe(live.length);
     expect(container.querySelector('.cursor-display')?.textContent).toBe(

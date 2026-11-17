@@ -12,7 +12,7 @@ import {
   monthGrid,
 } from '../util/calendar.ts';
 import { parseUtcInput } from '../util/moment.ts';
-import { renderEntryList } from './calendar-entries.ts';
+import { renderEntryTable } from './calendar-entries.ts';
 
 const p2 = (n: number): string => String(n).padStart(2, '0');
 
@@ -194,7 +194,7 @@ export class CalendarView implements View {
     didSec.appendChild(
       did.length === 0
         ? el('p', 'empty-state', 'Nothing was recorded in this hour.')
-        : renderEntryList(did, kidMap),
+        : renderEntryTable(did, kidMap, 'What the agent did this hour'),
     );
     out.push(didSec);
 
@@ -203,7 +203,7 @@ export class CalendarView implements View {
     beliefSec.appendChild(
       pool.length === 0
         ? el('p', 'empty-state', 'No entries were live at this moment.')
-        : renderEntryList(pool, kidMap),
+        : renderEntryTable(pool, kidMap, 'What it believed at this moment'),
     );
     out.push(beliefSec);
     return out;

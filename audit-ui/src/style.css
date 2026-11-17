@@ -157,7 +157,6 @@ button:disabled {
 .action-list,
 .belief-pool,
 .chain-list,
-.calendar-entries,
 .record-entries {
   margin: 0;
   padding: 0;
@@ -167,7 +166,6 @@ button:disabled {
 .action-list > li,
 .belief-pool > li,
 .chain-entry,
-.calendar-entries > li,
 .record-entries > li {
   margin: 0 0 var(--s2);
   border: 1px solid var(--line);
@@ -178,7 +176,6 @@ button:disabled {
 .action-list > li > a,
 .belief-pool > li,
 .chain-entry,
-.calendar-entries > li > a,
 .record-entries > li > a {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
@@ -190,19 +187,16 @@ button:disabled {
 }
 
 .action-list > li > a:hover,
-.calendar-entries > li > a:hover,
 .record-entries > li > a:hover {
   background: var(--surface-2);
 }
 
 .action-list > li:hover,
-.calendar-entries > li:hover,
 .record-entries > li:hover {
   border-color: var(--line-strong);
 }
 
 .action-list > li > a:focus-visible,
-.calendar-entries > li > a:focus-visible,
 .record-entries > li > a:focus-visible {
   outline-offset: -2px;
   border-radius: var(--radius);
@@ -212,7 +206,6 @@ button:disabled {
 .action-list span::before,
 .belief-pool span::before,
 .chain-entry span::before,
-.calendar-entries span::before,
 .record-entries span::before {
   display: block;
   margin-bottom: 2px;
@@ -233,21 +226,15 @@ button:disabled {
 .action-list .k-time::before { content: 'Live until (k_time)'; }
 
 .belief-pool .kid::before,
-.calendar-entries .kid::before,
 .record-entries .kid::before { content: 'KID'; }
-.belief-pool .subject::before,
-.calendar-entries .subject::before { content: 'Subject'; }
+.belief-pool .subject::before { content: 'Subject'; }
 .belief-pool .state::before,
-.calendar-entries .state::before,
 .record-entries .state::before { content: 'State'; }
 .belief-pool .authority::before,
-.calendar-entries .authority::before,
 .record-entries .authority::before { content: 'Authority 0-9'; }
 .belief-pool .evidence::before,
-.calendar-entries .evidence::before,
 .record-entries .evidence::before { content: 'Evidence'; }
-.belief-pool .reason::before,
-.calendar-entries .reason::before { content: 'Reason'; }
+.belief-pool .reason::before { content: 'Reason'; }
 .record-entries .k-start::before { content: 'Live from (k_start)'; }
 .record-entries .k-time::before { content: 'Live until (k_time)'; }
 
@@ -257,8 +244,7 @@ button:disabled {
 .chain-entry .reason::before { content: 'Reason'; }
 
 .action-list .label,
-.belief-pool .subject,
-.calendar-entries .subject {
+.belief-pool .subject {
   font-weight: 600;
   overflow-wrap: anywhere;
 }
@@ -273,27 +259,23 @@ button:disabled {
   grid-column: span 2;
 }
 
-.belief-pool > li,
-.calendar-entries > li > a {
+.belief-pool > li {
   grid-template-columns: minmax(8rem, 1fr) minmax(0, 1.6fr) minmax(5.5rem, 0.7fr) minmax(5.5rem, 0.6fr) minmax(0, 1.6fr);
 }
 
-.belief-pool .reason,
-.calendar-entries .reason {
+.belief-pool .reason {
   grid-column: 1 / -1;
 }
 
 @media (max-width: 1100px) {
   .action-list > li > a,
   .record-entries > li > a,
-  .belief-pool > li,
-  .calendar-entries > li > a {
+  .belief-pool > li {
     grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
   }
 
   .action-list .label,
-  .belief-pool .reason,
-  .calendar-entries .reason {
+  .belief-pool .reason {
     grid-column: auto;
   }
 }
@@ -307,8 +289,6 @@ button:disabled {
 .belief-pool .kid,
 .belief-pool .evidence,
 .chain-entry .k-start,
-.calendar-entries .kid,
-.calendar-entries .evidence,
 .record-entries .kid,
 .record-entries .evidence,
 .record-entries .k-start,
@@ -334,7 +314,6 @@ button:disabled {
 .action-list .authority,
 .belief-pool .authority,
 .chain-entry .authority,
-.calendar-entries .authority,
 .record-entries .authority {
   font-family: var(--mono);
   font-size: var(--fs-title);
@@ -343,8 +322,7 @@ button:disabled {
 }
 
 .belief-pool .reason,
-.chain-entry .reason,
-.calendar-entries .reason {
+.chain-entry .reason {
   color: var(--muted);
   overflow-wrap: anywhere;
 }
