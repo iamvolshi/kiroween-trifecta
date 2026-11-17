@@ -18,7 +18,7 @@ loop through a connector.
 | KATIE | Records each fact as an append-only entry in the record. | Bot loop |
 | KID | The number that names each thing in the record. | Bot loop (the record) |
 | TEMPE | Temporal data store. | Bot loop |
-| Connector | Lets the app talk to the bot loop over plain JSON. Built separately, to the contract below. | Outside this repo |
+| Connector | Lets the app talk to the bot loop over plain JSON, to the contract below. Run with `python -m bot.connector`. | Bots repo (`iamvolshi/bots`, `bot/connector.py`), not this repo |
 | Audit UI | Shows the conversation, the engines' work and the record. Sends names, never voices or prompts. | This repo |
 
 ## Connector contract (as built in the app)
@@ -33,6 +33,12 @@ time as `VITE_CONNECTOR_URL`. The shapes are the types in
 | `GET /record/{account_id}` | none | `RecordResult` |
 | `GET /lessons` | none | `Lesson[]` |
 | `POST /ask` | `{ "question": string }` | `AskResult` |
+| `GET /entries` | none | `Entry[]`, the whole record in record order |
+| `GET /belief-pool?at=<epoch ms>` | none | `Entry[]` live at that moment |
+| `GET /chain?kid=<kid>&subject=<subject>` | none | `Entry[]` for that KID and subject, in record order |
+| `GET /kidmap` | none | `KidMap` (`{ "<kid number>": "<label>" }`) |
+
+No auth, no pagination. A refusal is an HTTP error with an `{ "error": string }` body; the app shows those words after the status. `POST /update` is not in the contract: the live adapter returns a typed error for it.
 
 A `ChatTurn` carries the reply in `engines.arche.reply`, `known`, `step` /
 `total_steps`, and what the engines did: `engines.erie` (an `AskResult`
@@ -57,9 +63,49 @@ provenance, in `links`:
 (JavaScript string indices), end exclusive. Spans must not overlap. The app
 never finds these words itself; a bad span is shown as plain text.
 
-Anything else the app reads (the whole record, a moment's belief pool, a
-chain, the KID map) is not in the contract yet, and the live adapter says so
-in words instead of guessing an endpoint. On the live path that means the
-record views show that message and the left column's subject folders come
-from `GET /lessons` only. A whole-record read in the contract would fix it.
+The live adapter checks the four record reads before it uses them: an entry
+without every `Entry` field in its seam type (a string KID, a list evidence,
+a null `k_time`, an authority outside 0-9), or a KID map key that is not a
+whole number, is refused with a sentence saying which item failed. If the
+whole-record read fails, the left column's subject folders come from
+`GET /lessons` only, under a "Record entries not available" line.
 A `/chat` reply that is not a `ChatTurn` is refused with an error.
+
+## How the connector maps the loop's record
+
+The full table and the reasons are in
+`.kiro/specs/live-record-reads/notes.md`. In short:
+
+| Seam | From the loop |
+|---|---|
+| `id` | `event_id` |
+| `kid` | `1`: the connector's number for the one booted kernel. The loop's KID is a 32-character tag; `/kidmap` gives it as the label of `1`. |
+| `k_start`, `t_time` | `tek_t` (the second the entry was written), as ISO-8601 UTC. The loop's own `k_start` is a position (0, 1, 2...), kept as record order. |
+| `k_time`, `e_time` | `""`: the loop never closes an interval and records no event time |
+| `evidence` | the loop's list joined with `", "`; `""` when empty |
+| `subject`, `state`, `authority`, `reason`, `prev_hash` | as recorded |
+| `pool` | `"0"`, the loop's value |
+| Lessons | `event_id` `elle-<n>` (position), `event_type` the loop's `source`, `detail` the lesson sentence, `rule` null, `subject` null, `status` `promoted` (the loop puts every lesson in every prompt) |
+| `GET /record/{account_id}` | the account is the booted persona's slug, e.g. `archetron` |
+
+Belief pool: an entry is live at `M` when its start (`tek_t` in ms) is at
+or before `M` and `M` is before its end; no end means still live. In the
+loop no entry has an end, so the pool at `M` is every entry written by `M`.
+
+## Limits
+
+- One booted persona. The connector serves the persona its `CARTRIDGE`
+  booted. `/chat` with another persona name is refused (HTTP 409) and the
+  refusal names the booted one.
+- Register is pending. The loop has no register machinery; the connector
+  accepts `register` and does not act on it. No voice prompt was written.
+- `POST /update` is out.
+- Loopback only. The connector listens on 127.0.0.1 and answers browser
+  pages from 127.0.0.1 / localhost (or `CONNECTOR_ALLOW_ORIGINS`); any other
+  page gets HTTP 403.
+- One call at a time: record reads wait while a `/chat` model call runs.
+- K-Time and E-Time show blank on live entries: the loop never closes an
+  interval and records no event time.
+- No `links`: the loop marks no spans in its replies.
+- Turn text is not an `Entry` field, so the record views show each turn's
+  reason and evidence, not its words. The words are in the chat.
