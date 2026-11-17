@@ -100,6 +100,12 @@ loop no entry has an end, so the pool at `M` is every entry written by `M`.
 - Register is pending. The loop has no register machinery; the connector
   accepts `register` and does not act on it. No voice prompt was written.
 - `POST /update` is out.
+- Loopback only. The connector listens on 127.0.0.1 and answers browser
+  pages from 127.0.0.1 / localhost (or `CONNECTOR_ALLOW_ORIGINS`); any other
+  page gets HTTP 403.
+- One call at a time: record reads wait while a `/chat` model call runs.
+- K-Time and E-Time show blank on live entries: the loop never closes an
+  interval and records no event time.
 - No `links`: the loop marks no spans in its replies.
 - Turn text is not an `Entry` field, so the record views show each turn's
   reason and evidence, not its words. The words are in the chat.

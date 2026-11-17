@@ -73,6 +73,15 @@ recorded instead:
    turn, `supersedes` names the previous turn in the channel, not a replaced
    belief.
 
+Known blank cells: Entry Detail's K-Time and E-Time and the cards' "Live
+until" show empty for every live entry, because both are `""`. That is the
+honest value (open; not recorded). The views were not changed this round.
+A test in `live-record-reads.test.ts` pins `isLiveAt` to false on an open
+live entry, as a warning to the next caller.
+
+`evidence` is display text: joined with `", "`, not reversible when an item
+holds a comma.
+
 ## Lessons: loop ELLE -> seam `Lesson`
 
 ELLE lessons are strings (`ElleEngine.lessons()`), logged as
@@ -107,14 +116,20 @@ the log lines only for `source`, matched by text.
 | `GET /chain?kid=&subject=` | Entries with that subject, record order. Unknown kid: 404. Unknown subject: `[]`. |
 | `GET /kidmap` | `{ "1": "<kid_tag>" }`. |
 | `POST /update` | Not served (404). The app's live adapter keeps its typed error. |
+| Model failure | HTTP 502 with a fixed sentence; the provider's detail goes to the connector log only. The user turn stays recorded with no reply turn, as the bot does on a `ModelError`. Intended. |
+| Any other failure | HTTP 500 `{ "error": "connector failed (see the connector log)" }`; bad JSON, a non-object body or a bad `Content-Length`: 400. |
 
 ## Connector home
 
 - Bots repo, `bot/connector.py`, run as `python -m bot.connector`. Branch
   `feat/audit-connector`, pushed, not merged.
 - Stdlib `http.server`, no new dependency. Binds `127.0.0.1` only. One lock
-  around the loop (the loop is not thread-safe). CORS `*` so the built app on
-  another local port can call it; no auth, as the contract says.
+  around every call (the loop is not thread-safe), so reads wait while a
+  `/chat` model call runs. No auth, as the contract says. Browser origins:
+  loopback pages (`http://127.0.0.1:<port>`, `http://localhost:<port>`) and
+  `CONNECTOR_ALLOW_ORIGINS` get CORS; any other `Origin` gets HTTP 403, so a
+  web page open in the browser cannot spend model credits or read the
+  record. (First draft sent CORS `*`; changed after review.)
 - Boot like the bot: `.env` via `config.load_dotenv`, `load_cartridge(CARTRIDGE)`,
   `boot_arche(persona, DATA_DIR / persona.slug)`. A tampered record raises
   `KatieError` and the connector exits 3 without serving. The connector does

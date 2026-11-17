@@ -1,13 +1,18 @@
 // Shape guards for the connector's record reads. A reply that does not have
 // the seam shape is refused in words; nothing is coerced into shape.
 import type { Entry, KidMap } from './seam';
+import { parseMs } from '../util/interval';
 
 const STRING_FIELDS = [
   'id', 'subject', 'state', 'pool', 'k_start', 't_time', 'e_time', 'k_time',
   'evidence', 'reason', 'prev_hash',
 ] as const;
 
-/** True when `v` has every Entry field with its seam type. */
+/**
+ * True when `v` has every Entry field with its seam type, and `k_start` and
+ * `t_time` parse as times (the views bucket and sort by them). `e_time` and
+ * `k_time` may be "": the connector sends that for "not recorded" and "open".
+ */
 export function isEntry(v: unknown): v is Entry {
   if (typeof v !== 'object' || v === null) return false;
   const e = v as Record<string, unknown>;
@@ -15,7 +20,9 @@ export function isEntry(v: unknown): v is Entry {
     typeof e.kid === 'number' && Number.isInteger(e.kid) &&
     typeof e.authority === 'number' && Number.isInteger(e.authority) &&
     e.authority >= 0 && e.authority <= 9 &&
-    STRING_FIELDS.every((f) => typeof e[f] === 'string')
+    STRING_FIELDS.every((f) => typeof e[f] === 'string') &&
+    Number.isFinite(parseMs(e.k_start as string)) &&
+    Number.isFinite(parseMs(e.t_time as string))
   );
 }
 

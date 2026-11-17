@@ -5,6 +5,7 @@ import { asEntries, asKidMap, isEntry } from './live-guards';
 import type { Entry, Lesson } from './seam';
 import { LeftPanel } from '../shell/left.ts';
 import { makeEntry, tick } from '../test-helpers.ts';
+import { isLiveAt, parseMs } from '../util/interval.ts';
 
 /** Answers each path from `routes`; unknown paths get a 404. Records every URL. */
 function routed(routes: Record<string, { status?: number; body: unknown }>): { fetch: FetchLike; urls: string[] } {
@@ -82,6 +83,13 @@ describe('live record reads: errors in words', () => {
     expect(await bare.fetchKidMap()).toEqual({ ok: false, error: 'Connector answered HTTP 500 for /kidmap' });
   });
 
+  it('an error body without words, or with non-string words, gives the status alone', async () => {
+    for (const body of [{}, { error: 404 }, { error: '' }, null]) {
+      const a = createLiveAdapter(BASE, routed({ '/entries': { status: 404, body } }).fetch);
+      expect(await a.fetchAllEntries()).toEqual({ ok: false, error: 'Connector answered HTTP 404 for /entries' });
+    }
+  });
+
   it('a refused persona on /chat shows the booted persona the connector named', async () => {
     const s = routed({ '/chat': { status: 409, body: { error: "persona 'Elara' is not booted: this connector serves 'ARCHETRON'", booted_persona: 'ARCHETRON' } } });
     const r = await createLiveAdapter(BASE, s.fetch).chat('hi', { persona: 'Elara' });
@@ -130,6 +138,8 @@ describe('live record reads: malformed replies are refused', () => {
     expect(isEntry({ ...LIVE, k_time: null })).toBe(false);
     expect(isEntry({ ...LIVE, authority: 10 })).toBe(false);
     expect(isEntry({ ...LIVE, authority: 4.5 })).toBe(false);
+    expect(isEntry({ ...LIVE, k_start: 'garbage' })).toBe(false);
+    expect(isEntry({ ...LIVE, t_time: '' })).toBe(false);
     expect(isEntry(LIVE)).toBe(true);
     expect(asEntries([], '/chain')).toEqual({ ok: true, data: [] });
   });
@@ -199,5 +209,13 @@ describe('/chat options unchanged by this round', () => {
       { message: 'two', persona: 'Frankenstein', register: 'movie' },
       { message: 'three' },
     ]);
+  });
+});
+
+describe('open live entries and isLiveAt (warning test)', () => {
+  it('isLiveAt says false for an open live entry (k_time ""): never run it on live data', () => {
+    // The connector applies the belief-pool rule; isLiveAt runs only in the mock.
+    // If a live path ever calls isLiveAt, it must first treat k_time "" as open.
+    expect(isLiveAt(LIVE, parseMs(LIVE.k_start) + 1000)).toBe(false);
   });
 });
