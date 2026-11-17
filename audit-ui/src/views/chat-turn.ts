@@ -1,6 +1,11 @@
-import type { ChatTurn, Lesson } from '../adapter/seam.ts';
+import type { ChatTurn, Persona, ReplyLink } from '../adapter/seam.ts';
+import { provenanceChannel } from '../shell/provenance-channel.ts';
 
-const NOT_ACTED = 'did not act this turn';
+/**
+ * One chat turn as two bubbles: the user's message (right) and the active
+ * persona's reply (left). The engines' work is not shown here; it lives in
+ * the activity feed in the right column.
+ */
 
 function el(tag: string, className: string, text?: string): HTMLElement {
   const e = document.createElement(tag);
@@ -9,97 +14,80 @@ function el(tag: string, className: string, text?: string): HTMLElement {
   return e;
 }
 
-function engineRow(cls: string, label: string): { row: HTMLElement; body: HTMLElement } {
-  const row = el('div', `engine ${cls}`);
-  row.appendChild(el('span', 'engine-label', label));
-  const body = el('span', 'engine-body');
-  row.appendChild(body);
-  return { row, body };
+/** The spans the responder authored, in order; any span that is out of range or overlaps is dropped. */
+export function validLinks(reply: string, links: ReplyLink[] | undefined): ReplyLink[] {
+  if (!links) return [];
+  const sorted = [...links].sort((a, b) => a.start - b.start);
+  const out: ReplyLink[] = [];
+  let cursor = 0;
+  for (const l of sorted) {
+    const ok =
+      Number.isInteger(l.start) && Number.isInteger(l.end) &&
+      l.start >= cursor && l.end > l.start && l.end <= reply.length;
+    if (!ok) continue;
+    out.push(l);
+    cursor = l.end;
+  }
+  return out;
 }
 
-/** Render one chat turn: user message, ARCHE reply, and the four-engine panel. */
-export function renderChatTurn(turn: ChatTurn): HTMLElement {
+function provenanceLink(text: string, l: ReplyLink): HTMLAnchorElement {
+  const a = document.createElement('a');
+  a.className = 'provenance-link';
+  // A real href (keyboard + middle-click work), but activating it here
+  // highlights the work column instead of changing the route.
+  a.setAttribute('href', `/entry/${l.kid}/${encodeURIComponent(l.subject)}/${encodeURIComponent(l.entry_id)}`);
+  a.dataset.kid = String(l.kid);
+  a.dataset.subject = l.subject;
+  a.dataset.entryId = l.entry_id;
+  a.title = `Recorded: ${l.subject} (KID ${l.kid}). Shows the record entry in the work column.`;
+  a.textContent = text;
+  const go = (e: Event): void => {
+    e.preventDefault();
+    e.stopPropagation();
+    provenanceChannel.publish({ kid: l.kid, subject: l.subject, entry_id: l.entry_id });
+  };
+  a.addEventListener('click', go);
+  a.addEventListener('keydown', (e) => {
+    if (e.key === ' ') go(e); // Enter already fires click on a link
+  });
+  return a;
+}
+
+/** Reply text with the responder's link spans turned into links. */
+export function renderReplyText(reply: string, links: ReplyLink[] | undefined): Node[] {
+  const nodes: Node[] = [];
+  let at = 0;
+  for (const l of validLinks(reply, links)) {
+    if (l.start > at) nodes.push(document.createTextNode(reply.slice(at, l.start)));
+    nodes.push(provenanceLink(reply.slice(l.start, l.end), l));
+    at = l.end;
+  }
+  if (at < reply.length) nodes.push(document.createTextNode(reply.slice(at)));
+  return nodes;
+}
+
+/** Render one turn. `persona` is who replied (null if none was recorded). */
+export function renderChatTurn(turn: ChatTurn, persona: Persona | null): HTMLElement {
+  const name = persona ?? 'The persona';
   const root = el('div', turn.known ? 'chat-turn' : 'chat-turn not-knowing');
 
-  const user = el('p', 'chat-user');
+  const userRow = el('div', 'bubble-row bubble-row-user');
+  const user = el('p', 'bubble chat-user');
   user.append(el('span', 'sr-only', 'You said: '), document.createTextNode(turn.message));
-  root.appendChild(user);
-  const reply = el('p', 'chat-arche');
-  reply.append(el('span', 'sr-only', 'ARCHE replied: '), document.createTextNode(turn.engines.arche.reply));
-  root.appendChild(reply);
+  userRow.appendChild(user);
+  root.appendChild(userRow);
 
-  const engines = el('div', 'engines');
+  const replyRow = el('div', 'bubble-row bubble-row-reply');
+  const bubble = el('div', 'bubble chat-reply');
+  bubble.dataset.persona = name;
+  const who = el('p', 'bubble-name', name);
+  who.setAttribute('aria-hidden', 'true');
+  const text = el('p', 'bubble-text');
+  text.append(el('span', 'sr-only', `${name} replied: `), ...renderReplyText(turn.engines.arche.reply, turn.links));
+  bubble.append(who, text);
+  replyRow.appendChild(bubble);
+  root.appendChild(replyRow);
 
-  const arche = engineRow('engine-arche', 'ARCHE');
-  arche.body.textContent = 'talked';
-  engines.appendChild(arche.row);
-
-  const erie = engineRow('engine-erie', 'ERIE');
-  const ask = turn.engines.erie;
-  if (ask) {
-    erie.body.appendChild(
-      el('span', 'engine-action', ask.state === 'found' ? 'found' : 'looked, found nothing'),
-    );
-    erie.body.appendChild(el('span', 'engine-text', ask.text));
-    const ul = el('ul', 'provenance');
-    for (const p of ask.provenance) {
-      const li = el('li', '');
-      li.appendChild(el('span', 'prov-source', p.source));
-      li.appendChild(el('span', 'prov-content', p.content));
-      li.appendChild(el('span', 'prov-excerpt', p.excerpt));
-      ul.appendChild(li);
-    }
-    erie.body.appendChild(ul);
-  } else {
-    erie.body.textContent = NOT_ACTED;
-  }
-  engines.appendChild(erie.row);
-
-  const elle = engineRow('engine-elle', 'ELLE');
-  const recorded = turn.engines.elle;
-  const promoted = turn.engines.elle_promoted;
-  const injected = turn.engines.lessons_in_prompt.injected;
-  const held = turn.engines.lessons_in_prompt.held;
-  let acted = false;
-  const part = (cls: string, action: string, rules: Lesson[]): void => {
-    acted = true;
-    const wrap = el('div', `elle-part ${cls}`);
-    wrap.appendChild(el('span', 'engine-action', action));
-    for (const l of rules) wrap.appendChild(el('span', 'engine-text', l.rule ?? l.detail));
-    elle.body.appendChild(wrap);
-  };
-  if (recorded) part('lesson-candidate', 'recorded a lesson (not learned yet)', [recorded]);
-  if (promoted) part('lesson-promoted', 'promoted a lesson (learned)', [promoted]);
-  if (injected.length > 0) part('lesson-injected', 'injected into this prompt:', injected);
-  if (held.length > 0) part('lesson-candidate', 'held back (not learned yet):', held);
-  if (!acted) elle.body.textContent = NOT_ACTED;
-  engines.appendChild(elle.row);
-
-  const katie = engineRow('engine-katie', 'KATIE');
-  const updates = turn.engines.katie;
-  if (updates.length > 0) {
-    katie.body.appendChild(el('span', 'engine-action', 'recorded'));
-    for (const u of updates) {
-      const a = document.createElement('a');
-      a.className = 'katie-link';
-      a.setAttribute(
-        'href',
-        `/entry/${u.kid}/${encodeURIComponent(u.subject)}/${encodeURIComponent(u.entry_id)}`,
-      );
-      a.textContent = u.entry_id;
-      katie.body.appendChild(a);
-    }
-  } else {
-    katie.body.textContent = NOT_ACTED;
-  }
-  engines.appendChild(katie.row);
-
-  // Presentational hook: dim the engines that did not act (they stay listed).
-  for (const row of Array.from(engines.children)) {
-    const body = row.querySelector('.engine-body');
-    if (body && body.textContent === NOT_ACTED) row.classList.add('engine-idle');
-  }
-
-  root.appendChild(engines);
   return root;
 }

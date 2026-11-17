@@ -35,6 +35,9 @@ async function settle(): Promise<void> {
 }
 
 async function say(message: string): Promise<void> {
+  // The chat needs a persona before the first send.
+  const pick = container.querySelector<HTMLButtonElement>('.persona-picker [data-value="Elara"]');
+  if (pick && pick.getAttribute('aria-checked') !== 'true') pick.click();
   const input = container.querySelector<HTMLInputElement>('#chat-message')!;
   input.value = message;
   container
@@ -93,10 +96,10 @@ describe('task 5: scenario entries flow through the one seam', () => {
     expect(await timeTravelTo(inside)).toContain(S1.reason);
   });
 
-  it('the KATIE link in the chat opens that entry in Entry Detail', async () => {
+  it('the KATIE item in the work column opens that entry in Entry Detail', async () => {
     start('/chat');
     await say(SCENARIO.steps[0]!.prompt);
-    const link = container.querySelector<HTMLAnchorElement>('.engine-katie a')!;
+    const link = container.querySelector<HTMLAnchorElement>('.shell-right .feed-item[data-engine="KATIE"] .katie-link')!;
     link.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, button: 0 }));
     await settle();
     expect(container.querySelector('.entry-not-found')).toBeNull();

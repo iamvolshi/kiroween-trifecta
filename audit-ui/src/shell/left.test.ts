@@ -34,7 +34,7 @@ describe('LeftPanel', () => {
     );
     await tick();
     expect(slot.querySelectorAll('nav')).toHaveLength(1);
-    const folders = Array.from(slot.querySelectorAll('.folder')).map((f) => [
+    const folders = Array.from(slot.querySelectorAll('.folder-head')).map((f) => [
       f.querySelector('a')?.getAttribute('href'),
       f.textContent,
     ]);
@@ -57,7 +57,7 @@ describe('LeftPanel', () => {
       })),
     );
     await tick();
-    expect(slot.querySelector('.folder a')?.getAttribute('href')).toBe('/entry/1/temperature/new');
+    expect(slot.querySelector('.folder-head a')?.getAttribute('href')).toBe('/entry/1/temperature/new');
     expect(slot.querySelector('.folder-count')?.textContent).toBe(' (2)');
   });
 
@@ -86,7 +86,7 @@ describe('LeftPanel', () => {
     await tick();
     first.resolve({ ok: true, data: [makeEntry({ id: 'o', subject: 'stale.x' })] });
     await tick();
-    expect(Array.from(slot.querySelectorAll('.folder a')).map((a) => a.textContent)).toEqual(['new']);
+    expect(Array.from(slot.querySelectorAll('.folder-head a')).map((a) => a.textContent)).toEqual(['new']);
 
     const late = deferred<AdapterResult<Entry[]>>();
     const m = mountLeft(adapterOf(() => late.promise));

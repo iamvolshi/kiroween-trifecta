@@ -4,6 +4,7 @@ import './styles/chat.css';
 import './styles/calendar.css';
 import './styles/shell.css';
 import './styles/telemetry.css';
+import './styles/folders.css';
 import { createActiveAdapter } from './adapter/active.ts';
 import { boot } from './boot.ts';
 

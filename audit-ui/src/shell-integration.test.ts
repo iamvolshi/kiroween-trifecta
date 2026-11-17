@@ -1,7 +1,8 @@
 /**
- * Shell build (WO-H): the three columns working together on the mock
- * order-1042 scenario. Center = chat and record views, right = Curator + ELLE
- * telemetry, left = directories. Lessons stay grey until promoted and are
+ * Shell: the three columns working together on the mock order-1042
+ * scenario. Left = directories and the subject folders (0-9 meter, history,
+ * lessons inside), center = the chat and record views, right = the work
+ * column (one activity feed). Lessons stay grey until promoted and are
  * injected only after they are learned.
  */
 import { describe, it, expect, afterEach } from 'vitest';
@@ -31,6 +32,8 @@ async function settle(): Promise<void> {
 }
 
 async function say(message: string): Promise<void> {
+  const pick = container.querySelector<HTMLButtonElement>('.shell-center .persona-picker [data-value="Elara"]');
+  if (pick && pick.getAttribute('aria-checked') !== 'true') pick.click();
   const input = container.querySelector<HTMLInputElement>('.shell-center #chat-message')!;
   input.value = message;
   container
@@ -44,27 +47,34 @@ async function playStep(n: number): Promise<void> {
 }
 
 function folder(subject: string): HTMLElement | null {
-  const all = Array.from(container.querySelectorAll<HTMLElement>('.shell-right .subject-folder'));
+  const all = Array.from(container.querySelectorAll<HTMLElement>('.shell-left .subject-folder'));
   return all.find((f) => f.querySelector('.folder-subject')?.textContent === subject) ?? null;
 }
 
-function lastElleRow(): string {
-  const rows = container.querySelectorAll('.shell-center .engine-elle');
-  return rows[rows.length - 1]?.textContent ?? '';
+/** The ELLE feed items of the most recent turn, as one string. */
+function lastTurnElle(): string {
+  const items = Array.from(container.querySelectorAll<HTMLElement>('.shell-right .feed-item'));
+  const turnOf = (li: HTMLElement): number => Number(li.dataset.feedId!.split('-')[0]!.slice(1));
+  const last = container.querySelectorAll('.shell-center .chat-turn').length - 1;
+  return items
+    .filter((li) => li.dataset.engine === 'ELLE' && turnOf(li) === last)
+    .map((li) => li.textContent)
+    .join(' | ');
 }
 
 const RULE = 'Check the carrier feed before promising a delivery date.';
 const DATE = 'order-1042.delivery_date';
 const PARCEL = 'parcel-77.status';
 
-describe('right column: subject folders carry the 0-9 value and move with the record', () => {
+describe('left column: subject folders carry the 0-9 value and move with the record', () => {
   it('delivery_date goes 6 -> 7 and parcel status 7 -> 8 as the scenario plays', async () => {
     start('/chat');
     await settle();
-    expect(container.querySelector('.shell-right .empty-state')).not.toBeNull();
+    expect(folder(DATE)).toBeNull();
 
     await playStep(1);
     expect(folder(DATE)?.querySelector('.folder-value')?.textContent).toBe('6');
+    expect(folder(DATE)?.closest('.folder')?.getAttribute('data-group')).toBe('order-1042');
 
     await playStep(2);
     expect(folder(PARCEL)?.querySelector('.folder-value')?.textContent).toBe('7');
@@ -72,9 +82,11 @@ describe('right column: subject folders carry the 0-9 value and move with the re
     await playStep(3);
     expect(folder(DATE)?.querySelector('.folder-value')?.textContent).toBe('7');
     expect(folder(DATE)?.querySelector('.folder-history')?.textContent).toBe('6 -> 7');
+    expect(folder(DATE)?.getAttribute('data-authority')).toBe('7');
 
     await playStep(4);
     expect(folder(PARCEL)?.querySelector('.folder-value')?.textContent).toBe('8');
+    expect(container.querySelector('.shell-right .subject-folder')).toBeNull();
   });
 });
 
@@ -83,8 +95,8 @@ describe('lessons: grey until promoted, injected only after learned', () => {
     start('/chat');
     for (const n of [1, 2, 3, 4]) await playStep(n);
 
-    // Step 4 recorded the lesson: grey, inside its subject's folder.
-    expect(lastElleRow()).toContain('recorded a lesson (not learned yet)');
+    // Step 4 recorded the lesson: grey, inside its subject's folder (left).
+    expect(lastTurnElle()).toContain('Recorded a lesson, not learned yet');
     const candidate = folder(DATE)?.querySelector('.lesson-candidate');
     expect(candidate?.textContent).toContain(RULE);
     expect(folder(DATE)?.querySelector('.lesson-promoted')).toBeNull();
@@ -92,32 +104,35 @@ describe('lessons: grey until promoted, injected only after learned', () => {
 
     // A prompt seeking the subject before promotion: held back, not injected.
     await say('What is the delivery date?');
-    expect(lastElleRow()).toContain('held back (not learned yet)');
-    expect(lastElleRow()).not.toContain('injected into this prompt');
+    expect(lastTurnElle()).toContain('Held back a lesson that is not learned yet');
+    expect(lastTurnElle()).not.toContain('Used a learned lesson');
 
     // Step 5 promotes; not injected on that same turn.
     await playStep(5);
-    expect(lastElleRow()).toContain('promoted a lesson (learned)');
-    expect(lastElleRow()).not.toContain('injected into this prompt');
+    expect(lastTurnElle()).toContain('Promoted a lesson, now learned');
+    expect(lastTurnElle()).not.toContain('Used a learned lesson');
     expect(folder(DATE)?.querySelector('.lesson-promoted')?.textContent).toContain(RULE);
     expect(folder(DATE)?.querySelector('.lesson-candidate')).toBeNull();
 
     // Step 6 seeks the subject after it was learned: injected.
     await playStep(6);
-    expect(lastElleRow()).toContain('injected into this prompt');
-    expect(lastElleRow()).toContain(RULE);
+    expect(lastTurnElle()).toContain('Used a learned lesson in this reply');
+    expect(lastTurnElle()).toContain(RULE);
 
     // A prompt seeking only the parcel never gets the lesson.
     await say('Where is the parcel?');
-    expect(lastElleRow()).not.toContain(RULE);
+    expect(lastTurnElle()).not.toContain(RULE);
   });
 });
 
-describe('KATIE feed and the shell staying put', () => {
-  it('feed is newest first, links to Entry Detail, and the columns survive navigation', async () => {
+describe('the work column: one activity feed', () => {
+  it('KATIE items are newest first, link to Entry Detail, and the columns survive navigation', async () => {
     start('/chat');
+    expect(container.querySelector('.shell-right .empty-state')).not.toBeNull();
     for (const n of [1, 2, 3]) await playStep(n);
-    const links = Array.from(container.querySelectorAll<HTMLAnchorElement>('.shell-right .katie-feed a'));
+    const links = Array.from(
+      container.querySelectorAll<HTMLAnchorElement>('.shell-right .feed-item[data-engine="KATIE"] .katie-link'),
+    );
     expect(links.map((a) => decodeURIComponent(a.getAttribute('href')!.split('/').pop()!))).toEqual([
       'scn-s3',
       'scn-s2',
@@ -129,6 +144,26 @@ describe('KATIE feed and the shell staying put', () => {
     expect(container.querySelector('.shell-center .entry-primary')).not.toBeNull();
     expect(folder(DATE)).not.toBeNull();
     expect(container.querySelectorAll('.shell-left nav').length).toBe(1);
+  });
+
+  it('one item per ERIE / ELLE / KATIE event of the played turns, newest first, each tagged', async () => {
+    start('/chat');
+    for (const step of SCENARIO.steps) await say(step.prompt);
+    let expected = 0;
+    for (const s of SCENARIO.steps) {
+      expected += (s.erie ? 1 : 0) + s.entries.length + (s.elle ? 1 : 0) + (s.promotes ? 1 : 0);
+    }
+    expected += 1; // step 6 is the one turn that reads a learned lesson into its prompt
+    const items = Array.from(container.querySelectorAll<HTMLElement>('.shell-right .feed-item'));
+    expect(items).toHaveLength(expected);
+    for (const li of items) {
+      expect(['ERIE', 'ELLE', 'KATIE']).toContain(li.dataset.engine);
+      expect(li.querySelector('.engine-tag')?.textContent).toBe(li.dataset.engine);
+    }
+    const turnOf = (li: HTMLElement): number => Number(li.dataset.feedId!.split('-')[0]!.slice(1));
+    const order = items.map(turnOf);
+    expect(order).toEqual([...order].sort((a, b) => b - a));
+    expect(container.querySelector('.shell-right')?.textContent).not.toContain('ARCHE');
   });
 });
 

@@ -177,7 +177,7 @@
   list-style: none;
 }
 
-.folder-list .folder,
+.folder-list .folder-head,
 .left-links li {
   display: flex;
   align-items: baseline;
@@ -186,7 +186,7 @@
   border-radius: var(--radius);
 }
 
-.folder-list .folder a,
+.folder-list .folder-head a,
 .left-links a {
   flex: 1;
   min-width: 0;
@@ -204,7 +204,7 @@
   font-family: var(--sans);
 }
 
-.folder-list .folder a::before {
+.folder-list .folder-head a::before {
   content: '';
   display: inline-block;
   width: 10px;
@@ -215,7 +215,7 @@
   vertical-align: 0;
 }
 
-.folder-list .folder:hover,
+.folder-list .folder-head:hover,
 .left-links li:hover {
   background: var(--surface);
 }
@@ -249,13 +249,13 @@
     padding: var(--s3);
   }
 
-  .folder-list .folder a {
+  .folder-list .folder-head a {
     padding: var(--s1);
     font-size: var(--fs-meta);
     overflow-wrap: normal;
   }
 
-  .folder-list .folder a::before {
+  .folder-list .folder-head a::before {
     margin-right: var(--s1);
   }
 

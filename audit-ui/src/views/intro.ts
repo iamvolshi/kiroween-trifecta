@@ -10,8 +10,8 @@ export const INTROS = {
   },
   chat: {
     view: 'Chat',
-    question: 'What is the agent doing right now?',
-    how: 'Send a message. Each reply lists every engine: ARCHE talked, ERIE found, ELLE learned, KATIE recorded.',
+    question: 'Who do you want to talk to?',
+    how: 'ARCHE runs the persona you choose. Pick one, then send a message. The right column shows what the engines did.',
   },
   timeTravel: {
     view: 'Time Travel',

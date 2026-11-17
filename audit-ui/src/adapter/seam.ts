@@ -103,6 +103,35 @@ export interface EngineActivity {
   katie: UpdateResult[];             // KATIE recorded (empty = did not act)
 }
 
+/** The faces ARCHE can run. The app sends the NAME; the loop owns the voices. */
+export type Persona = 'Frankenstein' | 'Elara' | 'ARCHETRON';
+export const PERSONAS: readonly Persona[] = ['Frankenstein', 'Elara', 'ARCHETRON'];
+
+/** Frankenstein's register (Mansplainer engine): the novel's creature or the film's. */
+export type Register = 'book' | 'movie';
+
+/** Sent with every chat call. `register` only when persona is Frankenstein. */
+export interface ChatOptions {
+  persona: Persona;
+  register?: Register;
+}
+
+/**
+ * A provenance link span inside the reply text, AUTHORED BY THE RESPONDING
+ * SIDE (never derived by matching words at render time). `start`/`end` are
+ * offsets into `engines.arche.reply` in UTF-16 code units, end exclusive
+ * (JavaScript string indices). Spans must not overlap; a span that is out
+ * of range or overlaps an earlier one is rendered as plain text.
+ */
+export interface ReplyLink {
+  start: number;
+  end: number;
+  /** The record entry the words are grounded in. */
+  kid: number;
+  subject: string;
+  entry_id: string;
+}
+
 /** One chat exchange (mirrors POST /chat). */
 export interface ChatTurn {
   message: string;
@@ -112,6 +141,8 @@ export interface ChatTurn {
   step: number | null;
   total_steps: number;
   engines: EngineActivity;
+  /** Provenance link spans over `engines.arche.reply`. Absent = no links. */
+  links?: ReplyLink[];
 }
 
 export interface SeamAdapter {
@@ -122,12 +153,33 @@ export interface SeamAdapter {
 
   /** ERIE retrieval + provenance (POST /ask). */
   ask(question: string): Promise<AdapterResult<AskResult>>;
-  /** ARCHE turn (POST /chat). */
-  chat(message: string): Promise<AdapterResult<ChatTurn>>;
+  /**
+   * One chat turn (POST /chat). `options` carries the persona name (and the
+   * Frankenstein register). The mock adapter ignores it: its replies are
+   * scripted. The live adapter sends it with every call.
+   */
+  chat(message: string, options?: ChatOptions): Promise<AdapterResult<ChatTurn>>;
   /** KATIE write (POST /update). The UI never calls this; the agent does. */
   update(req: UpdateRequest): Promise<AdapterResult<UpdateResult>>;
   /** ELLE lessons so far (GET /lessons). */
   fetchLessons(): Promise<AdapterResult<Lesson[]>>;
   /** Entries for one account, grouped by subject (GET /record/{account_id}). */
   fetchRecord(accountId: string): Promise<AdapterResult<RecordResult>>;
+}
+
+/** True when `v` has the ChatTurn fields the app renders; a connector reply without them is refused. */
+export function isChatTurn(v: unknown): v is ChatTurn {
+  const t = v as ChatTurn | null;
+  return (
+    typeof t === 'object' && t !== null &&
+    typeof t.message === 'string' &&
+    typeof t.known === 'boolean' &&
+    typeof t.engines === 'object' && t.engines !== null &&
+    typeof t.engines.arche?.reply === 'string' &&
+    Array.isArray(t.engines.katie) &&
+    typeof t.engines.lessons_in_prompt === 'object' && t.engines.lessons_in_prompt !== null &&
+    Array.isArray(t.engines.lessons_in_prompt.injected) &&
+    Array.isArray(t.engines.lessons_in_prompt.held) &&
+    (t.links === undefined || Array.isArray(t.links))
+  );
 }

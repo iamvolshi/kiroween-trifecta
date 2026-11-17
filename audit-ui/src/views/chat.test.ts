@@ -1,10 +1,9 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import type { SeamAdapter, ChatTurn, AdapterResult } from '../adapter/seam.ts';
+import type { SeamAdapter, ChatTurn, AdapterResult, ChatOptions, Persona } from '../adapter/seam.ts';
 import { ChatView } from './chat.ts';
 import { ChatLog } from './chat-log.ts';
 import { tick, deferred } from '../test-helpers.ts';
 import { renderChatTurn } from './chat-turn.ts';
-import type { Lesson } from '../adapter/seam.ts';
 
 function turn1(): ChatTurn {
   return {
@@ -45,32 +44,25 @@ function turnUnknown(): ChatTurn {
   };
 }
 
-function turnLesson(): ChatTurn {
-  return {
-    message: 'Thanks. What did you learn?',
-    known: true,
-    step: 4,
-    total_steps: 4,
-    engines: {
-      arche: { reply: 'ok' },
-      erie: null,
-      elle: { event_id: 'l1', event_type: 'lesson', detail: 'detail text', rule: 'check the carrier feed', subject: 'order-1042.delivery_date', status: 'candidate' },
-      elle_promoted: null,
-      lessons_in_prompt: { subjects: [], injected: [], held: [] },
-      katie: [],
-    },
-  };
-}
-
-function fake(fn: (m: string) => Promise<AdapterResult<ChatTurn>>): { adapter: SeamAdapter; calls: string[] } {
+function fake(fn: (m: string) => Promise<AdapterResult<ChatTurn>>): {
+  adapter: SeamAdapter;
+  calls: string[];
+  options: Array<ChatOptions | undefined>;
+} {
   const calls: string[] = [];
+  const options: Array<ChatOptions | undefined> = [];
   const adapter = {
-    chat: (m: string) => {
+    chat: (m: string, o?: ChatOptions) => {
       calls.push(m);
+      options.push(o);
       return fn(m);
     },
   } as unknown as SeamAdapter;
-  return { adapter, calls };
+  return { adapter, calls, options };
+}
+
+function pick(container: HTMLElement, persona: Persona): void {
+  container.querySelector<HTMLButtonElement>(`.persona-picker [data-value="${persona}"]`)!.click();
 }
 
 function send(container: HTMLElement, text: string): void {
@@ -89,61 +81,136 @@ describe('ChatView', () => {
     document.body.appendChild(container);
   });
 
-  it('shows empty state, labeled input, mock note before any turn', () => {
+  it('before a persona is chosen: picker, disabled composer, words, labeled input, mock note', () => {
     const { adapter } = fake(async () => ({ ok: true, data: turn1() }));
     new ChatView(adapter, new ChatLog()).mount(container);
-    expect(container.querySelector('.empty-state')?.textContent).toMatch(/not started/);
     expect(container.querySelector('nav.main-nav')).toBeNull(); // the shell owns the nav
-    expect(container.querySelector('h1')?.textContent).toBe('Chat with the agent (ARCHE)');
-    expect(container.querySelector('label[for="chat-message"]')?.textContent).toBe('Your message');
+    expect(container.querySelector('h1')?.textContent).toBe('Chat');
+    const radios = Array.from(container.querySelectorAll<HTMLButtonElement>('.persona-picker [role="radio"]'));
+    expect(radios.map((b) => b.textContent)).toEqual(['Frankenstein', 'Elara', 'ARCHETRON']);
+    expect(radios.every((b) => b.getAttribute('aria-checked') === 'false')).toBe(true);
+    expect(container.querySelector('.persona-picker')?.getAttribute('role')).toBe('radiogroup');
+    expect(container.querySelector<HTMLInputElement>('#chat-message')!.disabled).toBe(true);
+    expect(container.querySelector<HTMLButtonElement>('.chat-form button')!.disabled).toBe(true);
+    expect(container.querySelector('.persona-required')?.textContent).toBe('Choose a persona to start chatting.');
+    const label = container.querySelector('label[for="chat-message"]')!;
+    expect(label.textContent).toBe('Your message');
+    expect(label.classList.contains('sr-only')).toBe(true);
     expect(container.querySelector('.mock-note')?.textContent).toMatch(/mock/i);
     expect(container.querySelector('.step-progress')?.textContent).toBe('Scenario not started');
+    expect(container.querySelector('.empty-state')?.textContent).toMatch(/not started/);
   });
 
-  it('submit calls chat once, renders turn, progress, engines, provenance, link', async () => {
+  it('a submit before choosing a persona does nothing', async () => {
     const { adapter, calls } = fake(async () => ({ ok: true, data: turn1() }));
     new ChatView(adapter, new ChatLog()).mount(container);
+    send(container, 'hi');
+    await tick();
+    expect(calls).toHaveLength(0);
+  });
+
+  it('choosing a persona enables the composer, checks it and names it in the heading', () => {
+    const { adapter } = fake(async () => ({ ok: true, data: turn1() }));
+    new ChatView(adapter, new ChatLog()).mount(container);
+    pick(container, 'Elara');
+    expect(container.querySelector<HTMLInputElement>('#chat-message')!.disabled).toBe(false);
+    expect(container.querySelector<HTMLButtonElement>('.chat-form button')!.disabled).toBe(false);
+    expect(container.querySelector('.persona-picker [data-value="Elara"]')?.getAttribute('aria-checked')).toBe('true');
+    expect(container.querySelector('h1')?.textContent).toBe('Chat with Elara');
+    expect(container.querySelector('.persona-required')).toBeNull();
+    // focus stays on the chosen option after the picker re-renders
+    expect((document.activeElement as HTMLElement).dataset.value).toBe('Elara');
+  });
+
+  it('arrow keys move through the picker and choose', () => {
+    const { adapter } = fake(async () => ({ ok: true, data: turn1() }));
+    const log = new ChatLog();
+    new ChatView(adapter, log).mount(container);
+    pick(container, 'Frankenstein');
+    container
+      .querySelector('.persona-picker [data-value="Frankenstein"]')!
+      .dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+    expect(log.persona()).toBe('Elara');
+  });
+
+  it('submit renders the user bubble on the right and the reply on the left, no engine grid', async () => {
+    const { adapter, calls } = fake(async () => ({ ok: true, data: turn1() }));
+    new ChatView(adapter, new ChatLog()).mount(container);
+    pick(container, 'ARCHETRON');
     send(container, 'When will my order arrive?');
     await tick();
     expect(calls).toEqual(['When will my order arrive?']);
-    expect(container.querySelector('.empty-state')).toBeNull();
+    expect(container.querySelector('.bubble-row-user .chat-user')?.textContent).toContain('When will my order arrive?');
+    expect(container.querySelector('.bubble-row-reply .chat-reply')?.textContent).toContain('Your order arrives');
+    expect(container.querySelector('.engines, .engine, .engine-label, .provenance')).toBeNull();
+    expect(container.textContent).not.toContain('did not act this turn');
     expect(container.querySelector('.step-progress')?.textContent).toBe('Step 1 of 4');
-    const labels = ['arche', 'erie', 'elle', 'katie'].map(
-      (n) => container.querySelector(`.engine-${n} .engine-label`)?.textContent,
-    );
-    expect(labels).toEqual(['ARCHE', 'ERIE', 'ELLE', 'KATIE']);
-    expect(container.querySelector('.engine-arche')?.textContent).toContain('talked');
-    expect(container.querySelector('.engine-erie')?.textContent).toContain('found');
-    expect(container.querySelector('.engine-erie')?.textContent).toContain('order system');
-    expect(container.querySelector('.engine-erie')?.textContent).toContain('delivery 2026-11-18');
-    expect(container.querySelector('.engine-elle')?.textContent).toContain('did not act this turn');
-    expect(container.querySelector('.engine-katie')?.textContent).toContain('recorded');
-    const a = container.querySelector<HTMLAnchorElement>('.engine-katie a')!;
-    expect(a.getAttribute('href')).toBe('/entry/4/order-1042.delivery_date/scn-s1');
-    expect(a.textContent).toBe('scn-s1');
     expect(container.querySelector<HTMLInputElement>('#chat-message')!.value).toBe('');
     expect(container.querySelector<HTMLButtonElement>('.chat-form button')!.disabled).toBe(false);
   });
 
-  it('renders ELLE learned rule and ERIE not-acted', async () => {
-    const { adapter } = fake(async () => ({ ok: true, data: turnLesson() }));
+  it('attribution names the persona that replied; switching changes later replies only', async () => {
+    const { adapter } = fake(async () => ({ ok: true, data: turn1() }));
     new ChatView(adapter, new ChatLog()).mount(container);
-    send(container, 'thanks');
+    pick(container, 'Frankenstein');
+    send(container, 'one');
     await tick();
-    expect(container.querySelector('.engine-elle')?.textContent).toContain('recorded a lesson (not learned yet)');
-    expect(container.querySelector('.engine-elle .lesson-candidate')).not.toBeNull();
-    expect(container.querySelector('.engine-elle')?.textContent).toContain('check the carrier feed');
-    expect(container.querySelector('.engine-erie')?.textContent).toContain('did not act this turn');
-    expect(container.querySelector('.engine-katie')?.textContent).toContain('did not act this turn');
+    pick(container, 'Elara');
+    send(container, 'two');
+    await tick();
+    const replies = Array.from(container.querySelectorAll('.chat-reply'));
+    expect(replies.map((r) => r.querySelector('.sr-only')?.textContent)).toEqual([
+      'Frankenstein replied: ',
+      'Elara replied: ',
+    ]);
+    expect(replies.map((r) => r.querySelector('.bubble-name')?.textContent)).toEqual(['Frankenstein', 'Elara']);
+    expect(container.textContent).not.toContain('ARCHE replied');
+    expect(container.querySelector('h1')?.textContent).toBe('Chat with Elara');
   });
 
-  it('not-knowing turn has class, no KATIE link, progress unchanged', async () => {
+  it('the Book / Movie switch shows only for Frankenstein and defaults to Movie', () => {
+    const { adapter } = fake(async () => ({ ok: true, data: turn1() }));
+    new ChatView(adapter, new ChatLog()).mount(container);
+    expect(container.querySelector('.register-switch')).toBeNull();
+    pick(container, 'Elara');
+    expect(container.querySelector('.register-switch')).toBeNull();
+    pick(container, 'Frankenstein');
+    const sw = container.querySelector('.register-switch')!;
+    expect(sw.getAttribute('role')).toBe('radiogroup');
+    expect(sw.querySelector('[data-value="movie"]')?.getAttribute('aria-checked')).toBe('true');
+    expect(sw.querySelector('[data-value="book"]')?.getAttribute('aria-checked')).toBe('false');
+    sw.querySelector<HTMLButtonElement>('[data-value="book"]')!.click();
+    expect(container.querySelector('.register-switch [data-value="book"]')?.getAttribute('aria-checked')).toBe('true');
+    pick(container, 'ARCHETRON');
+    expect(container.querySelector('.register-switch')).toBeNull();
+  });
+
+  it('sends the persona with every call, and the register only for Frankenstein', async () => {
+    const { adapter, options } = fake(async () => ({ ok: true, data: turn1() }));
+    new ChatView(adapter, new ChatLog()).mount(container);
+    pick(container, 'Frankenstein');
+    send(container, 'a');
+    await tick();
+    container.querySelector<HTMLButtonElement>('.register-switch [data-value="book"]')!.click();
+    send(container, 'b');
+    await tick();
+    pick(container, 'Elara');
+    send(container, 'c');
+    await tick();
+    expect(options).toEqual([
+      { persona: 'Frankenstein', register: 'movie' },
+      { persona: 'Frankenstein', register: 'book' },
+      { persona: 'Elara' },
+    ]);
+  });
+
+  it('not-knowing reply keeps its own treatment', async () => {
     const { adapter } = fake(async () => ({ ok: true, data: turnUnknown() }));
     new ChatView(adapter, new ChatLog()).mount(container);
+    pick(container, 'Elara');
     send(container, 'blah');
     await tick();
-    expect(container.querySelector('.chat-turn.not-knowing')).not.toBeNull();
-    expect(container.querySelector('.engine-katie a')).toBeNull();
+    expect(container.querySelector('.chat-turn.not-knowing .chat-reply')).not.toBeNull();
     expect(container.querySelector('.step-progress')?.textContent).toBe('Scenario not started');
   });
 
@@ -151,9 +218,10 @@ describe('ChatView', () => {
     const log = new ChatLog();
     const { adapter } = fake(async () => ({ ok: false, error: 'boom' }));
     new ChatView(adapter, log).mount(container);
+    pick(container, 'Elara');
     send(container, 'hi');
     await tick();
-    expect(container.querySelector('.error-state')?.textContent).toBe('boom');
+    expect(container.querySelector('.chat-error .error-state')?.textContent).toBe('boom');
     expect(log.turns()).toHaveLength(0);
     expect(container.querySelector<HTMLButtonElement>('.chat-form button')!.disabled).toBe(false);
   });
@@ -161,16 +229,20 @@ describe('ChatView', () => {
   it('blank input does not call chat', async () => {
     const { adapter, calls } = fake(async () => ({ ok: true, data: turn1() }));
     new ChatView(adapter, new ChatLog()).mount(container);
+    pick(container, 'Elara');
     send(container, '   ');
     await tick();
     expect(calls).toHaveLength(0);
   });
 
-  it('disables Send while waiting', async () => {
+  it('disables Send while waiting, also across a persona switch', async () => {
     const d = deferred<AdapterResult<ChatTurn>>();
     const { adapter } = fake(() => d.promise);
     new ChatView(adapter, new ChatLog()).mount(container);
+    pick(container, 'Elara');
     send(container, 'hi');
+    expect(container.querySelector<HTMLButtonElement>('.chat-form button')!.disabled).toBe(true);
+    pick(container, 'ARCHETRON');
     expect(container.querySelector<HTMLButtonElement>('.chat-form button')!.disabled).toBe(true);
     d.resolve({ ok: true, data: turn1() });
     await tick();
@@ -183,99 +255,44 @@ describe('ChatView', () => {
     const { adapter } = fake(() => d.promise);
     const view = new ChatView(adapter, log);
     view.mount(container);
+    pick(container, 'Elara');
     send(container, 'hi');
     view.unmount();
     d.resolve({ ok: true, data: turn1() });
     await tick();
     expect(container.innerHTML).toBe('');
-    // The agent already played the step; the transcript must not lose it.
     expect(log.turns()).toHaveLength(1);
+    expect(log.personaAt(0)).toBe('Elara');
 
     new ChatView(adapter, log).mount(container);
     expect(container.querySelector('.step-progress')?.textContent).toBe('Step 1 of 4');
   });
 
-  it('log survives remount', async () => {
+  it('the log and the chosen persona survive a remount', async () => {
     const log = new ChatLog();
     const { adapter } = fake(async () => ({ ok: true, data: turn1() }));
     const v1 = new ChatView(adapter, log);
     v1.mount(container);
+    pick(container, 'ARCHETRON');
     send(container, 'hi');
     await tick();
     v1.unmount();
     new ChatView(adapter, log).mount(container);
     expect(container.querySelectorAll('.chat-turn')).toHaveLength(1);
-    expect(container.querySelector('.step-progress')?.textContent).toBe('Step 1 of 4');
-    expect(container.querySelector('.empty-state')).toBeNull();
+    expect(container.querySelector('.persona-picker [data-value="ARCHETRON"]')?.getAttribute('aria-checked')).toBe('true');
+    expect(container.querySelector<HTMLInputElement>('#chat-message')!.disabled).toBe(false);
   });
 });
 
-describe('ERIE not_found is shown as not found', () => {
-  it('a not_found retrieval does not read as "found"', async () => {
-    const c = document.createElement('div');
-    const notFound: ChatTurn = {
-      ...turn1(),
-      engines: {
-        ...turn1().engines,
-        erie: { question: 'q', state: 'not_found', text: 'nothing', provenance: [] },
-      },
-    };
-    const { adapter } = fake(async () => ({ ok: true, data: notFound }));
-    new ChatView(adapter, new ChatLog()).mount(c);
-    send(c, 'hi');
-    await tick();
-    const action = c.querySelector('.engine-erie .engine-action')?.textContent;
-    expect(action).toBe('looked, found nothing');
-  });
-});
-
-describe('ELLE row in a chat turn', () => {
-  const L = (rule: string, status: 'candidate' | 'promoted'): Lesson => ({
-    event_id: 'x',
-    event_type: 'lesson',
-    detail: 'd',
-    rule,
-    subject: 's',
-    status,
-  });
-  const elleText = (t: ChatTurn): string =>
-    renderChatTurn(t).querySelector('.engine-elle')?.textContent ?? '';
-
-  it('recorded', () => {
-    const t = turn1();
-    t.engines.elle = L('rule A', 'candidate');
-    const txt = elleText(t);
-    expect(txt).toContain('recorded a lesson (not learned yet)');
-    expect(txt).toContain('rule A');
+describe('renderChatTurn', () => {
+  it('a turn with no recorded persona still never says ARCHE replied', () => {
+    const root = renderChatTurn(turn1(), null);
+    expect(root.querySelector('.chat-reply .sr-only')?.textContent).toBe('The persona replied: ');
   });
 
-  it('promoted', () => {
-    const t = turn1();
-    t.engines.elle_promoted = L('rule B', 'promoted');
-    const root = renderChatTurn(t);
-    expect(root.querySelector('.engine-elle .lesson-promoted')).not.toBeNull();
-    expect(root.querySelector('.engine-elle')?.textContent).toContain('promoted a lesson (learned)');
-    expect(root.querySelector('.engine-elle')?.textContent).toContain('rule B');
-  });
-
-  it('injected', () => {
-    const t = turn1();
-    t.engines.lessons_in_prompt = { subjects: ['s'], injected: [L('rule C', 'promoted')], held: [] };
-    const txt = elleText(t);
-    expect(txt).toContain('injected into this prompt:');
-    expect(txt).toContain('rule C');
-  });
-
-  it('held', () => {
-    const t = turn1();
-    t.engines.lessons_in_prompt = { subjects: ['s'], injected: [], held: [L('rule D', 'candidate')] };
-    const txt = elleText(t);
-    expect(txt).toContain('held back (not learned yet):');
-    expect(txt).toContain('rule D');
-    expect(txt).not.toContain('injected');
-  });
-
-  it('none', () => {
-    expect(elleText(turn1())).toContain('did not act this turn');
+  it('no provenance list and no engine panel in a turn', () => {
+    const root = renderChatTurn(turn1(), 'Elara');
+    expect(root.querySelector('.engines')).toBeNull();
+    expect(root.textContent).not.toContain('order system');
   });
 });

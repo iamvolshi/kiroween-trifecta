@@ -1,9 +1,9 @@
-/* Captions written as `content: 'X'; content: 'X' / '';`: the first is the
-   fallback for browsers without CSS alt text; the second marks the caption
-   decorative, because a hidden .sr-only label already speaks it. */
 /*
- * Chat view: transcript of turns, each with the four-engine grid.
- * An engine that did not act is dimmed (.engine-idle) but stays listed.
+ * Chat view: a normal chat. Persona picker (and Frankenstein's Book / Movie
+ * switch) on top, then the transcript as bubbles: your messages on the
+ * right, the persona's replies on the left. The composer is pinned at the
+ * bottom of the column. The engines' work is not shown here (see the work
+ * column on the right).
  */
 
 .chat-view {
@@ -13,9 +13,72 @@
 }
 
 .chat-view .mock-note {
-  margin: 0 0 var(--s3);
+  margin: 0 0 var(--s2);
   font-size: var(--fs-meta);
   color: var(--muted);
+}
+
+/* ---- Persona picker + register switch -------------------------------- */
+
+.chat-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s2) var(--s4);
+  margin: 0 0 var(--s3);
+}
+
+.persona-picker,
+.register-switch {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s1);
+}
+
+.radio-caption {
+  margin-right: var(--s1);
+  font-family: var(--mono);
+  font-size: var(--fs-caption);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+.radio-option {
+  padding: var(--s1) var(--s3);
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--muted);
+  letter-spacing: 0.04em;
+  text-transform: none;
+  font-family: var(--sans);
+  font-size: var(--fs-dense);
+  font-weight: 600;
+}
+
+.radio-option:hover {
+  border-color: var(--accent);
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.radio-option[aria-checked='true'] {
+  border-color: var(--accent);
+  background: var(--accent-bg);
+  color: var(--text);
+}
+
+.radio-option[aria-checked='true']::before {
+  content: '\25CF  ';
+  content: '\25CF  ' / '';
+  color: var(--accent);
+}
+
+.chat-controls .persona-required {
+  flex-basis: 100%;
+  margin: 0;
 }
 
 .chat-view .step-progress {
@@ -31,193 +94,99 @@
 
 .chat-transcript {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
 }
 
-/* ---- One turn --------------------------------------------------------- */
+/* ---- Bubbles ---------------------------------------------------------- */
 
 .chat-turn {
-  margin: 0 0 var(--s3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+}
+
+.bubble-row {
+  display: flex;
+}
+
+.bubble-row-user {
+  justify-content: flex-end;
+}
+
+.bubble-row-reply {
+  justify-content: flex-start;
+}
+
+.bubble {
+  max-width: min(42rem, 78%);
+  margin: 0;
+  padding: var(--s2) var(--s3);
   border: 1px solid var(--line);
   border-radius: var(--radius);
+  line-height: 1.45;
+  overflow-wrap: break-word;
+}
+
+.bubble.chat-user {
+  border-color: var(--accent);
+  background: var(--accent-bg);
+  color: var(--text);
+}
+
+.bubble.chat-reply {
   background: var(--surface);
-  overflow: hidden;
+  color: var(--text);
 }
 
-.chat-turn.not-knowing {
-  border-style: dashed;
-  border-color: var(--line-strong);
-}
-
-.chat-turn .chat-user {
-  margin: 0;
-  padding: var(--s2) var(--s4);
-  border-bottom: 1px solid var(--line);
-  background: var(--surface-2);
-  font-weight: 600;
-}
-
-.chat-turn .chat-user::before {
-  content: 'You'; content: 'You' / '';
-  margin-right: var(--s3);
+.bubble-name {
+  margin: 0 0 2px;
+  font-family: var(--mono);
   font-size: var(--fs-caption);
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--faint);
+  color: var(--accent);
 }
 
-.chat-turn .chat-arche {
+.bubble-text {
   margin: 0;
-  padding: var(--s3) var(--s4);
-  font-size: var(--fs-title);
-  line-height: 1.45;
+  font-size: var(--fs-body);
 }
 
-.chat-turn.not-knowing .chat-arche {
+/* Not-knowing is content: its own look, dashed, italic, muted. */
+.chat-turn.not-knowing .bubble.chat-reply {
+  border-style: dashed;
+  border-color: var(--line-strong);
+  background: var(--inset);
+}
+
+.chat-turn.not-knowing .bubble-text {
   color: var(--muted);
   font-style: italic;
 }
 
-/* ---- Engine grid ------------------------------------------------------ */
-
-.engines {
-  display: grid;
-  gap: 1px;
-  border-top: 1px solid var(--line);
-  background: var(--line);
-}
-
-.engines .engine {
-  display: grid;
-  grid-template-columns: 4.75rem minmax(0, 1fr);
-  gap: var(--s3);
-  align-items: baseline;
-  padding: var(--s2) var(--s4);
-  background: var(--surface);
-  font-size: var(--fs-dense);
-}
-
-.engines .engine-label {
-  justify-self: start;
-  padding: 1px var(--s2);
-  border: 1px solid currentColor;
-  border-radius: var(--radius);
-  font-family: var(--mono);
-  font-size: var(--fs-caption);
-  font-weight: 700;
-  letter-spacing: 0.06em;
-}
-
-.engines .engine-label { color: var(--text); border-color: var(--line-strong); }
-
-
-
-
-.engines .engine-idle {
-  background: var(--panel);
-}
-
-.engines .engine-idle .engine-label {
-  color: var(--faint);
-}
-
-.engines .engine-idle .engine-body {
-  color: var(--faint);
-}
-
-.engines .engine-action {
-  margin-right: var(--s2);
-  font-weight: 600;
-  color: var(--text);
-}
-
-.engines .engine-text {
-  color: var(--muted);
-}
-
-.engines .provenance {
-  margin: var(--s2) 0 0;
-  padding: 0;
-  list-style: none;
-}
-
-.engines .provenance li {
-  margin-top: var(--s1);
-  padding: var(--s1) var(--s2);
-  border-left: 2px solid var(--accent);
-  background: var(--panel);
-  font-family: var(--mono);
-  font-size: var(--fs-meta);
-}
-
-.engines .provenance span {
-  margin-right: var(--s2);
-}
-
-.prov-source {
+/* Provenance: the words the responder grounded in a record entry. */
+.provenance-link {
   color: var(--accent);
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
 }
 
-.prov-content {
-  color: var(--text);
+.provenance-link:hover {
+  text-decoration-style: solid;
 }
 
-.prov-excerpt {
-  color: var(--muted);
-}
-
-.katie-link {
-  font-family: var(--mono);
-  margin-right: var(--s2);
-}
-
-/* ELLE parts inside a turn. */
-.elle-part {
-  margin-bottom: var(--s1);
-}
-
-.elle-part:last-child {
-  margin-bottom: 0;
-}
-
-.elle-part.lesson-candidate,
-.elle-part.lesson-held {
-  color: var(--faint);
-}
-
-.elle-part.lesson-candidate .engine-action,
-.elle-part.lesson-held .engine-action {
-  color: var(--faint);
-}
-
-.elle-part.lesson-promoted .engine-action {
-  color: var(--ok);
-}
-
-.elle-part.lesson-injected {
-  padding: var(--s1) var(--s2);
-  border: 1px solid var(--ok);
-  border-radius: var(--radius);
-  background: var(--ok-bg);
-}
-
-.elle-part.lesson-injected .engine-action {
-  color: var(--ok);
-}
-
-.elle-part.lesson-injected .engine-text {
-  color: var(--text);
-}
-
-/* ---- Composer --------------------------------------------------------- */
+/* ---- Composer, pinned at the bottom ----------------------------------- */
 
 .chat-form {
   position: sticky;
   /* Stick over the column's bottom padding, so nothing shows beneath it. */
   bottom: calc(-1 * var(--s5));
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  gap: var(--s3);
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--s2);
   align-items: center;
   margin: var(--s3) 0 calc(-1 * var(--s5));
   padding: var(--s3) 0 var(--s4);
@@ -225,10 +194,19 @@
   background: var(--bg);
 }
 
-.chat-form label {
-  font-size: var(--fs-caption);
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--muted);
+.chat-form input {
+  width: 100%;
+  padding: var(--s3);
+  font-family: var(--sans);
+  font-size: var(--fs-body);
+}
+
+.chat-form input:disabled {
+  border-style: dashed;
+  color: var(--faint);
+  cursor: not-allowed;
+}
+
+.chat-form button {
+  padding: var(--s3) var(--s5);
 }

@@ -1,7 +1,9 @@
-import type { Entry, Lesson, SeamAdapter } from '../adapter/seam.ts';
+import type { Entry, SeamAdapter } from '../adapter/seam.ts';
 import type { ChatLog } from '../views/chat-log.ts';
 import type { Panel } from './panel.ts';
-import { compareKStart } from '../util/interval.ts';
+import { ACTIVE_ADAPTER_KIND } from '../adapter/active.ts';
+import { feedItems, type FeedItem } from './activity-feed.ts';
+import { provenanceChannel, type ProvenanceTarget } from './provenance-channel.ts';
 
 function el(tag: string, className: string, text?: string): HTMLElement {
   const e = document.createElement(tag);
@@ -10,49 +12,55 @@ function el(tag: string, className: string, text?: string): HTMLElement {
   return e;
 }
 
-function renderLesson(l: Lesson): HTMLElement {
-  const promoted = l.status === 'promoted';
-  const li = el('li', promoted ? 'lesson lesson-promoted' : 'lesson lesson-candidate');
-  li.appendChild(el('span', 'lesson-status', promoted ? 'learned' : 'not learned yet'));
-  li.appendChild(el('span', 'lesson-rule', l.rule ?? l.detail));
+export const WORK_HEADING = ACTIVE_ADAPTER_KIND === 'mock' ? 'What the machine is doing (mock)' : 'What the machine is doing';
+
+function renderItem(item: FeedItem): HTMLElement {
+  const li = el('li', 'feed-item');
+  li.dataset.feedId = item.id;
+  li.dataset.engine = item.engine;
+  if (item.entry) {
+    li.dataset.kid = String(item.entry.kid);
+    li.dataset.subject = item.entry.subject;
+    li.dataset.entryId = item.entry.entry_id;
+  }
+  const tag = el('span', 'engine-tag', item.engine);
+  tag.dataset.engine = item.engine;
+  li.appendChild(tag);
+  li.appendChild(el('span', 'feed-text', item.text));
+
+  for (const s of item.sources ?? []) {
+    const line = el('span', 'feed-source');
+    line.append(el('span', 'feed-source-name', s.source), document.createTextNode(` ${s.excerpt}`));
+    li.appendChild(line);
+  }
+  if (item.entry) {
+    const a = document.createElement('a');
+    a.className = 'katie-link';
+    a.setAttribute(
+      'href',
+      `/entry/${item.entry.kid}/${encodeURIComponent(item.entry.subject)}/${encodeURIComponent(item.entry.entry_id)}`,
+    );
+    a.textContent = item.entry.subject;
+    li.appendChild(a);
+    li.appendChild(el('span', 'katie-evidence', item.entry.evidence ?? 'entry not visible'));
+  }
+  const step = item.from.step !== null ? ` (step ${item.from.step})` : '';
+  li.appendChild(el('span', 'feed-from', `from: "${item.from.message}"${step}`));
   return li;
 }
 
-function renderFolder(subject: string, entries: Entry[], lessons: Lesson[]): HTMLElement {
-  const folder = el('section', 'subject-folder');
-  folder.appendChild(el('h3', 'folder-subject', subject));
-
-  const mine = entries.filter((e) => e.subject === subject).sort(compareKStart);
-  const value = el('p', 'folder-authority');
-  value.appendChild(el('span', 'folder-label', 'authority of latest entry: '));
-  if (mine.length === 0) {
-    value.appendChild(el('span', 'folder-value', '--'));
-    value.appendChild(el('span', 'folder-history', 'no entry recorded'));
-  } else {
-    const latest = mine[mine.length - 1].authority;
-    // Presentational hook: the CSS meter reads the same number, nothing else.
-    folder.dataset.authority = String(latest);
-    value.appendChild(el('span', 'folder-value', String(latest)));
-    value.appendChild(
-      el('span', 'folder-history', mine.map((e) => String(e.authority)).join(' -> ')),
-    );
-  }
-  folder.appendChild(value);
-
-  const own = lessons.filter((l) => l.subject === subject);
-  if (own.length > 0) {
-    const ul = el('ul', 'folder-lessons');
-    for (const l of own) ul.appendChild(renderLesson(l));
-    folder.appendChild(ul);
-  }
-  return folder;
-}
-
-/** Right column: Curator + ELLE as one worker. Everything derives from the seam and the log. */
+/**
+ * Right column: the work column. One activity feed, newest first: what
+ * ERIE, ELLE and KATIE did on each turn, each item one sentence with a small
+ * engine tag. Derived only from the ChatLog and the seam. A provenance link
+ * in the chat highlights its KATIE item through `provenanceChannel`.
+ */
 export class TelemetryPanel implements Panel {
   private root: HTMLElement | null = null;
   private token = 0;
   private unsubscribe: (() => void) | null = null;
+  private unsubscribeLinks: (() => void) | null = null;
+  private lastTarget: ProvenanceTarget | null = null;
   private adapter: SeamAdapter;
   private log: ChatLog;
 
@@ -65,108 +73,59 @@ export class TelemetryPanel implements Panel {
     this.root = el('div', 'telemetry');
     slot.appendChild(this.root);
     this.unsubscribe = this.log.subscribe(() => this.refresh());
-    this.render([], [], []);
+    this.unsubscribeLinks = provenanceChannel.subscribe((t) => this.highlight(t));
+    this.render([]);
     this.refresh();
   }
 
   refresh(): void {
     if (!this.root) return;
     const my = ++this.token;
-    void (async () => {
-      const [entries, lessons] = await Promise.all([
-        this.adapter.fetchAllEntries(),
-        this.adapter.fetchLessons(),
-      ]);
+    void this.adapter.fetchAllEntries().then((entries) => {
       if (my !== this.token || !this.root) return;
-      if (!entries.ok || !lessons.ok) {
-        if (!entries.ok) this.renderError(entries.error);
-        else if (!lessons.ok) this.renderError(lessons.error);
-        return;
-      }
-      this.render(entries.data, lessons.data, this.log.turns());
-    })();
+      // The feed comes from the log; entries only add KATIE evidence when visible.
+      this.render(entries.ok ? entries.data : []);
+    });
+  }
+
+  /** Scroll to and mark the KATIE item for `t`. No item, nothing happens. Focus is not moved. */
+  highlight(t: ProvenanceTarget, scroll = true): void {
+    const root = this.root;
+    if (!root) return;
+    const items = Array.from(root.querySelectorAll<HTMLElement>('.feed-item[data-entry-id]'));
+    const hit = items.find(
+      (li) => li.dataset.entryId === t.entry_id && li.dataset.subject === t.subject && li.dataset.kid === String(t.kid),
+    );
+    if (!hit) return;
+    this.lastTarget = t;
+    for (const li of root.querySelectorAll('.feed-item.is-highlighted')) li.classList.remove('is-highlighted');
+    hit.classList.add('is-highlighted');
+    if (scroll) hit.scrollIntoView?.({ block: 'nearest' });
   }
 
   unmount(): void {
     this.token++;
     this.unsubscribe?.();
     this.unsubscribe = null;
+    this.unsubscribeLinks?.();
+    this.unsubscribeLinks = null;
     this.root?.remove();
     this.root = null;
   }
 
-  private renderError(message: string): void {
-    if (!this.root) return;
-    this.root.replaceChildren(el('h2', 'telemetry-heading', 'Curator + ELLE (mock)'));
-    this.root.appendChild(el('p', 'error-state', message));
-  }
-
-  private render(entries: Entry[], lessons: Lesson[], turns: ReturnType<ChatLog['turns']>): void {
+  private render(entries: Entry[]): void {
     const root = this.root;
     if (!root) return;
-    root.replaceChildren(el('h2', 'telemetry-heading', 'Curator + ELLE (mock)'));
-
-    // Subject folders: KATIE subjects from the log, then lesson subjects, first-seen order.
-    const subjects: string[] = [];
-    const see = (s: string | null): void => {
-      if (s !== null && !subjects.includes(s)) subjects.push(s);
-    };
-    for (const t of turns) for (const u of t.engines.katie) see(u.subject);
-    for (const l of lessons) see(l.subject);
-
-    const folders = el('div', 'subject-folders');
-    if (subjects.length === 0) {
-      folders.appendChild(
-        el('p', 'empty-state', 'No subjects yet. Folders appear as the conversation records them.'),
-      );
-    } else {
-      for (const s of subjects) folders.appendChild(renderFolder(s, entries, lessons));
+    root.replaceChildren(el('h2', 'telemetry-heading', WORK_HEADING));
+    const items = feedItems(this.log.turns(), entries);
+    if (items.length === 0) {
+      root.appendChild(el('p', 'empty-state', 'Nothing has happened yet. Each step the engines take shows up here.'));
     }
-    root.appendChild(folders);
-
-    const unfiled = lessons.filter((l) => l.subject === null);
-    if (unfiled.length > 0) {
-      const box = el('div', 'lessons-unfiled-box');
-      box.appendChild(el('h3', '', 'Lessons without a subject'));
-      const ul = el('ul', 'lessons-unfiled');
-      for (const l of unfiled) ul.appendChild(renderLesson(l));
-      box.appendChild(ul);
-      root.appendChild(box);
-    }
-
-    root.appendChild(this.renderFeed(entries, turns));
-  }
-
-  private renderFeed(entries: Entry[], turns: ReturnType<ChatLog['turns']>): HTMLElement {
-    const box = el('div', 'katie-box');
-    box.appendChild(el('h3', '', 'KATIE feed'));
-    const feed = el('ul', 'katie-feed');
-    let any = false;
-    for (const t of [...turns].reverse()) {
-      for (const u of [...t.engines.katie].reverse()) {
-        any = true;
-        const li = el('li', 'katie-item');
-        const a = document.createElement('a');
-        a.className = 'katie-link';
-        a.setAttribute(
-          'href',
-          `/entry/${u.kid}/${encodeURIComponent(u.subject)}/${encodeURIComponent(u.entry_id)}`,
-        );
-        a.textContent = u.subject;
-        li.appendChild(a);
-        const entry = entries.find(
-          (e) => e.id === u.entry_id && e.kid === u.kid && e.subject === u.subject,
-        );
-        li.appendChild(
-          el('span', 'katie-evidence', entry ? entry.evidence : 'entry not visible'),
-        );
-        const step = t.step !== null ? ` (step ${t.step})` : '';
-        li.appendChild(el('span', 'katie-from', `from: "${t.message}"${step}`));
-        feed.appendChild(li);
-      }
-    }
-    if (!any) box.appendChild(el('p', 'empty-state', 'KATIE has recorded nothing yet.'));
-    box.appendChild(feed);
-    return box;
+    const feed = el('ul', 'activity-feed');
+    feed.setAttribute('aria-label', 'Activity, newest first');
+    for (const item of items) feed.appendChild(renderItem(item));
+    root.appendChild(feed);
+    // Keep the last highlight across re-renders (a new turn rebuilds the feed).
+    if (this.lastTarget) this.highlight(this.lastTarget, false);
   }
 }

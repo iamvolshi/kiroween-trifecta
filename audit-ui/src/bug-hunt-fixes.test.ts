@@ -44,6 +44,7 @@ describe('MED-1: a throwing chat adapter does not leave Send disabled', () => {
       },
     };
     new ChatView(throwing, new ChatLog()).mount(root);
+    root.querySelector<HTMLButtonElement>('.persona-picker [data-value="Elara"]')!.click();
     const input = root.querySelector<HTMLInputElement>('#chat-message')!;
     const send = root.querySelector<HTMLButtonElement>('.chat-form button')!;
     input.value = 'When will my order arrive?';
@@ -84,11 +85,12 @@ describe('MED-2: card fields, chat lines and the no-match box carry real text la
     const log = new ChatLog();
     const view = new ChatView(createMockAdapter(), log);
     view.mount(root);
+    root.querySelector<HTMLButtonElement>('.persona-picker [data-value="ARCHETRON"]')!.click();
     root.querySelector<HTMLInputElement>('#chat-message')!.value = SCENARIO.steps[0]!.prompt;
     root.querySelector('form')!.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
     await settle();
     expect(root.querySelector('.chat-user .sr-only')?.textContent).toBe('You said: ');
-    expect(root.querySelector('.chat-arche .sr-only')?.textContent).toBe('ARCHE replied: ');
+    expect(root.querySelector('.chat-reply .sr-only')?.textContent).toBe('ARCHETRON replied: ');
   });
 
   it('the filters no-match box starts with a spoken "No match" label', async () => {
@@ -114,7 +116,7 @@ describe('MED-2: card fields, chat lines and the no-match box carry real text la
       .map((p) => nodeFs.readFileSync(new URL(p, import.meta.url), 'utf8'))
       .join('');
     for (const label of ["'Authority '", "'KID '", "'live from '", "'Why'", "'Evidence'", "'Wall time (t_time)'",
-      "'Event time (e_time)'", "'Live until (k_time)'", "'No match'", "'You'"]) {
+      "'Event time (e_time)'", "'Live until (k_time)'", "'No match'"]) {
       expect(css).toContain(`content: ${label} / '';`);
     }
   });

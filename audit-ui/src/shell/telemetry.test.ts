@@ -2,23 +2,16 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import type { AdapterResult, ChatTurn, Entry, Lesson, SeamAdapter } from '../adapter/seam.ts';
 import { ChatLog } from '../views/chat-log.ts';
 import { makeEntry, tick, deferred } from '../test-helpers.ts';
-import { TelemetryPanel } from './telemetry.ts';
+import { TelemetryPanel, WORK_HEADING } from './telemetry.ts';
+import { provenanceChannel } from './provenance-channel.ts';
 
 const SUBJ = 'order-1042.delivery_date';
 
 function lesson(over: Partial<Lesson> = {}): Lesson {
-  return {
-    event_id: 'l1',
-    event_type: 'lesson',
-    detail: 'd',
-    rule: 'check the carrier feed',
-    subject: SUBJ,
-    status: 'candidate',
-    ...over,
-  };
+  return { event_id: 'l1', event_type: 'lesson', detail: 'd', rule: 'check the carrier feed', subject: SUBJ, status: 'candidate', ...over };
 }
 
-function turn(message: string, step: number, katie: ChatTurn['engines']['katie']): ChatTurn {
+function turn(message: string, step: number | null, over: Partial<ChatTurn['engines']> = {}): ChatTurn {
   return {
     message,
     known: true,
@@ -30,28 +23,19 @@ function turn(message: string, step: number, katie: ChatTurn['engines']['katie']
       elle: null,
       elle_promoted: null,
       lessons_in_prompt: { subjects: [], injected: [], held: [] },
-      katie,
+      katie: [],
+      ...over,
     },
   };
 }
 
-interface State {
-  entries: Entry[];
-  lessons: Lesson[];
+function fake(entries: () => Promise<AdapterResult<Entry[]>>): SeamAdapter {
+  return { fetchAllEntries: entries, fetchLessons: async () => ({ ok: true, data: [] }) } as unknown as SeamAdapter;
 }
 
-function fake(state: State): SeamAdapter {
-  return {
-    fetchAllEntries: async () => ({ ok: true, data: [...state.entries] }),
-    fetchLessons: async () => ({ ok: true, data: [...state.lessons] }),
-  } as unknown as SeamAdapter;
-}
+const ok = (data: Entry[]) => async (): Promise<AdapterResult<Entry[]>> => ({ ok: true, data });
 
-function entry(id: string, subject: string, authority: number, kStart: string, evidence = 'ev'): Entry {
-  return makeEntry({ id, kid: 4, subject, authority, k_start: kStart, evidence });
-}
-
-describe('TelemetryPanel', () => {
+describe('TelemetryPanel: the work column', () => {
   let slot: HTMLElement;
   beforeEach(() => {
     slot = document.createElement('div');
@@ -59,127 +43,83 @@ describe('TelemetryPanel', () => {
     document.body.appendChild(slot);
   });
 
-  it('shows heading and empty state before any turn', async () => {
-    new TelemetryPanel(fake({ entries: [], lessons: [] }), new ChatLog()).mount(slot);
+  it('heading names the work column and keeps the mock marker; empty state in words', async () => {
+    new TelemetryPanel(fake(ok([])), new ChatLog()).mount(slot);
     await tick();
-    expect(slot.querySelector('h2')?.textContent).toBe('Curator + ELLE (mock)');
-    expect(slot.querySelector('.subject-folders .empty-state')?.textContent).toBe(
-      'No subjects yet. Folders appear as the conversation records them.',
+    expect(slot.querySelector('h2')?.textContent).toBe(WORK_HEADING);
+    expect(WORK_HEADING).toBe('What the machine is doing (mock)');
+    expect(slot.querySelector('.empty-state')?.textContent).toMatch(/Nothing has happened yet/);
+    expect(slot.querySelector('.subject-folder')).toBeNull();
+  });
+
+  it('one item per event, newest first, each with its small engine tag', async () => {
+    const log = new ChatLog();
+    new TelemetryPanel(fake(ok([makeEntry({ id: 'e1', kid: 4, subject: SUBJ, evidence: 'value=x (mock)' })])), log).mount(slot);
+    log.push(
+      turn('first', 1, {
+        erie: { question: 'q', state: 'found', text: 'it says x', provenance: [{ source: 'mock:src', content: 'c', excerpt: 'ex' }] },
+        katie: [{ kid: 4, subject: SUBJ, entry_id: 'e1', seated: true }],
+      }),
     );
-    expect(slot.querySelectorAll('.subject-folder')).toHaveLength(0);
-    expect(slot.querySelector('.katie-box .empty-state')).not.toBeNull();
+    log.push(turn('second', 2, { elle: lesson(), lessons_in_prompt: { subjects: [SUBJ], injected: [], held: [lesson()] } }));
+    log.push(turn('third', null, { erie: { question: 'zzz', state: 'not_found', text: '', provenance: [] } }));
+    await tick();
+    const items = Array.from(slot.querySelectorAll<HTMLElement>('.feed-item'));
+    expect(items.map((li) => [li.dataset.feedId, li.dataset.engine])).toEqual([
+      ['t2-0', 'ERIE'],
+      ['t1-1', 'ELLE'],
+      ['t1-0', 'ELLE'],
+      ['t0-1', 'KATIE'],
+      ['t0-0', 'ERIE'],
+    ]);
+    for (const li of items) expect(li.querySelector('.engine-tag')?.textContent).toBe(li.dataset.engine);
+    expect(items[0]!.textContent).toContain('Looked, and found nothing for "zzz".');
+    expect(items[1]!.textContent).toContain('Recorded a lesson, not learned yet: check the carrier feed');
+    expect(items[2]!.textContent).toContain('Held back a lesson that is not learned yet');
+    const katie = items[3]!;
+    expect(katie.dataset.kid).toBe('4');
+    expect(katie.dataset.subject).toBe(SUBJ);
+    expect(katie.dataset.entryId).toBe('e1');
+    expect(katie.querySelector('a')?.getAttribute('href')).toBe(`/entry/4/${encodeURIComponent(SUBJ)}/e1`);
+    expect(katie.querySelector('.katie-evidence')?.textContent).toBe('value=x (mock)');
+    expect(katie.querySelector('.feed-from')?.textContent).toBe('from: "first" (step 1)');
+    expect(items[4]!.querySelector('.feed-source')?.textContent).toBe('mock:src ex');
+    expect(slot.textContent).not.toContain('ARCHE');
   });
 
-  it('makes a folder per touched subject in first-seen order', async () => {
+  it('a failed record read still shows the feed, with "entry not visible"', async () => {
     const log = new ChatLog();
-    const state: State = {
-      entries: [entry('a', 'zeta', 3, '2026-01-01T00:00:00Z'), entry('b', 'alpha', 4, '2026-01-02T00:00:00Z')],
-      lessons: [lesson({ subject: 'omega' })],
-    };
-    new TelemetryPanel(fake(state), log).mount(slot);
-    log.push(turn('m1', 1, [{ kid: 4, subject: 'zeta', entry_id: 'a', seated: true }]));
-    log.push(turn('m2', 2, [{ kid: 4, subject: 'alpha', entry_id: 'b', seated: true }]));
+    log.push(turn('m', 1, { katie: [{ kid: 4, subject: SUBJ, entry_id: 'e1', seated: true }] }));
+    new TelemetryPanel(fake(async () => ({ ok: false, error: 'boom' })), log).mount(slot);
     await tick();
-    const names = [...slot.querySelectorAll('.subject-folder .folder-subject')].map((n) => n.textContent);
-    expect(names).toEqual(['zeta', 'alpha', 'omega']);
+    expect(slot.querySelector('.feed-item .katie-evidence')?.textContent).toBe('entry not visible');
   });
 
-  it('folder value is the latest entry authority and moves 6 -> 7 on refresh', async () => {
+  it('a provenance target highlights its KATIE item; an unknown target changes nothing', async () => {
     const log = new ChatLog();
-    const state: State = { entries: [entry('s1', SUBJ, 6, '2026-11-18T00:00:00Z')], lessons: [] };
-    const panel = new TelemetryPanel(fake(state), log);
-    panel.mount(slot);
-    log.push(turn('m1', 1, [{ kid: 4, subject: SUBJ, entry_id: 's1', seated: true }]));
+    log.push(turn('m', 1, { katie: [{ kid: 4, subject: SUBJ, entry_id: 'e1', seated: true }, { kid: 5, subject: 'p.s', entry_id: 'e2', seated: true }] }));
+    new TelemetryPanel(fake(ok([])), log).mount(slot);
     await tick();
-    expect(slot.querySelector('.folder-value')?.textContent).toBe('6');
-    expect(slot.querySelector('.folder-authority')?.textContent).toContain('authority of latest entry');
-    state.entries.push(entry('s3', SUBJ, 7, '2026-11-19T00:00:00Z'));
-    panel.refresh();
-    await tick();
-    expect(slot.querySelector('.folder-value')?.textContent).toBe('7');
-    expect(slot.querySelector('.folder-history')?.textContent).toBe('6 -> 7');
+    provenanceChannel.publish({ kid: 4, subject: SUBJ, entry_id: 'e1' });
+    expect(Array.from(slot.querySelectorAll<HTMLElement>('.is-highlighted')).map((li) => li.dataset.entryId)).toEqual(['e1']);
+    provenanceChannel.publish({ kid: 5, subject: 'p.s', entry_id: 'e2' });
+    expect(Array.from(slot.querySelectorAll<HTMLElement>('.is-highlighted')).map((li) => li.dataset.entryId)).toEqual(['e2']);
+    provenanceChannel.publish({ kid: 9, subject: 'nope', entry_id: 'x' });
+    expect(Array.from(slot.querySelectorAll<HTMLElement>('.is-highlighted')).map((li) => li.dataset.entryId)).toEqual(['e2']);
   });
 
-  it('folder with no entry shows -- and no entry recorded', async () => {
-    new TelemetryPanel(fake({ entries: [], lessons: [lesson()] }), new ChatLog()).mount(slot);
-    await tick();
-    expect(slot.querySelector('.folder-value')?.textContent).toBe('--');
-    expect(slot.querySelector('.folder-history')?.textContent).toBe('no entry recorded');
-  });
-
-  it('candidate lesson is grey inside its folder; promoted shows learned; unfiled listed', async () => {
-    const state: State = {
-      entries: [],
-      lessons: [
-        lesson({ event_id: 'l1' }),
-        lesson({ event_id: 'l2', rule: 'promoted rule', status: 'promoted' }),
-        lesson({ event_id: 'l3', rule: 'loose rule', subject: null }),
-      ],
-    };
-    new TelemetryPanel(fake(state), new ChatLog()).mount(slot);
-    await tick();
-    const folder = slot.querySelector('.subject-folder')!;
-    const cand = folder.querySelector('.lesson-candidate')!;
-    expect(cand.textContent).toContain('not learned yet');
-    expect(cand.textContent).toContain('check the carrier feed');
-    const prom = folder.querySelector('.lesson-promoted')!;
-    expect(prom.textContent).toContain('learned');
-    expect(prom.textContent).not.toContain('not learned');
-    const unfiled = slot.querySelectorAll('.lessons-unfiled li');
-    expect(unfiled).toHaveLength(1);
-    expect(unfiled[0].textContent).toContain('loose rule');
-    expect(slot.querySelectorAll('.subject-folder')).toHaveLength(1);
-  });
-
-  it('KATIE feed is newest first with href, evidence and from text', async () => {
+  it('a late refresh after unmount is dropped, and unmount stops listening', async () => {
+    const late = deferred<AdapterResult<Entry[]>>();
     const log = new ChatLog();
-    const state: State = {
-      entries: [entry('s1', SUBJ, 6, '2026-11-18T00:00:00Z', 'first evidence')],
-      lessons: [],
-    };
-    new TelemetryPanel(fake(state), log).mount(slot);
-    log.push(turn('When will it arrive?', 1, [{ kid: 4, subject: SUBJ, entry_id: 's1', seated: true }]));
-    log.push(turn('It moved', 3, [{ kid: 4, subject: 'other thing', entry_id: 'x/9', seated: true }]));
-    await tick();
-    const items = [...slot.querySelectorAll('.katie-feed .katie-item')];
-    expect(items).toHaveLength(2);
-    expect(items[0].querySelector('a')?.textContent).toBe('other thing');
-    expect(items[0].querySelector('a')?.getAttribute('href')).toBe('/entry/4/other%20thing/x%2F9');
-    expect(items[0].textContent).toContain('entry not visible');
-    expect(items[0].textContent).toContain('from: "It moved" (step 3)');
-    expect(items[1].querySelector('a')?.getAttribute('href')).toBe(`/entry/4/${SUBJ}/s1`);
-    expect(items[1].textContent).toContain('first evidence');
-    expect(items[1].textContent).toContain('from: "When will it arrive?" (step 1)');
-  });
-
-  it('a late refresh after unmount is dropped', async () => {
-    const d = deferred<AdapterResult<Entry[]>>();
-    const adapter = {
-      fetchAllEntries: () => d.promise,
-      fetchLessons: async () => ({ ok: true, data: [] }),
-    } as unknown as SeamAdapter;
-    const panel = new TelemetryPanel(adapter, new ChatLog());
+    const panel = new TelemetryPanel(fake(() => late.promise), log);
     panel.mount(slot);
     panel.unmount();
-    d.resolve({ ok: true, data: [] });
+    late.resolve({ ok: true, data: [] });
     await tick();
     expect(slot.innerHTML).toBe('');
-  });
-
-  it('a stale refresh does not overwrite a newer one', async () => {
-    const d1 = deferred<AdapterResult<Entry[]>>();
-    let n = 0;
-    const adapter = {
-      fetchAllEntries: () => (++n === 1 ? d1.promise : Promise.resolve({ ok: true, data: [] })),
-      fetchLessons: async () => ({ ok: true, data: [lesson()] }),
-    } as unknown as SeamAdapter;
-    const panel = new TelemetryPanel(adapter, new ChatLog());
-    panel.mount(slot);
-    panel.refresh();
+    log.push(turn('after', 1));
+    provenanceChannel.publish({ kid: 4, subject: SUBJ, entry_id: 'e1' });
     await tick();
-    expect(slot.querySelector('.folder-value')?.textContent).toBe('--');
-    d1.resolve({ ok: true, data: [entry('old', SUBJ, 1, '2026-01-01T00:00:00Z')] });
-    await tick();
-    expect(slot.querySelector('.folder-value')?.textContent).toBe('--');
+    expect(slot.innerHTML).toBe('');
   });
 });
