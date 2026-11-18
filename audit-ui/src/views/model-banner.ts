@@ -2,7 +2,7 @@
 // from LIVE data only: the connector's status (GET /models) before a turn,
 // and each reply's served_by after it. When the two disagree, served_by wins.
 // No provider or model name is written here; every name is the connector's.
-// Mock mode shows the honest mock label (the same one switch, active.ts).
+// With no connector address, or no answer, it says the connector is unreachable.
 import type { Register, ServedBy } from '../adapter/seam.ts';
 import type { ModelRoute, ModelStatus } from '../adapter/live-models.ts';
 
@@ -12,7 +12,6 @@ export type StatusState =
   | { state: 'error'; error: string };
 
 export interface BannerInput {
-  kind: 'mock' | 'live';
   /** The switch position, or null for a persona without the switch. */
   register: Register | null;
   status: StatusState;
@@ -21,7 +20,7 @@ export interface BannerInput {
 }
 
 export interface Announcement {
-  state: 'mock' | 'loading' | 'live' | 'unconfigured' | 'unreachable';
+  state: 'loading' | 'live' | 'unconfigured' | 'unreachable';
   /** 'book' | 'movie' | 'default': drives the colour band. */
   position: Register | 'default';
   label: string;
@@ -45,9 +44,6 @@ function routeFor(status: ModelStatus, register: Register | null): ModelRoute {
 export function announce(input: BannerInput): Announcement {
   const position: Register | 'default' = input.register ?? 'default';
   const base = { position, label: POSITION_LABEL[position], model: '', provider: '', source: '', note: '' };
-  if (input.kind === 'mock') {
-    return { ...base, state: 'mock', model: 'No live model', source: 'Mock mode: replies are scripted.' };
-  }
   const route: ModelRoute | null = input.status.state === 'ok' ? routeFor(input.status.data, input.register) : null;
   if (input.served) {
     const note =

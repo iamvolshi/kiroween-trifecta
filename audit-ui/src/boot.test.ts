@@ -2,7 +2,7 @@
  * Boot decision (task 2): deep links survive boot; only exactly "/" redirects.
  */
 import { describe, it, expect, afterEach } from 'vitest';
-import { createMockAdapter } from './adapter/mock.ts';
+import { createRecordStub } from './test-helpers.ts';
 import { boot } from './boot.ts';
 import { tick } from './test-helpers.ts';
 import type { Router } from './router/router.ts';
@@ -23,7 +23,7 @@ describe('boot', () => {
     const before = window.history.length;
     app = document.createElement('div');
     document.body.appendChild(app);
-    router = boot(createMockAdapter(), app);
+    router = boot(createRecordStub(), app);
     return { before };
   }
 

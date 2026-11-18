@@ -7,7 +7,7 @@
 import { describe, it, expect } from 'vitest';
 import * as fc from 'fast-check';
 import { ActionListView } from './action-list';
-import { createMockAdapter, createErrorMock } from '../adapter/mock';
+import { createRecordStub, createFailingStub } from '../test-helpers.ts';
 import type { Entry, SeamAdapter, KidMap } from '../adapter/seam';
 import { assemblyNotUsed } from '../test-helpers';
 
@@ -101,7 +101,7 @@ describe('ActionListView – example-based', () => {
   });
 
   it('error result → <p class="error-state"> present, no <ul> (Req 3.7)', async () => {
-    const view = new ActionListView(createErrorMock());
+    const view = new ActionListView(createFailingStub());
     const el = await mountAndLoad(view);
 
     expect(el.querySelector('.error-state')).not.toBeNull();
@@ -109,7 +109,7 @@ describe('ActionListView – example-based', () => {
   });
 
   it('renders a <ul class="action-list"> when entries are present', async () => {
-    const view = new ActionListView(createMockAdapter());
+    const view = new ActionListView(createRecordStub());
     const el = await mountAndLoad(view);
 
     expect(el.querySelector('ul.action-list')).not.toBeNull();

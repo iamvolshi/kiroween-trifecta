@@ -8,7 +8,7 @@ import { EntryDetailView } from './entry-detail.ts';
 import { NotFoundView } from './not-found.ts';
 import { RecordView } from './record.ts';
 import { createNav } from './nav.ts';
-import { createMockAdapter, createErrorMock } from '../adapter/mock.ts';
+import { createRecordStub, createFailingStub } from '../test-helpers.ts';
 import type { View } from '../router/router.ts';
 import { tick } from '../test-helpers.ts';
 
@@ -22,7 +22,7 @@ async function check(make: () => View): Promise<void> {
 }
 
 describe('views do not render the nav themselves', () => {
-  const ok = createMockAdapter();
+  const ok = createRecordStub();
   it('Action List', () => check(() => new ActionListView(ok)));
   it('Time Travel', () => check(() => new TimeTravelView(ok)));
   it('Entry Detail (found)', () => check(() => new EntryDetailView(ok, 1, 'temperature', 'entry-a1')));
@@ -30,8 +30,8 @@ describe('views do not render the nav themselves', () => {
   it('Not Found', () => check(() => new NotFoundView()));
   it('Record', () => check(() => new RecordView(ok, 'order-1042')));
   it('Action List and Entry Detail in the error state', async () => {
-    await check(() => new ActionListView(createErrorMock()));
-    await check(() => new EntryDetailView(createErrorMock(), 1, 'temperature', 'x'));
+    await check(() => new ActionListView(createFailingStub()));
+    await check(() => new EntryDetailView(createFailingStub(), 1, 'temperature', 'x'));
   });
 });
 
@@ -39,11 +39,11 @@ describe('createNav', () => {
   const current = (nav: HTMLElement): string[] =>
     Array.from(nav.querySelectorAll('a[aria-current="page"]')).map((a) => a.getAttribute('href')!);
 
-  it('links all four destinations and carries the MOCK badge', () => {
+  it('links all four destinations and nothing else', () => {
     const nav = createNav();
     const hrefs = Array.from(nav.querySelectorAll('a')).map((a) => a.getAttribute('href'));
     expect(hrefs).toEqual(['/actions', '/time-travel', '/chat', '/calendar']);
-    expect(nav.querySelector('.mock-badge')?.textContent).toMatch(/MOCK/);
+    expect(nav.querySelectorAll(':scope > :not(a)')).toHaveLength(0);
   });
 
   it('marks the current destination only', () => {

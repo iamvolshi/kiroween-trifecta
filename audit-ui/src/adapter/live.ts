@@ -3,9 +3,10 @@
 // The connector contract (plain JSON over HTTP, no auth) is in
 // docs/assembly-parts.md; the request/response shapes are the types in seam.ts.
 //
-// With no base URL, every call returns the typed "Live adapter not wired"
-// error, as before. The record reads (entries, belief pool, chain, KID map)
-// are in the contract and their replies pass shape guards (live-guards.ts).
+// With no base URL, every call returns the typed NO_ADDRESS error: the
+// connector cannot be reached because no address was set at build time.
+// The record reads (entries, belief pool, chain, KID map) are in the
+// contract and their replies pass shape guards (live-guards.ts).
 // update is outside the contract and returns a typed error that says so.
 import type {
   AdapterResult,
@@ -23,7 +24,10 @@ import type {
 import { isChatTurn } from './seam';
 import { asEntries, asKidMap } from './live-guards';
 
-const NOT_WIRED = Object.freeze({ ok: false as const, error: 'Live adapter not wired' });
+/** The words every call answers when no connector address was set at build time. */
+export const NO_ADDRESS_ERROR =
+  'Connector unreachable: no connector address was set at build time (VITE_CONNECTOR_URL)';
+const NOT_WIRED = Object.freeze({ ok: false as const, error: NO_ADDRESS_ERROR });
 
 function notInContract(what: string): { ok: false; error: string } {
   return { ok: false, error: `Live adapter: ${what} is not in the connector contract yet` };

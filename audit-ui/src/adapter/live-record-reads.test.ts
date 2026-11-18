@@ -214,7 +214,7 @@ describe('/chat options unchanged by this round', () => {
 
 describe('open live entries and isLiveAt (warning test)', () => {
   it('isLiveAt says false for an open live entry (k_time ""): never run it on live data', () => {
-    // The connector applies the belief-pool rule; isLiveAt runs only in the mock.
+    // The connector applies the belief-pool rule; isLiveAt runs only in the record stub (a test double).
     // If a live path ever calls isLiveAt, it must first treat k_time "" as open.
     expect(isLiveAt(LIVE, parseMs(LIVE.k_start) + 1000)).toBe(false);
   });

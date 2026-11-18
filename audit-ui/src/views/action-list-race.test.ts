@@ -3,14 +3,14 @@
  */
 import { describe, it, expect } from 'vitest';
 import { ActionListView } from './action-list.ts';
-import { createMockAdapter } from '../adapter/mock.ts';
+import { createRecordStub } from '../test-helpers.ts';
 import type { AdapterResult, Entry, KidMap, SeamAdapter } from '../adapter/seam.ts';
 import { deferred, tick } from '../test-helpers.ts';
 
 describe('ActionListView unmount guard', () => {
   it('unmount while fetchAllEntries is pending: nothing is written afterwards', async () => {
     const pending = deferred<AdapterResult<Entry[]>>();
-    const adapter: SeamAdapter = { ...createMockAdapter(), fetchAllEntries: () => pending.promise };
+    const adapter: SeamAdapter = { ...createRecordStub(), fetchAllEntries: () => pending.promise };
     const container = document.createElement('div');
     const view = new ActionListView(adapter);
     view.mount(container);
@@ -26,7 +26,7 @@ describe('ActionListView unmount guard', () => {
 
   it('unmount while the error result is pending: no container wipe', async () => {
     const pending = deferred<AdapterResult<Entry[]>>();
-    const adapter: SeamAdapter = { ...createMockAdapter(), fetchAllEntries: () => pending.promise };
+    const adapter: SeamAdapter = { ...createRecordStub(), fetchAllEntries: () => pending.promise };
     const container = document.createElement('div');
     const view = new ActionListView(adapter);
     view.mount(container);
@@ -40,7 +40,7 @@ describe('ActionListView unmount guard', () => {
 
   it('unmount while fetchKidMap is pending: nothing is written and entries are not fetched into the view', async () => {
     const pending = deferred<AdapterResult<KidMap>>();
-    const adapter: SeamAdapter = { ...createMockAdapter(), fetchKidMap: () => pending.promise };
+    const adapter: SeamAdapter = { ...createRecordStub(), fetchKidMap: () => pending.promise };
     const container = document.createElement('div');
     const view = new ActionListView(adapter);
     view.mount(container);

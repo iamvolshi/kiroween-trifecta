@@ -15,7 +15,7 @@ function fakeAdapter(entries: Entry[]): SeamAdapter {
       data: entries.filter((e) => isLiveAt(e, ms)),
     })),
     fetchChain: bad,
-    fetchKidMap: async () => ({ ok: true, data: { 1: 'alpha (mock)' } }),
+    fetchKidMap: async () => ({ ok: true, data: { 1: 'alpha (stub)' } }),
     ask: bad, chat: bad, update: bad, fetchLessons: bad, fetchRecord: bad,
   } as unknown as SeamAdapter;
 }
@@ -87,7 +87,7 @@ describe('CalendarView', () => {
     const did = [...root.querySelectorAll('.hour-did a')].map(hrefId);
     expect(did).toEqual(entriesInHour(E, 2026, 11, 16, 14).map((e) => e.id));
     expect(root.querySelector('.hour-believed a')?.getAttribute('href')).toMatch(/^\/entry\/1\/temperature\//);
-    expect(root.querySelector('.kid')?.textContent).toContain('alpha (mock)');
+    expect(root.querySelector('.kid')?.textContent).toContain('alpha (stub)');
   });
 
   it('hour: displayed moment parses to the queried moment', async () => {

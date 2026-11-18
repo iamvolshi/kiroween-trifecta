@@ -1,7 +1,6 @@
 import type { Entry, SeamAdapter } from '../adapter/seam.ts';
 import type { ChatLog } from '../views/chat-log.ts';
 import type { Panel } from './panel.ts';
-import { ACTIVE_ADAPTER_KIND } from '../adapter/active.ts';
 import { feedItems, type FeedItem } from './activity-feed.ts';
 import { provenanceChannel, type ProvenanceTarget } from './provenance-channel.ts';
 
@@ -12,7 +11,7 @@ function el(tag: string, className: string, text?: string): HTMLElement {
   return e;
 }
 
-export const WORK_HEADING = ACTIVE_ADAPTER_KIND === 'mock' ? 'What the machine is doing (mock)' : 'What the machine is doing';
+export const WORK_HEADING = 'What the machine is doing';
 
 function renderItem(item: FeedItem): HTMLElement {
   const li = el('li', 'feed-item');
@@ -44,8 +43,7 @@ function renderItem(item: FeedItem): HTMLElement {
     li.appendChild(a);
     li.appendChild(el('span', 'katie-evidence', item.entry.evidence ?? 'entry not visible'));
   }
-  const step = item.from.step !== null ? ` (step ${item.from.step})` : '';
-  li.appendChild(el('span', 'feed-from', `from: "${item.from.message}"${step}`));
+  li.appendChild(el('span', 'feed-from', `from: "${item.from.message}"`));
   return li;
 }
 
@@ -63,6 +61,8 @@ export class TelemetryPanel implements Panel {
   private lastTarget: ProvenanceTarget | null = null;
   private adapter: SeamAdapter;
   private log: ChatLog;
+  /** False until the first record read answers: no empty-state claim before then. */
+  private loaded = false;
 
   constructor(adapter: SeamAdapter, log: ChatLog) {
     this.adapter = adapter;
@@ -83,8 +83,9 @@ export class TelemetryPanel implements Panel {
     const my = ++this.token;
     void this.adapter.fetchAllEntries().then((entries) => {
       if (my !== this.token || !this.root) return;
+      this.loaded = true;
       // The feed comes from the log; entries only add KATIE evidence when visible.
-      this.render(entries.ok ? entries.data : []);
+      this.render(entries.ok ? entries.data : [], entries.ok ? null : entries.error);
     });
   }
 
@@ -111,16 +112,20 @@ export class TelemetryPanel implements Panel {
     this.unsubscribeLinks = null;
     this.root?.remove();
     this.root = null;
+    this.loaded = false;
   }
 
-  private render(entries: Entry[]): void {
+  /** `readError`: why the record read failed (the connector's words), shown above the feed. */
+  private render(entries: Entry[], readError: string | null = null): void {
     const root = this.root;
     if (!root) return;
     root.replaceChildren(el('h2', 'telemetry-heading', WORK_HEADING));
+    if (readError !== null) root.appendChild(el('p', 'error-state', readError));
     const items = feedItems(this.log.turns(), entries);
-    if (items.length === 0) {
+    if (items.length === 0 && readError === null && this.loaded) {
       root.appendChild(el('p', 'empty-state', 'Nothing has happened yet. Each step the engines take shows up here.'));
     }
+    if (items.length === 0) return;
     const feed = el('ul', 'activity-feed');
     feed.setAttribute('aria-label', 'Activity, newest first');
     for (const item of items) feed.appendChild(renderItem(item));

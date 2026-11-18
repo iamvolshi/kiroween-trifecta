@@ -9,17 +9,17 @@ import { TimeTravelView } from './time-travel.ts';
 import { EntryDetailView } from './entry-detail.ts';
 import { RecordView } from './record.ts';
 import { Router } from '../router/router.ts';
-import { createMockAdapter } from '../adapter/mock.ts';
+import { createRecordStub } from '../test-helpers.ts';
 import { makeEntry, tick } from '../test-helpers.ts';
 import type { Entry } from '../adapter/seam.ts';
 
 const ENTRIES: Entry[] = [
   makeEntry({ id: 'a1', kid: 4, subject: 'order-1042.delivery_date', state: 'confirmed', authority: 6,
-    k_start: '2026-11-16T09:12:00.000Z', k_time: '2026-11-16T14:30:00.000Z', reason: 'R-A1', evidence: 'value=a (mock)' }),
+    k_start: '2026-11-16T09:12:00.000Z', k_time: '2026-11-16T14:30:00.000Z', reason: 'R-A1', evidence: 'value=a (stub)' }),
   makeEntry({ id: 'a2', kid: 4, subject: 'order-1042.delivery_date', state: 'revised', authority: 7,
-    k_start: '2026-11-16T14:30:00.000Z', k_time: '2026-11-17T00:00:00.000Z', reason: 'R-A2', evidence: 'value=b (mock)' }),
+    k_start: '2026-11-16T14:30:00.000Z', k_time: '2026-11-17T00:00:00.000Z', reason: 'R-A2', evidence: 'value=b (stub)' }),
   makeEntry({ id: 'b1', kid: 5, subject: 'parcel-77.status', state: 'confirmed', authority: 7,
-    k_start: '2026-11-16T10:05:00.000Z', k_time: '2026-11-16T15:10:00.000Z', reason: 'R-B1', evidence: 'value=c (mock)' }),
+    k_start: '2026-11-16T10:05:00.000Z', k_time: '2026-11-16T15:10:00.000Z', reason: 'R-B1', evidence: 'value=c (stub)' }),
 ];
 
 let container: HTMLElement;
@@ -27,7 +27,7 @@ let container: HTMLElement;
 async function mountList(entries = ENTRIES): Promise<HTMLElement> {
   container = document.createElement('div');
   document.body.appendChild(container);
-  new ActionListView(createMockAdapter(entries)).mount(container);
+  new ActionListView(createRecordStub(entries)).mount(container);
   for (let i = 0; i < 4; i++) await tick();
   return container;
 }
@@ -147,7 +147,7 @@ describe('Inspect stays one click away, and never nests in the toggle', () => {
     window.history.replaceState({}, '', '/actions');
     const root = document.createElement('div');
     document.body.appendChild(root);
-    const router = new Router(createMockAdapter(ENTRIES), root);
+    const router = new Router(createRecordStub(ENTRIES), root);
     for (let i = 0; i < 4; i++) await tick();
     const li = root.querySelector('.action-list > li')!;
     expect(detailsOf(li).hidden).toBe(true);
@@ -183,7 +183,7 @@ describe('the other card views keep the full skeleton', () => {
   };
 
   it('Time Travel pool', async () => {
-    const c = await mountView((el) => new TimeTravelView(createMockAdapter(ENTRIES)).mount(el));
+    const c = await mountView((el) => new TimeTravelView(createRecordStub(ENTRIES)).mount(el));
     const input = c.querySelector<HTMLInputElement>('#moment-cursor')!;
     input.value = '2026-11-16T14:00';
     input.dispatchEvent(new Event('change'));
@@ -193,14 +193,14 @@ describe('the other card views keep the full skeleton', () => {
 
   it('Entry Detail chain', async () => {
     const c = await mountView((el) =>
-      new EntryDetailView(createMockAdapter(ENTRIES), 4, 'order-1042.delivery_date', 'a2').mount(el),
+      new EntryDetailView(createRecordStub(ENTRIES), 4, 'order-1042.delivery_date', 'a2').mount(el),
     );
     expect(c.querySelectorAll('.chain-list .record-card')).toHaveLength(2);
     expectFull(c);
   });
 
   it('Record view', async () => {
-    const c = await mountView((el) => new RecordView(createMockAdapter(ENTRIES), 'order-1042').mount(el));
+    const c = await mountView((el) => new RecordView(createRecordStub(ENTRIES), 'order-1042').mount(el));
     expect(c.querySelectorAll('.record-entries .record-card')).toHaveLength(2);
     expectFull(c);
   });

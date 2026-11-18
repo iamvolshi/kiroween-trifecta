@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { createLiveAdapter, type FetchLike } from './live';
+import { createLiveAdapter, NO_ADDRESS_ERROR, type FetchLike } from './live';
 import type { ChatTurn } from './seam';
 
 describe('live adapter without a base URL', () => {
-  it('every method returns ok:false "Live adapter not wired"', async () => {
+  it('every method answers that the connector is unreachable (no address set)', async () => {
     const a = createLiveAdapter('');
     const results = await Promise.all([
       a.ask('q'),
@@ -17,7 +17,7 @@ describe('live adapter without a base URL', () => {
       a.fetchKidMap(),
     ]);
     for (const r of results) {
-      expect(r).toEqual({ ok: false, error: 'Live adapter not wired' });
+      expect(r).toEqual({ ok: false, error: NO_ADDRESS_ERROR });
     }
   });
 });

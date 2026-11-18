@@ -88,7 +88,7 @@ describe('Router shell', () => {
   });
 
   for (const path of ROUTES) {
-    it(`${path}: the nav exists exactly once, with four destinations and MOCK`, async () => {
+    it(`${path}: the nav exists exactly once, with four destinations`, async () => {
       entries = [makeEntry({ id: 'a', subject: 'order-1042.delivery_date' })];
       start(path);
       await settle();
@@ -96,7 +96,7 @@ describe('Router shell', () => {
       expect(container.querySelector('.shell-left nav')).not.toBeNull();
       const hrefs = Array.from(container.querySelectorAll('nav a')).map((a) => a.getAttribute('href'));
       expect(hrefs).toEqual(['/actions', '/time-travel', '/chat', '/calendar']);
-      expect(container.querySelector('nav .mock-badge')?.textContent).toMatch(/MOCK/);
+      expect(container.querySelectorAll('nav > :not(a)')).toHaveLength(0);
     });
   }
 

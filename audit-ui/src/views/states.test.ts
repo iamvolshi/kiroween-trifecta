@@ -8,7 +8,7 @@ import { describe, it, expect } from 'vitest';
 import * as fc from 'fast-check';
 import type { AdapterResult, Entry, KidMap, SeamAdapter } from '../adapter/seam.ts';
 import { assemblyNotUsed } from '../test-helpers.ts';
-import { createErrorMock } from '../adapter/mock.ts';
+import { createFailingStub } from '../test-helpers.ts';
 import { ActionListView } from './action-list.ts';
 import { TimeTravelView } from './time-travel.ts';
 import { EntryDetailView } from './entry-detail.ts';
@@ -18,7 +18,7 @@ import { EntryDetailView } from './entry-detail.ts';
 // ---------------------------------------------------------------------------
 
 /** Returns { ok: true, data: [] } from every method — simulates empty record. */
-function createEmptyMock(): SeamAdapter {
+function createEmptyStub(): SeamAdapter {
   return {
     ...assemblyNotUsed(),
     async fetchAllEntries(): Promise<AdapterResult<Entry[]>> {
@@ -37,7 +37,7 @@ function createEmptyMock(): SeamAdapter {
 }
 
 /** Build a custom error adapter that returns a specific error string from every method. */
-function createCustomErrorMock(errorMessage: string): SeamAdapter {
+function createErrorStub(errorMessage: string): SeamAdapter {
   const err = { ok: false as const, error: errorMessage };
   return {
     ...assemblyNotUsed(),
@@ -75,7 +75,7 @@ function triggerCursorChange(container: HTMLElement, isoDatetime: string): void 
 describe('Property 15: Empty state explicitness', () => {
   it('ActionListView with empty adapter shows .empty-state, no .error-state, no skeleton/loading elements', async () => {
     const container = makeContainer();
-    const view = new ActionListView(createEmptyMock());
+    const view = new ActionListView(createEmptyStub());
     view.mount(container);
     await view.load(container);
 
@@ -99,7 +99,7 @@ describe('Property 15: Empty state explicitness', () => {
 
   it('TimeTravelView with empty adapter shows .empty-state after cursor change, no .error-state', async () => {
     const container = makeContainer();
-    const view = new TimeTravelView(createEmptyMock());
+    const view = new TimeTravelView(createEmptyStub());
     view.mount(container);
 
     // Trigger a cursor change to get a belief-pool render
@@ -125,7 +125,7 @@ describe('Property 15: Empty state explicitness', () => {
 
   it('EntryDetailView with empty adapter shows .empty-state, no .error-state', async () => {
     const container = makeContainer();
-    const view = new EntryDetailView(createEmptyMock(), 1, 'temperature', 'entry-a1');
+    const view = new EntryDetailView(createEmptyStub(), 1, 'temperature', 'entry-a1');
     view.mount(container);
     await flushAsync();
 
@@ -153,7 +153,7 @@ describe('Property 15: Empty state explicitness', () => {
 describe('Property 16: Empty vs error state distinction', () => {
   it('ActionListView with error adapter shows .error-state, no .empty-state', async () => {
     const container = makeContainer();
-    const view = new ActionListView(createErrorMock());
+    const view = new ActionListView(createFailingStub());
     view.mount(container);
     await view.load(container);
 
@@ -171,7 +171,7 @@ describe('Property 16: Empty vs error state distinction', () => {
 
   it('TimeTravelView with error adapter shows .error-state after cursor change, no .empty-state', async () => {
     const container = makeContainer();
-    const view = new TimeTravelView(createErrorMock());
+    const view = new TimeTravelView(createFailingStub());
     view.mount(container);
 
     triggerCursorChange(container, '2024-01-01T12:00');
@@ -191,7 +191,7 @@ describe('Property 16: Empty vs error state distinction', () => {
 
   it('EntryDetailView with error adapter shows .error-state, no .empty-state', async () => {
     const container = makeContainer();
-    const view = new EntryDetailView(createErrorMock(), 1, 'temperature', 'entry-a1');
+    const view = new EntryDetailView(createFailingStub(), 1, 'temperature', 'entry-a1');
     view.mount(container);
     await flushAsync();
 
@@ -218,7 +218,7 @@ describe('Property 14: Error propagation', () => {
         fc.string({ minLength: 1 }),
         async (errorMsg) => {
           const container = makeContainer();
-          const view = new ActionListView(createCustomErrorMock(errorMsg));
+          const view = new ActionListView(createErrorStub(errorMsg));
           view.mount(container);
           await view.load(container);
 
@@ -246,7 +246,7 @@ describe('Property 14: Error propagation', () => {
         fc.string({ minLength: 1 }),
         async (errorMsg) => {
           const container = makeContainer();
-          const view = new TimeTravelView(createCustomErrorMock(errorMsg));
+          const view = new TimeTravelView(createErrorStub(errorMsg));
           view.mount(container);
 
           triggerCursorChange(container, '2024-06-15T08:00');
@@ -276,7 +276,7 @@ describe('Property 14: Error propagation', () => {
         fc.string({ minLength: 1 }),
         async (errorMsg) => {
           const container = makeContainer();
-          const view = new EntryDetailView(createCustomErrorMock(errorMsg), 1, 'temperature', 'entry-a1');
+          const view = new EntryDetailView(createErrorStub(errorMsg), 1, 'temperature', 'entry-a1');
           view.mount(container);
           await flushAsync();
 

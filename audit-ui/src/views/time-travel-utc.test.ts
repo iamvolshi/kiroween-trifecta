@@ -3,7 +3,7 @@
  */
 import { describe, it, expect } from 'vitest';
 import { TimeTravelView } from './time-travel.ts';
-import { createMockAdapter } from '../adapter/mock.ts';
+import { createRecordStub } from '../test-helpers.ts';
 import type { AdapterResult, Entry, SeamAdapter } from '../adapter/seam.ts';
 import { deferred, makeEntry, tick } from '../test-helpers.ts';
 
@@ -29,7 +29,7 @@ const ids = (c: HTMLElement) =>
 
 describe('Time Travel reads the input as UTC', () => {
   it('2024-01-01T00:00 (UTC) is exactly T0: entries A and D are live (k_start inclusive)', async () => {
-    const { container, set, done } = setup(createMockAdapter());
+    const { container, set, done } = setup(createRecordStub());
     set('2024-01-01T00:00');
     await tick();
     expect(ids(container).sort()).toEqual(['pressure', 'temperature']);
@@ -37,7 +37,7 @@ describe('Time Travel reads the input as UTC', () => {
   });
 
   it('2024-03-31T23:59 (UTC) is still in A, 2024-04-01T00:00 (UTC) is in B (half-open boundary)', async () => {
-    const { container, set, done } = setup(createMockAdapter());
+    const { container, set, done } = setup(createRecordStub());
     set('2024-03-31T23:59');
     await tick();
     expect(container.querySelector('.belief-pool .state')?.textContent).toBe('confirmed');
@@ -50,7 +50,7 @@ describe('Time Travel reads the input as UTC', () => {
 
   it('queries the same moment it displays, labeled UTC', async () => {
     let queried = NaN;
-    const base = createMockAdapter();
+    const base = createRecordStub();
     const adapter: SeamAdapter = {
       ...base,
       fetchBeliefPool: (ms) => {
@@ -74,7 +74,7 @@ describe('Time Travel: stale responses are discarded', () => {
     const slow = deferred<AdapterResult<Entry[]>>();
     const fast = deferred<AdapterResult<Entry[]>>();
     const queue = [slow, fast];
-    const base = createMockAdapter();
+    const base = createRecordStub();
     const adapter: SeamAdapter = {
       ...base,
       fetchBeliefPool: () => queue.shift()!.promise,
@@ -95,7 +95,7 @@ describe('Time Travel: stale responses are discarded', () => {
 
   it('a pending response arriving after the input was cleared does not replace the prompt', async () => {
     const pending = deferred<AdapterResult<Entry[]>>();
-    const adapter: SeamAdapter = { ...createMockAdapter(), fetchBeliefPool: () => pending.promise };
+    const adapter: SeamAdapter = { ...createRecordStub(), fetchBeliefPool: () => pending.promise };
     const { container, set, done } = setup(adapter);
 
     set('2024-01-01T00:00');
@@ -110,7 +110,7 @@ describe('Time Travel: stale responses are discarded', () => {
 
   it('a response arriving after unmount writes nothing', async () => {
     const pending = deferred<AdapterResult<Entry[]>>();
-    const adapter: SeamAdapter = { ...createMockAdapter(), fetchBeliefPool: () => pending.promise };
+    const adapter: SeamAdapter = { ...createRecordStub(), fetchBeliefPool: () => pending.promise };
     const { container, set, done } = setup(adapter);
     set('2024-01-01T00:00');
     done();
@@ -122,7 +122,7 @@ describe('Time Travel: stale responses are discarded', () => {
 
 describe('Time Travel: empty input', () => {
   it('clearing the input shows a "Select a moment" prompt, not the empty-pool message', async () => {
-    const { container, set, done } = setup(createMockAdapter());
+    const { container, set, done } = setup(createRecordStub());
     set('2024-01-01T00:00');
     await tick();
     set('');

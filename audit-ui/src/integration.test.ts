@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect, afterEach } from 'vitest';
-import { createMockAdapter } from './adapter/mock.ts';
+import { createRecordStub } from './test-helpers.ts';
 import { Router } from './router/router.ts';
 
 // ---------------------------------------------------------------------------
@@ -23,7 +23,7 @@ async function tick(): Promise<void> {
 
 describe('integration smoke tests', () => {
   let container: HTMLDivElement;
-  let adapter: ReturnType<typeof createMockAdapter>;
+  let adapter: ReturnType<typeof createRecordStub>;
   let router: Router;
 
   // Create a fresh container and adapter for each test; destroy the router
@@ -33,7 +33,7 @@ describe('integration smoke tests', () => {
   });
 
   it('Test 1: full app bootstrap — Action List loads with entries', async () => {
-    adapter = createMockAdapter();
+    adapter = createRecordStub();
     container = document.createElement('div');
     document.body.appendChild(container);
 
@@ -45,7 +45,7 @@ describe('integration smoke tests', () => {
     // Container should have content
     expect(container.innerHTML).not.toBe('');
 
-    // At least one <li> must be present (the mock has 4 entries)
+    // At least one <li> must be present (the record stub has 4 entries)
     const items = container.querySelectorAll('li');
     expect(items.length).toBeGreaterThan(0);
 
@@ -53,7 +53,7 @@ describe('integration smoke tests', () => {
   });
 
   it('Test 2: navigate to Time Travel — datetime-local input is present', async () => {
-    adapter = createMockAdapter();
+    adapter = createRecordStub();
     container = document.createElement('div');
     document.body.appendChild(container);
 
@@ -73,12 +73,12 @@ describe('integration smoke tests', () => {
   });
 
   it('Test 3: navigate to Entry Detail — entry-primary section is present', async () => {
-    adapter = createMockAdapter();
+    adapter = createRecordStub();
     container = document.createElement('div');
     document.body.appendChild(container);
 
     router = new Router(adapter, container);
-    // kid=1, subject=temperature, id=entry-a1 (from mock fixture)
+    // kid=1, subject=temperature, id=entry-a1 (from the record stub)
     router.navigate('/entry/1/temperature/entry-a1');
 
     await tick();
@@ -90,7 +90,7 @@ describe('integration smoke tests', () => {
   });
 
   it('Test 4: navigate to unknown route — NotFound shows link back to /actions', async () => {
-    adapter = createMockAdapter();
+    adapter = createRecordStub();
     container = document.createElement('div');
     document.body.appendChild(container);
 

@@ -1,4 +1,4 @@
-import { ACTIVE_ADAPTER_KIND } from '../adapter/active.ts';
+import { CONNECTOR_URL } from '../adapter/connector-url.ts';
 
 export interface ShellSlots {
   left: HTMLElement;
@@ -34,14 +34,12 @@ export function createShell(container: HTMLElement): ShellSlots {
   const tag = document.createElement('span');
   tag.className = 'brand-tag';
   tag.textContent = 'What did the agent do, and what did it believe when it did it?';
-  // Seam chip: states the active adapter in words, from ACTIVE_ADAPTER_KIND.
+  // Seam chip: the app is live-only; it says when no connector address was set.
   const seam = document.createElement('span');
   seam.className = 'seam-chip';
-  seam.dataset.seam = ACTIVE_ADAPTER_KIND;
+  seam.dataset.seam = CONNECTOR_URL === '' ? 'no-address' : 'live';
   seam.textContent =
-    ACTIVE_ADAPTER_KIND === 'mock'
-      ? 'Seam: mock adapter, active. Record is a scripted scenario.'
-      : 'Seam: live adapter, active.';
+    CONNECTOR_URL === '' ? 'Seam: live adapter. No connector address set.' : 'Seam: live adapter, active.';
   // Current view: set in JS from the mounted view's own intro (setViewLabel).
   const view = document.createElement('span');
   view.className = 'brand-view';

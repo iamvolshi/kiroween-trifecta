@@ -1,6 +1,7 @@
 /**
  * The live-model announcement under the chat box: status before a turn,
- * served_by after it (served_by wins), the unreachable words, the mock label,
+ * served_by after it (served_by wins), the unreachable words (also with no
+ * connector address),
  * and the visible change when the Book/Movie switch flips.
  */
 import { describe, it, expect, afterEach } from 'vitest';
@@ -8,7 +9,7 @@ import { announce, renderModelBanner } from './model-banner.ts';
 import { ChatView, type ModelSource } from './chat.ts';
 import { ChatLog } from './chat-log.ts';
 import { fetchModelStatus, isModelStatus, type ModelStatus } from '../adapter/live-models.ts';
-import { createLiveAdapter, type FetchLike } from '../adapter/live.ts';
+import { createLiveAdapter, NO_ADDRESS_ERROR, type FetchLike } from '../adapter/live.ts';
 import { isChatTurn, type ChatTurn } from '../adapter/seam.ts';
 import { tick } from '../test-helpers.ts';
 
@@ -33,37 +34,30 @@ function turn(message: string, served_by?: { provider: string; model: string }):
 }
 
 describe('announce()', () => {
-  it('mock mode: the honest mock label, no model name', () => {
-    const a = announce({ kind: 'mock', register: 'movie', status: { state: 'loading' }, served: null });
-    expect(a.state).toBe('mock');
-    expect(a.model).toBe('No live model');
-    expect(a.provider).toBe('');
-  });
-
   it('live: the status names the model for the switch position', () => {
     const ok = { state: 'ok' as const, data: STATUS };
-    expect(announce({ kind: 'live', register: 'movie', status: ok, served: null })).toMatchObject({
+    expect(announce({ register: 'movie', status: ok, served: null })).toMatchObject({
       state: 'live', position: 'movie', label: 'MOVIE', model: 'model-movie-1', provider: 'prov-movie',
     });
-    expect(announce({ kind: 'live', register: 'book', status: ok, served: null })).toMatchObject({
+    expect(announce({ register: 'book', status: ok, served: null })).toMatchObject({
       position: 'book', label: 'BOOK', model: 'model-book-1', provider: 'prov-book',
     });
-    expect(announce({ kind: 'live', register: null, status: ok, served: null })).toMatchObject({
+    expect(announce({ register: null, status: ok, served: null })).toMatchObject({
       position: 'default', label: 'MODEL', model: 'model-movie-1',
     });
   });
 
   it('served_by wins over the status, and the disagreement is said', () => {
     const served = { provider: 'prov-other', model: 'model-other' };
-    const a = announce({ kind: 'live', register: 'book', status: { state: 'ok', data: STATUS }, served });
+    const a = announce({ register: 'book', status: { state: 'ok', data: STATUS }, served });
     expect(a).toMatchObject({ model: 'model-other', provider: 'prov-other', source: 'Served the last reply' });
     expect(a.note).toContain('prov-book / model-book-1');
-    const agree = announce({ kind: 'live', register: 'book', status: { state: 'ok', data: STATUS }, served: BOOK });
+    const agree = announce({ register: 'book', status: { state: 'ok', data: STATUS }, served: BOOK });
     expect(agree.note).toBe('');
   });
 
   it('an unreachable connector is said in words, never a stale name', () => {
-    const a = announce({ kind: 'live', register: 'movie', status: { state: 'error', error: 'Connector unreachable: refused' }, served: null });
+    const a = announce({ register: 'movie', status: { state: 'error', error: 'Connector unreachable: refused' }, served: null });
     expect(a.state).toBe('unreachable');
     expect(a.model).toBe('Model unknown');
     expect(a.source).toContain('Connector unreachable: refused');
@@ -71,14 +65,14 @@ describe('announce()', () => {
 
   it('an unconfigured position shows the config error', () => {
     const data = { ...STATUS, registers: { movie: MOVIE, book: { error: 'BOOK_PROVIDER not set' } } };
-    const a = announce({ kind: 'live', register: 'book', status: { state: 'ok', data }, served: null });
+    const a = announce({ register: 'book', status: { state: 'ok', data }, served: null });
     expect(a).toMatchObject({ state: 'unconfigured', model: 'Not configured', source: 'BOOK_PROVIDER not set' });
   });
 });
 
 describe('renderModelBanner()', () => {
   it('the band carries the position and the state; a flip adds the pulse', () => {
-    const a = announce({ kind: 'live', register: 'book', status: { state: 'ok', data: STATUS }, served: null });
+    const a = announce({ register: 'book', status: { state: 'ok', data: STATUS }, served: null });
     const b = renderModelBanner(a, true);
     expect(b.dataset.position).toBe('book');
     expect(b.dataset.state).toBe('live');
@@ -137,7 +131,7 @@ describe('ChatView: the announcement under the chat box', () => {
   };
 
   it('flipping the switch changes the band, the word and the model name', async () => {
-    const live: ModelSource = { kind: 'live', status: async () => ({ ok: true, data: STATUS }) };
+    const live: ModelSource = { status: async () => ({ ok: true, data: STATUS }) };
     await mount(live, async () => new Response('{}', { status: 500 }));
     click('.persona-picker [data-value="Frankenstein"]');
     expect(banner().dataset.position).toBe('movie');
@@ -150,7 +144,7 @@ describe('ChatView: the announcement under the chat box', () => {
   });
 
   it('a reply\'s served_by replaces the status for that position', async () => {
-    const live: ModelSource = { kind: 'live', status: async () => ({ ok: true, data: STATUS }) };
+    const live: ModelSource = { status: async () => ({ ok: true, data: STATUS }) };
     const other = { provider: 'prov-other', model: 'model-other' };
     const { bodies } = await mount(live, async () => new Response(JSON.stringify(turn('hi', other)), { status: 200 }));
     click('.persona-picker [data-value="Frankenstein"]');
@@ -167,7 +161,7 @@ describe('ChatView: the announcement under the chat box', () => {
   it('a failed turn drops the old served_by and re-reads the live map', async () => {
     let reads = 0;
     let data: ModelStatus = STATUS;
-    const live: ModelSource = { kind: 'live', status: async () => { reads++; return { ok: true, data }; } };
+    const live: ModelSource = { status: async () => { reads++; return { ok: true, data }; } };
     const other = { provider: 'prov-other', model: 'model-other' };
     let fail = false;
     await mount(live, async () => (fail
@@ -188,7 +182,7 @@ describe('ChatView: the announcement under the chat box', () => {
   it('a flip re-reads the live map, so a config change shows', async () => {
     let reads = 0;
     let data: ModelStatus = STATUS;
-    const live: ModelSource = { kind: 'live', status: async () => { reads++; return { ok: true, data }; } };
+    const live: ModelSource = { status: async () => { reads++; return { ok: true, data }; } };
     await mount(live, async () => new Response('{}', { status: 500 }));
     click('.persona-picker [data-value="Frankenstein"]');
     data = { ...STATUS, registers: { movie: MOVIE, book: { provider: 'prov-book-2', model: 'model-book-2' } } };
@@ -201,7 +195,6 @@ describe('ChatView: the announcement under the chat box', () => {
   it('an older /models answer that lands late is dropped', async () => {
     const answers: Array<(d: ModelStatus) => void> = [];
     const live: ModelSource = {
-      kind: 'live',
       status: () => new Promise((res) => answers.push((d) => res({ ok: true, data: d }))),
     };
     await mount(live, async () => new Response('{}', { status: 500 }));
@@ -216,19 +209,18 @@ describe('ChatView: the announcement under the chat box', () => {
   });
 
   it('an unreachable connector says so under the chat box', async () => {
-    const down: ModelSource = { kind: 'live', status: async () => ({ ok: false, error: 'Connector unreachable: refused' }) };
+    const down: ModelSource = { status: async () => ({ ok: false, error: 'Connector unreachable: refused' }) };
     await mount(down, async () => new Response('{}', { status: 500 }));
     expect(banner().dataset.state).toBe('unreachable');
     expect(banner().textContent).toContain('Connector unreachable: refused');
   });
 
-  it('mock mode shows the mock label and never asks for a status', async () => {
-    let asked = 0;
-    const mock: ModelSource = { kind: 'mock', status: async () => { asked++; return { ok: true, data: STATUS }; } };
-    await mount(mock, async () => new Response('{}', { status: 500 }));
-    expect(banner().dataset.state).toBe('mock');
-    expect(banner().textContent).toContain('No live model');
-    expect(asked).toBe(0);
+  it('a build with no connector address says the connector is unreachable', async () => {
+    const noAddress: ModelSource = { status: () => fetchModelStatus('') };
+    await mount(noAddress, async () => new Response('{}', { status: 500 }));
+    expect(banner().dataset.state).toBe('unreachable');
+    expect(banner().querySelector('.model-name')?.textContent).toBe('Model unknown');
+    expect(banner().textContent).toContain(NO_ADDRESS_ERROR);
   });
 });
 
