@@ -9,8 +9,8 @@
 
 ## The seam
 
-- The UI reads the record through a **seam adapter**: one module speaking the seam contract (`seam.ts`), with mock record data behind it (`mock.ts`) for build and test.
-- **Mock first, live data later.** Mock data must be labeled as mock in code and must never reach the demo as if it were record data.
+- The UI reads the record through a **seam adapter**: one module speaking the seam contract (`seam.ts`), backed only by the live connector (`live.ts`, address `VITE_CONNECTOR_URL`).
+- **Live data only.** No mock adapter, scenario, mock mode or mock label. See `live-data-only.md`.
 - The live seam is NOT wired. A stub returning a typed error stands in its place until a real endpoint is confirmed. Do not wire it, do not guess an endpoint.
 - **No-holes rule**: the browser never talks to Postgres directly and no DB key may sit in the page. The record stays behind Darren's own server, reached over HTTPS.
 

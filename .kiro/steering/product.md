@@ -17,6 +17,6 @@ It is the interface showing what the agent does and how it can be audited back t
 
 ## The UI's job
 
-Display only. The UI reads the record and shows it. It never writes to the record, never judges entries, never invents data. **No fake status, no fake telemetry, no simulated entries.** Everything shown comes from the real record or from honestly labeled mock data during build.
+Display only. The UI reads the record and shows it. It never writes to the record, never judges entries, never invents data. **No fake status, no fake telemetry, no simulated entries.** Everything shown comes from the real record, through the connector. Live data only: see `live-data-only.md`.
 
 Plain-language labels. Big labels. A stranger must get it in 30 seconds: what happened, what was believed, when, why.

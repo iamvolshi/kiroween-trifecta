@@ -8,7 +8,7 @@
 
 ## Modules
 
-- **Seam adapter** (`seam.ts` + `mock.ts`): the only module that speaks the record contract. All views read through it. Nothing else touches record shapes directly.
+- **Seam adapter** (`seam.ts` + `live.ts`): the only module that speaks the record contract, over the connector. All views read through it. Nothing else touches record shapes directly.
 - **Views**: Action List, Time Travel, Entry Detail. Each reads from the seam adapter. Each carries explicit empty and error states.
 - **Router**: manual pathname routing in one module (pushState + popstate). Unknown paths go to a NotFound view.
 - **Utilities**: the interval live-at predicate, KID display formatting, label formatting. Pure functions, property-tested.
