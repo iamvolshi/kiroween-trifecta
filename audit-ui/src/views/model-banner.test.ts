@@ -16,11 +16,15 @@ import { tick } from '../test-helpers.ts';
 // Test-only names: the app itself carries none (see the last test).
 const MOVIE = { provider: 'prov-movie', model: 'model-movie-1' };
 const BOOK = { provider: 'prov-book', model: 'model-book-1' };
+const ELARA = { provider: 'prov-elara', model: 'model-elara-1' };
+const TRON = { provider: 'prov-tron', model: 'model-tron-1' };
 const STATUS: ModelStatus = {
-  persona: 'Frankenstein',
-  default: MOVIE,
+  persona: 'entity',
+  personas: ['Frankenstein', 'Elara', 'ARCHETRON'],
+  default: { provider: 'prov-default', model: 'model-default' },
   registers: { movie: MOVIE, book: BOOK },
   register_voices: ['movie', 'book'],
+  persona_routes: { Elara: ELARA, ARCHETRON: TRON },
 };
 
 function turn(message: string, served_by?: { provider: string; model: string }): ChatTurn {
@@ -34,52 +38,71 @@ function turn(message: string, served_by?: { provider: string; model: string }):
 }
 
 describe('announce()', () => {
+  it('before a mask is picked: nothing to announce', () => {
+    for (const status of [{ state: 'ok' as const, data: STATUS }, { state: 'loading' as const }, { state: 'error' as const, error: 'x' }]) {
+      expect(announce({ persona: null, register: null, status, served: null })).toBeNull();
+    }
+  });
+
+  it('a mask route the connector does not report, or reports unconfigured, is said in words', () => {
+    const data = { ...STATUS, persona_routes: { Elara: { error: 'ELARA_PROVIDER not set' } } };
+    expect(announce({ persona: 'Elara', register: null, status: { state: 'ok', data }, served: null })).toMatchObject({
+      state: 'unconfigured', source: 'ELARA_PROVIDER not set',
+    });
+    expect(announce({ persona: 'ARCHETRON', register: null, status: { state: 'ok', data }, served: null })).toMatchObject({
+      state: 'unconfigured', source: 'The connector reports no route for ARCHETRON.',
+    });
+  });
+
   it('live: the status names the model for the switch position', () => {
     const ok = { state: 'ok' as const, data: STATUS };
-    expect(announce({ register: 'movie', status: ok, served: null })).toMatchObject({
+    expect(announce({ persona: 'Frankenstein', register: 'movie', status: ok, served: null })).toMatchObject({
       state: 'live', position: 'movie', label: 'MOVIE', model: 'model-movie-1', provider: 'prov-movie',
     });
-    expect(announce({ register: 'book', status: ok, served: null })).toMatchObject({
+    expect(announce({ persona: 'Frankenstein', register: 'book', status: ok, served: null })).toMatchObject({
       position: 'book', label: 'BOOK', model: 'model-book-1', provider: 'prov-book',
     });
-    expect(announce({ register: null, status: ok, served: null })).toMatchObject({
-      position: 'default', label: 'MODEL', model: 'model-movie-1',
+    expect(announce({ persona: 'Elara', register: null, status: ok, served: null })).toMatchObject({
+      state: 'live', position: 'mask', label: 'ELARA', model: 'model-elara-1', provider: 'prov-elara',
+    });
+    expect(announce({ persona: 'ARCHETRON', register: null, status: ok, served: null })).toMatchObject({
+      position: 'mask', label: 'ARCHETRON', model: 'model-tron-1', provider: 'prov-tron',
     });
   });
 
   it('served_by wins over the status, and the disagreement is said', () => {
     const served = { provider: 'prov-other', model: 'model-other' };
-    const a = announce({ register: 'book', status: { state: 'ok', data: STATUS }, served });
+    const a = announce({ persona: 'Frankenstein', register: 'book', status: { state: 'ok', data: STATUS }, served });
     expect(a).toMatchObject({ model: 'model-other', provider: 'prov-other', source: 'Served the last reply' });
-    expect(a.note).toContain('prov-book / model-book-1');
-    const agree = announce({ register: 'book', status: { state: 'ok', data: STATUS }, served: BOOK });
-    expect(agree.note).toBe('');
+    expect(a!.note).toContain('prov-book / model-book-1');
+    const agree = announce({ persona: 'Frankenstein', register: 'book', status: { state: 'ok', data: STATUS }, served: BOOK });
+    expect(agree!.note).toBe('');
   });
 
   it('an unreachable connector is said in words, never a stale name', () => {
-    const a = announce({ register: 'movie', status: { state: 'error', error: 'Connector unreachable: refused' }, served: null });
-    expect(a.state).toBe('unreachable');
-    expect(a.model).toBe('Model unknown');
-    expect(a.source).toContain('Connector unreachable: refused');
+    const a = announce({ persona: 'Frankenstein', register: 'movie', status: { state: 'error', error: 'Connector unreachable: refused' }, served: null });
+    expect(a!.state).toBe('unreachable');
+    expect(a!.model).toBe('Model unknown');
+    expect(a!.source).toContain('Connector unreachable: refused');
   });
 
   it('an unconfigured position shows the config error', () => {
     const data = { ...STATUS, registers: { movie: MOVIE, book: { error: 'BOOK_PROVIDER not set' } } };
-    const a = announce({ register: 'book', status: { state: 'ok', data }, served: null });
+    const a = announce({ persona: 'Frankenstein', register: 'book', status: { state: 'ok', data }, served: null });
     expect(a).toMatchObject({ state: 'unconfigured', model: 'Not configured', source: 'BOOK_PROVIDER not set' });
   });
 });
 
 describe('renderModelBanner()', () => {
   it('the band carries the position and the state; a flip adds the pulse', () => {
-    const a = announce({ register: 'book', status: { state: 'ok', data: STATUS }, served: null });
-    const b = renderModelBanner(a, true);
+    const a = announce({ persona: 'Frankenstein', register: 'book', status: { state: 'ok', data: STATUS }, served: null });
+    const b = renderModelBanner(a!, true);
     expect(b.dataset.position).toBe('book');
     expect(b.dataset.state).toBe('live');
     expect(b.classList.contains('model-flip')).toBe(true);
     expect(b.querySelector('.model-position')?.textContent).toBe('BOOK');
     expect(b.querySelector('.model-name')?.textContent).toBe('model-book-1');
-    expect(renderModelBanner(a).classList.contains('model-flip')).toBe(false);
+    expect(renderModelBanner(a!).classList.contains('model-flip')).toBe(false);
   });
 });
 
@@ -94,6 +117,17 @@ describe('fetchModelStatus()', () => {
     const down: FetchLike = async () => { throw new Error('ECONNREFUSED'); };
     expect(await fetchModelStatus('http://c.test', down)).toEqual({ ok: false, error: 'Connector unreachable: ECONNREFUSED' });
     expect(isModelStatus({ ...STATUS, registers: { movie: MOVIE, book: { error: 'x' } } })).toBe(true);
+  });
+
+  it('accepts the extended shared-entity shape and refuses a malformed one', () => {
+    expect(isModelStatus(STATUS)).toBe(true);
+    const { personas: _p, persona_routes: _r, ...older } = STATUS;
+    void _p; void _r;
+    expect(isModelStatus(older)).toBe(true); // the extension is additive
+    expect(isModelStatus({ ...STATUS, personas: 'Elara' })).toBe(false);
+    expect(isModelStatus({ ...STATUS, personas: [1] })).toBe(false);
+    expect(isModelStatus({ ...STATUS, persona_routes: [] })).toBe(false);
+    expect(isModelStatus({ ...STATUS, persona_routes: { Elara: { provider: 'p' } } })).toBe(false);
   });
 
   it('a served_by that is not two strings makes the turn not a ChatTurn', () => {
@@ -208,9 +242,50 @@ describe('ChatView: the announcement under the chat box', () => {
     expect(banner().querySelector('.model-name')?.textContent).toBe('model-book-1');
   });
 
+  it('before a mask is picked the banner slot is empty: no band, no words', async () => {
+    const live: ModelSource = { status: async () => ({ ok: true, data: STATUS }) };
+    await mount(live, async () => new Response('{}', { status: 500 }));
+    const modelSlot = (): HTMLElement => slot.querySelector<HTMLElement>('.chat-form .model-slot')!;
+    expect(modelSlot().children).toHaveLength(0);
+    expect(modelSlot().textContent).toBe('');
+    const down: ModelSource = { status: async () => ({ ok: false, error: 'Connector unreachable: refused' }) };
+    view?.unmount();
+    await mount(down, async () => new Response('{}', { status: 500 }));
+    expect(modelSlot().children).toHaveLength(0);
+  });
+
+  it('after a pick: Frankenstein shows its register, Elara and ARCHETRON their own routes', async () => {
+    const live: ModelSource = { status: async () => ({ ok: true, data: STATUS }) };
+    await mount(live, async () => new Response('{}', { status: 500 }));
+    click('.persona-picker [data-value="Elara"]');
+    expect(banner().dataset.position).toBe('mask');
+    expect(banner().querySelector('.model-position')?.textContent).toBe('ELARA');
+    expect(banner().querySelector('.model-name')?.textContent).toBe('model-elara-1');
+    click('.persona-picker [data-value="ARCHETRON"]');
+    expect(banner().querySelector('.model-position')?.textContent).toBe('ARCHETRON');
+    expect(banner().querySelector('.model-name')?.textContent).toBe('model-tron-1');
+    expect(banner().classList.contains('model-flip')).toBe(true);
+    click('.persona-picker [data-value="Frankenstein"]');
+    expect(banner().querySelector('.model-name')?.textContent).toBe('model-movie-1');
+    click('.register-switch [data-value="book"]');
+    expect(banner().querySelector('.model-name')?.textContent).toBe('model-book-1');
+  });
+
+  it('a mask reply\'s served_by wins for that mask only', async () => {
+    const live: ModelSource = { status: async () => ({ ok: true, data: STATUS }) };
+    const other = { provider: 'prov-other', model: 'model-other' };
+    await mount(live, async () => new Response(JSON.stringify(turn('hi', other)), { status: 200 }));
+    click('.persona-picker [data-value="Elara"]');
+    await send('hi');
+    expect(banner().querySelector('.model-name')?.textContent).toBe('model-other');
+    click('.persona-picker [data-value="ARCHETRON"]');
+    expect(banner().querySelector('.model-name')?.textContent).toBe('model-tron-1');
+  });
+
   it('an unreachable connector says so under the chat box', async () => {
     const down: ModelSource = { status: async () => ({ ok: false, error: 'Connector unreachable: refused' }) };
     await mount(down, async () => new Response('{}', { status: 500 }));
+    click('.persona-picker [data-value="Elara"]');
     expect(banner().dataset.state).toBe('unreachable');
     expect(banner().textContent).toContain('Connector unreachable: refused');
   });
@@ -218,6 +293,7 @@ describe('ChatView: the announcement under the chat box', () => {
   it('a build with no connector address says the connector is unreachable', async () => {
     const noAddress: ModelSource = { status: () => fetchModelStatus('') };
     await mount(noAddress, async () => new Response('{}', { status: 500 }));
+    click('.persona-picker [data-value="ARCHETRON"]');
     expect(banner().dataset.state).toBe('unreachable');
     expect(banner().querySelector('.model-name')?.textContent).toBe('Model unknown');
     expect(banner().textContent).toContain(NO_ADDRESS_ERROR);

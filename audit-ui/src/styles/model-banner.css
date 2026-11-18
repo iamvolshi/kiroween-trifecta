@@ -33,6 +33,13 @@
   --band-text: #ffe3b3;
 }
 
+/* Elara and ARCHETRON: the mask's own route, in the signal cyan. */
+.model-banner[data-position='mask'] {
+  --band: var(--accent);
+  --band-bg: var(--accent-bg);
+  --band-text: var(--text);
+}
+
 .model-banner[data-position='book'] {
   --band: #b49cff;
   --band-bg: #1c1236;

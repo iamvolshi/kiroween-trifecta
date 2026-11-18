@@ -11,7 +11,7 @@ loop through a connector.
 | Part | What it does | Where it lives |
 |---|---|---|
 | ARCHE | Directs the turn and runs the persona you chose. ARCHE does not talk as itself. | Bot loop |
-| Persona cartridges | The faces ARCHE can run: Frankenstein, Elara, ARCHETRON. | Bot loop |
+| Persona cartridges | The masks of the one entity: Frankenstein, Elara, ARCHETRON. A mask picks the voice and the model, nothing else. | Bot loop |
 | Mansplainer register engine | Frankenstein's two voices: Book (the novel's eloquent creature) and Movie (the film monster). | Bot loop |
 | ERIE | Finds what a turn needs and says where it came from (provenance). | Bot loop |
 | ELLE | Records lessons, holds them back until learned, promotes them, and reads learned ones into later prompts. One ELLE serves every persona. | Bot loop |
@@ -31,7 +31,7 @@ connector is unreachable, in words. The shapes are the types in
 
 | Call | Request | Response |
 |---|---|---|
-| `POST /chat` | `{ "message": string, "persona": "Frankenstein" \| "Elara" \| "ARCHETRON", "register"?: "book" \| "movie" }` (`register` only for Frankenstein) | `ChatTurn` |
+| `POST /chat` | `{ "message": string, "persona": "Frankenstein" \| "Elara" \| "ARCHETRON", "register"?: "book" \| "movie" }`. `persona` is required. `register` is required for Frankenstein and refused (400) for the others. | `ChatTurn` |
 | `GET /record/{account_id}` | none | `RecordResult` |
 | `GET /lessons` | none | `Lesson[]` |
 | `POST /ask` | `{ "question": string }` | `AskResult` |
@@ -88,11 +88,40 @@ The full table and the reasons are in
 | `subject`, `state`, `authority`, `reason`, `prev_hash` | as recorded |
 | `pool` | `"0"`, the loop's value |
 | Lessons | `event_id` `elle-<n>` (position), `event_type` the loop's `source`, `detail` the lesson sentence, `rule` null, `subject` null, `status` `promoted` (the loop puts every lesson in every prompt) |
-| `GET /record/{account_id}` | the account is the booted persona's slug, e.g. `archetron` |
+| `GET /record/{account_id}` | any of the three mask slugs (`frankenstein`, `elara`, `archetron`) reads the ONE shared record; any other account is 404 |
 
 Belief pool: an entry is live at `M` when its start (`tek_t` in ms) is at
 or before `M` and `M` is before its end; no end means still live. In the
 loop no entry has an end, so the pool at `M` is every entry written by `M`.
+
+## One entity, three masks
+
+Darren: "Persona is just what mask you prefer to talk to the entity with.
+The entity holds the record. It's all shared everything."
+
+| Shared by every mask | Picked per turn by the mask |
+|---|---|
+| the loop, the record (one kernel, KID 1), ELLE's lessons, the history | the voice (cartridge), the model route, the reply length |
+
+There is no per-mask filtering: no mask sees only its own entries. A lesson
+learned under one mask is injected under another; the models share nothing,
+so ELLE is what carried it.
+
+Routes per mask, set in the connector's environment, no defaults:
+
+| Mask | Route |
+|---|---|
+| Frankenstein | `MOVIE_*` / `BOOK_*` by the register switch |
+| Elara | `ELARA_PROVIDER` / `ELARA_MODEL` |
+| ARCHETRON | `ARCHETRON_PROVIDER` / `ARCHETRON_MODEL` |
+
+An unconfigured mask answers 503 naming the missing setting and records
+nothing; it never falls back to another mask's route. `GET /health`
+answers `{ "ok": true, "personas": [the three slugs] }`.
+
+The app shows nothing under the chat box until a mask is picked. After a
+pick it shows that mask's route (Frankenstein: the register position), and
+a reply's `served_by` wins.
 
 ## The model switch (Book / Movie)
 
@@ -117,7 +146,7 @@ Connector additions:
 | Call | Change |
 |---|---|
 | `POST /chat` | honours `register`; every reply carries `served_by: { provider, model }`, the model that actually served the turn |
-| `GET /models` | the live map: `{ persona, default, registers: { movie, book }, register_voices }`, each position `{ provider, model }` or `{ error }` |
+| `GET /models` | the live map: `{ persona: "entity", personas, default, registers: { movie, book }, register_voices, persona_routes: { Elara, ARCHETRON } }`, each route `{ provider, model }` or `{ error }`. `default` is reported only; no turn runs on it. |
 
 The announcement: under the chat box, a band names the live model from the
 connector (`GET /models` before a turn, `served_by` after; `served_by` wins).
@@ -128,9 +157,10 @@ app holds no provider or model names.
 
 ## Limits
 
-- One booted persona. The connector serves the persona its `CARTRIDGE`
-  booted. `/chat` with another persona name is refused (HTTP 409) and the
-  refusal names the booted one.
+- One entity, three masks. The connector loads all three cartridges and
+  boots one loop on one shared data dir; `CARTRIDGE` no longer picks the
+  connector's persona. The 409 "not booted" refusal is gone. An unknown or
+  missing `persona` is 400, naming the three masks.
 - `POST /update` is out.
 - Loopback only. The connector listens on 127.0.0.1 and answers browser
   pages from 127.0.0.1 / localhost (or `CONNECTOR_ALLOW_ORIGINS`); any other

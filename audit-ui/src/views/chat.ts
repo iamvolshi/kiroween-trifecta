@@ -121,11 +121,13 @@ export class ChatView implements View {
     const flipped = this.lastPositionKey !== null && this.lastPositionKey !== key;
     this.lastPositionKey = key;
     const a = announce({
+      persona,
       register: persona === 'Frankenstein' ? this.log.register() : null,
       status: this.status,
       served: this.served.get(key) ?? null,
     });
-    this.modelSlot.replaceChildren(renderModelBanner(a, flipped));
+    // Before a mask is picked the slot stays empty: no band, no words.
+    this.modelSlot.replaceChildren(...(a ? [renderModelBanner(a, flipped)] : []));
   }
 
   /** Heading, picker, Book/Movie switch and composer state follow the chosen persona. */

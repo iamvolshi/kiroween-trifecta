@@ -10,12 +10,18 @@ import { NO_ADDRESS_ERROR, type FetchLike } from './live';
 export type ModelRoute = ServedBy | { error: string };
 
 export interface ModelStatus {
+  /** "entity": one shared entity behind every mask. */
   persona: string;
-  /** The route a turn with no register runs on. */
+  /** The loop's own route; reported only, no connector turn runs on it. */
   default: ModelRoute;
+  /** Frankenstein's two register positions. */
   registers: { movie: ModelRoute; book: ModelRoute };
-  /** Registers whose voice the booted cartridge carries. */
+  /** Registers whose voice the register mask's cartridge carries. */
   register_voices: string[];
+  /** The masks the connector serves, by name. */
+  personas?: string[];
+  /** Each mask without registers (Elara, ARCHETRON) -> its route. */
+  persona_routes?: Record<string, ModelRoute>;
 }
 
 function isRoute(v: unknown): v is ModelRoute {
@@ -32,7 +38,11 @@ export function isModelStatus(v: unknown): v is ModelStatus {
     isRoute(s.default) &&
     typeof s.registers === 'object' && s.registers !== null &&
     isRoute(s.registers.movie) && isRoute(s.registers.book) &&
-    Array.isArray(s.register_voices)
+    Array.isArray(s.register_voices) &&
+    (s.personas === undefined || (Array.isArray(s.personas) && s.personas.every((p) => typeof p === 'string'))) &&
+    (s.persona_routes === undefined ||
+      (typeof s.persona_routes === 'object' && s.persona_routes !== null && !Array.isArray(s.persona_routes) &&
+        Object.values(s.persona_routes).every(isRoute)))
   );
 }
 

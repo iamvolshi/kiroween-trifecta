@@ -56,10 +56,12 @@ describe('no connector address: every view says so', () => {
 
   it('/chat: the banner under the chat box says the connector is unreachable', async () => {
     await open('/chat');
+    // Nothing in the banner slot until a mask is picked.
+    expect(container.querySelector('.chat-form .model-banner')).toBeNull();
+    container.querySelector<HTMLButtonElement>('.persona-picker [data-value="Elara"]')!.click();
     const banner = container.querySelector<HTMLElement>('.chat-form .model-banner')!;
     expect(banner.dataset.state).toBe('unreachable');
     expect(banner.textContent).toContain(NO_ADDRESS_ERROR);
-    container.querySelector<HTMLButtonElement>('.persona-picker [data-value="Elara"]')!.click();
     container.querySelector<HTMLInputElement>('#chat-message')!.value = 'hello';
     container.querySelector<HTMLFormElement>('.chat-form')!.requestSubmit();
     for (let i = 0; i < 6; i++) await tick();
@@ -83,6 +85,7 @@ describe('connector down (address set, nothing answers): every view says so', ()
   it('/chat banner shows "Connector unreachable"', async () => {
     await open('/chat', down, 'http://127.0.0.1:9');
     // The banner reads the build-time address, which tests leave unset.
+    container.querySelector<HTMLButtonElement>('.persona-picker [data-value="ARCHETRON"]')!.click();
     expect(container.querySelector('.model-banner')?.getAttribute('data-state')).toBe('unreachable');
   });
 });
