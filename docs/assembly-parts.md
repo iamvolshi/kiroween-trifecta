@@ -70,7 +70,7 @@ Frankenstein's Book/Movie switch picks the model, not only the voice.
 
 | Position | Model | Set by |
 |---|---|---|
-| Movie | Meta Spark (`meta`) | `MOVIE_PROVIDER` / `MOVIE_MODEL`, default the loop's own route |
+| Movie | Meta Spark (`meta`) | `MOVIE_PROVIDER` / `MOVIE_MODEL`, default Meta Spark |
 | Book | Mercury or SubQ | `BOOK_PROVIDER` (`mercury` or `subq`). No default: unset, a Book turn is refused with the missing setting named |
 
 The map is config in the bots repo's environment. Flipping Book between

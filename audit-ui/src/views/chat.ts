@@ -98,10 +98,11 @@ export class ChatView implements View {
   }
 
   /** Live: read the model map before the first turn. Mock: nothing to read. */
-  private loadStatus(): void {
+  private loadStatus(reset = true): void {
     if (this.models.kind === 'mock') return;
     const root = this.container;
-    this.status = { state: 'loading' };
+    // A re-read keeps showing the last answer until the new one lands.
+    if (reset) this.status = { state: 'loading' };
     void this.models.status().then(
       (r) => {
         if (this.container !== root) return;
@@ -155,6 +156,8 @@ export class ChatView implements View {
         renderRegisterSwitch(this.log.register(), (r) => {
           this.log.setRegister(r);
           this.renderControls('register-switch');
+          // A flip re-reads the live map, so a config change shows up.
+          this.loadStatus(false);
         }),
       );
     }
@@ -247,10 +250,17 @@ export class ChatView implements View {
     if (result.ok) this.log.push(result.data, persona);
     // Truth wins over config: the turn says who served it.
     if (result.ok && result.data.served_by) this.served.set(positionKey, result.data.served_by);
+    // A failed turn on this position: its old served_by is no longer the
+    // last reply, so drop it and re-read the live map.
+    if (!result.ok) {
+      this.served.delete(positionKey);
+      this.loadStatus(false);
+    }
     if (token !== this.requestToken || this.container !== root) return;
 
     btn.disabled = this.log.persona() === null;
     if (!result.ok) {
+      this.renderModel();
       const p = document.createElement('p');
       p.className = 'error-state';
       p.textContent = result.error;

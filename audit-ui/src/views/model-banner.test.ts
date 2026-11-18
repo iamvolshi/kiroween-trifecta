@@ -164,6 +164,40 @@ describe('ChatView: the announcement under the chat box', () => {
     expect(banner().querySelector('.model-name')?.textContent).toBe('model-movie-1');
   });
 
+  it('a failed turn drops the old served_by and re-reads the live map', async () => {
+    let reads = 0;
+    let data: ModelStatus = STATUS;
+    const live: ModelSource = { kind: 'live', status: async () => { reads++; return { ok: true, data }; } };
+    const other = { provider: 'prov-other', model: 'model-other' };
+    let fail = false;
+    await mount(live, async () => (fail
+      ? new Response('{}', { status: 503 })
+      : new Response(JSON.stringify(turn('hi', other)), { status: 200 })));
+    click('.persona-picker [data-value="Frankenstein"]');
+    await send('hi');
+    expect(banner().querySelector('.model-name')?.textContent).toBe('model-other');
+    const before = reads;
+    data = { ...STATUS, registers: { ...STATUS.registers, movie: { provider: 'prov-new', model: 'model-new' } } };
+    fail = true;
+    await send('again');
+    expect(reads).toBe(before + 1);
+    expect(banner().querySelector('.model-name')?.textContent).toBe('model-new');
+    expect(banner().querySelector('.model-source')?.textContent).toBe("From the connector's status");
+  });
+
+  it('a flip re-reads the live map, so a config change shows', async () => {
+    let reads = 0;
+    let data: ModelStatus = STATUS;
+    const live: ModelSource = { kind: 'live', status: async () => { reads++; return { ok: true, data }; } };
+    await mount(live, async () => new Response('{}', { status: 500 }));
+    click('.persona-picker [data-value="Frankenstein"]');
+    data = { ...STATUS, registers: { movie: MOVIE, book: { provider: 'prov-book-2', model: 'model-book-2' } } };
+    click('.register-switch [data-value="book"]');
+    await tick(); await tick();
+    expect(reads).toBe(2);
+    expect(banner().querySelector('.model-name')?.textContent).toBe('model-book-2');
+  });
+
   it('an unreachable connector says so under the chat box', async () => {
     const down: ModelSource = { kind: 'live', status: async () => ({ ok: false, error: 'Connector unreachable: refused' }) };
     await mount(down, async () => new Response('{}', { status: 500 }));
