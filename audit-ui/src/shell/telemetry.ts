@@ -43,8 +43,7 @@ function renderItem(item: FeedItem): HTMLElement {
     li.appendChild(a);
     li.appendChild(el('span', 'katie-evidence', item.entry.evidence ?? 'entry not visible'));
   }
-  const step = item.from.step !== null ? ` (step ${item.from.step})` : '';
-  li.appendChild(el('span', 'feed-from', `from: "${item.from.message}"${step}`));
+  li.appendChild(el('span', 'feed-from', `from: "${item.from.message}"`));
   return li;
 }
 
@@ -83,7 +82,7 @@ export class TelemetryPanel implements Panel {
     void this.adapter.fetchAllEntries().then((entries) => {
       if (my !== this.token || !this.root) return;
       // The feed comes from the log; entries only add KATIE evidence when visible.
-      this.render(entries.ok ? entries.data : []);
+      this.render(entries.ok ? entries.data : [], entries.ok ? null : entries.error);
     });
   }
 
@@ -112,12 +111,14 @@ export class TelemetryPanel implements Panel {
     this.root = null;
   }
 
-  private render(entries: Entry[]): void {
+  /** `readError`: why the record read failed (the connector's words), shown above the feed. */
+  private render(entries: Entry[], readError: string | null = null): void {
     const root = this.root;
     if (!root) return;
     root.replaceChildren(el('h2', 'telemetry-heading', WORK_HEADING));
+    if (readError !== null) root.appendChild(el('p', 'error-state', readError));
     const items = feedItems(this.log.turns(), entries);
-    if (items.length === 0) {
+    if (items.length === 0 && readError === null) {
       root.appendChild(el('p', 'empty-state', 'Nothing has happened yet. Each step the engines take shows up here.'));
     }
     const feed = el('ul', 'activity-feed');

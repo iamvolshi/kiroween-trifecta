@@ -27,6 +27,7 @@ async function open(path: string, fetchImpl?: FetchLike, base = ''): Promise<voi
 
 const center = (): string => container.querySelector('.shell-center')?.textContent ?? '';
 const left = (): string => container.querySelector('.shell-left')?.textContent ?? '';
+const right = (): string => container.querySelector('.shell-right')?.textContent ?? '';
 
 describe('no connector address: every view says so', () => {
   const routes = [
@@ -48,6 +49,8 @@ describe('no connector address: every view says so', () => {
       }
       expect(center()).toContain(NO_ADDRESS_ERROR);
       expect(left()).toContain(NO_ADDRESS_ERROR);
+      expect(right()).toContain(NO_ADDRESS_ERROR);
+      expect(right()).not.toContain('Nothing has happened yet');
     });
   }
 
@@ -73,6 +76,7 @@ describe('connector down (address set, nothing answers): every view says so', ()
     it(`${path} shows "Connector unreachable"`, async () => {
       await open(path, down, 'http://127.0.0.1:9');
       expect(center()).toContain('Connector unreachable: Failed to fetch');
+      expect(right()).toContain('Connector unreachable: Failed to fetch');
     });
   }
 

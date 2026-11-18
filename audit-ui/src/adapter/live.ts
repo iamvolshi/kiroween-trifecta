@@ -4,8 +4,9 @@
 // docs/assembly-parts.md; the request/response shapes are the types in seam.ts.
 //
 // With no base URL, every call returns the typed NO_ADDRESS error: the
-// connector cannot be reached because no address was set at build time. The record reads (entries, belief pool, chain, KID map)
-// are in the contract and their replies pass shape guards (live-guards.ts).
+// connector cannot be reached because no address was set at build time.
+// The record reads (entries, belief pool, chain, KID map) are in the
+// contract and their replies pass shape guards (live-guards.ts).
 // update is outside the contract and returns a typed error that says so.
 import type {
   AdapterResult,

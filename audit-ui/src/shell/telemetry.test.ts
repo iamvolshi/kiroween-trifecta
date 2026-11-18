@@ -82,7 +82,7 @@ describe('TelemetryPanel: the work column', () => {
     expect(katie.dataset.entryId).toBe('e1');
     expect(katie.querySelector('a')?.getAttribute('href')).toBe(`/entry/4/${encodeURIComponent(SUBJ)}/e1`);
     expect(katie.querySelector('.katie-evidence')?.textContent).toBe('value=x (stub)');
-    expect(katie.querySelector('.feed-from')?.textContent).toBe('from: "first" (step 1)');
+    expect(katie.querySelector('.feed-from')?.textContent).toBe('from: "first"');
     expect(items[4]!.querySelector('.feed-source')?.textContent).toBe('stub:src ex');
     expect(slot.textContent).not.toContain('ARCHE');
   });

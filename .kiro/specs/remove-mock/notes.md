@@ -31,7 +31,7 @@ Branch: `feat/remove-mock`. Kiroween repo only; the bots repo is untouched.
 | `views/nav.ts`, `styles/shell.css` | the `MOCK DATA` badge and its style |
 | `views/chat.ts`, `styles/chat.css` | "Replies are scripted mock. No model is running.", the "Scenario not started" / "Step n of m" chip, the mock kind of `ModelSource` |
 | `views/model-banner.ts`, `styles/model-banner.css` | the banner's mock state ("No live model"); the banner keeps live, unconfigured, unreachable and loading |
-| `shell/telemetry.ts` | "(mock)" in the work-column heading |
+| `shell/telemetry.ts` | "(mock)" in the work-column heading; the "(step n)" label on feed items (after review). A failed record read now shows the connector's words above the feed instead of "Nothing has happened yet". |
 | `shell/shell.ts` | the mock seam-chip text. The chip now says "Seam: live adapter, active." or, with no address, "Seam: live adapter. No connector address set." |
 | `style.css` | the `--mock` / `--mock-text` tokens |
 | `adapter/seam.ts`, `adapter/live-models.ts`, `shell/left.ts` | comments describing mock or scripted behaviour. The contract types are unchanged. |
@@ -90,11 +90,11 @@ views/calendar.test.ts:98: ... vi.fn>).mock.calls[0][0];
 ## Tests
 
 - Base `main` `9bfccc6`: 361 tests in 38 files.
-- Branch: 314 tests in 35 files, all pass. Deleted: the four mock / scenario
+- Branch: 315 tests in 35 files, all pass. Deleted: the four mock / scenario
   test files above plus the scenario-only cases in kept files (the scenario
   flow in `assembly-integration`, `bug-hunt-fixes` LOW-5, the mock persona
   case in `wired-chat`, the mock banner cases). Added: `no-connector.test.ts`
-  (11) and the no-address banner case. Retargeted: every test that used the
+  (11) and the no-address banner case; after review, right-column unreachable assertions and a left-folder refresh test (the meter moves with the record). Retargeted: every test that used the
   mock adapter as a convenient adapter now uses `createRecordStub`.
 - `npx tsc --noEmit` clean, `npm run build` clean, no new dependencies.
 

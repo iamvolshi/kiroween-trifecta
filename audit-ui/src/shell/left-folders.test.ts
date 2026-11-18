@@ -82,3 +82,24 @@ describe('LeftPanel subject folders', () => {
     expect(slot.querySelector('.folder[data-group="pressure"] .folder-subject')?.classList.contains('sr-only')).toBe(true);
   });
 });
+
+describe('LeftPanel refresh: the meter moves with the record', () => {
+  it('a new entry on the subject moves the number and the history on refresh', async () => {
+    const entries: Entry[] = [makeEntry({ id: 'a', subject: 'turn', authority: 5, k_start: '2026-11-18T15:00:00.000Z' })];
+    const a = {
+      fetchAllEntries: async () => ({ ok: true, data: [...entries] }),
+      fetchLessons: async () => ({ ok: true, data: [] }),
+    } as unknown as SeamAdapter;
+    const slot = document.createElement('div');
+    const panel = new LeftPanel(a);
+    panel.mount(slot);
+    await tick(); await tick();
+    const folder = (): HTMLElement => slot.querySelector<HTMLElement>('.subject-folder[data-subject="turn"]')!;
+    expect(folder().querySelector('.folder-value')?.textContent).toBe('5');
+    entries.push(makeEntry({ id: 'b', subject: 'turn', authority: 7, k_start: '2026-11-18T15:01:00.000Z' }));
+    panel.refresh();
+    await tick(); await tick();
+    expect(folder().querySelector('.folder-value')?.textContent).toBe('7');
+    expect(folder().querySelector('.folder-history')?.textContent).toBe('5 -> 7');
+  });
+});
