@@ -198,6 +198,23 @@ describe('ChatView: the announcement under the chat box', () => {
     expect(banner().querySelector('.model-name')?.textContent).toBe('model-book-2');
   });
 
+  it('an older /models answer that lands late is dropped', async () => {
+    const answers: Array<(d: ModelStatus) => void> = [];
+    const live: ModelSource = {
+      kind: 'live',
+      status: () => new Promise((res) => answers.push((d) => res({ ok: true, data: d }))),
+    };
+    await mount(live, async () => new Response('{}', { status: 500 }));
+    click('.persona-picker [data-value="Frankenstein"]');
+    click('.register-switch [data-value="book"]'); // read 2
+    const late = { ...STATUS, registers: { movie: MOVIE, book: { provider: 'prov-old', model: 'model-old' } } };
+    answers[1]!(STATUS);
+    await tick();
+    answers[0]!(late); // read 1, older, lands last
+    await tick();
+    expect(banner().querySelector('.model-name')?.textContent).toBe('model-book-1');
+  });
+
   it('an unreachable connector says so under the chat box', async () => {
     const down: ModelSource = { kind: 'live', status: async () => ({ ok: false, error: 'Connector unreachable: refused' }) };
     await mount(down, async () => new Response('{}', { status: 500 }));

@@ -44,6 +44,8 @@ export class ChatView implements View {
   /** served_by of the last reply per switch position ("persona|register"). */
   private served = new Map<string, ServedBy>();
   private lastPositionKey: string | null = null;
+  /** Counts /models reads; only the latest answer is kept. */
+  private statusRead = 0;
 
   constructor(adapter: SeamAdapter, log: ChatLog, models: ModelSource = ACTIVE_MODELS) {
     this.adapter = adapter;
@@ -103,14 +105,15 @@ export class ChatView implements View {
     const root = this.container;
     // A re-read keeps showing the last answer until the new one lands.
     if (reset) this.status = { state: 'loading' };
+    const read = ++this.statusRead;
     void this.models.status().then(
       (r) => {
-        if (this.container !== root) return;
+        if (this.container !== root || read !== this.statusRead) return;
         this.status = r.ok ? { state: 'ok', data: r.data } : { state: 'error', error: r.error };
         this.renderModel();
       },
       (e: unknown) => {
-        if (this.container !== root) return;
+        if (this.container !== root || read !== this.statusRead) return;
         this.status = { state: 'error', error: `Connector unreachable: ${e instanceof Error ? e.message : String(e)}` };
         this.renderModel();
       },

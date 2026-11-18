@@ -107,9 +107,10 @@ Movie)." No Frankenstein cartridge existed in bots, Trifecta or Kiroween.
   `styles/model-banner.css`, `adapter/live-models.ts` (`GET /models` + its
   shape guard), `views/chat.ts` (wiring), `adapter/seam.ts` (optional
   `ChatTurn.served_by`, guarded), `main.ts` (one CSS import).
-- Data: before a turn, `GET /models` (read at mount and again on every
-  flip and after a failed turn); after a turn, that turn's `served_by` for
-  that switch position. A failed turn drops that position's old `served_by`. When they disagree, `served_by` wins and the
+- Data: before a turn, `GET /models`, read at mount, on every flip and
+  after a failed turn (only the latest read is kept). After a turn, that
+  turn's `served_by` for that switch position. A failed turn drops that
+  position's old `served_by`. When they disagree, `served_by` wins and the
   band says what the status had claimed.
 - One switch: `ChatView` reads `ACTIVE_ADAPTER_KIND` and `LIVE_BASE_URL` from
   `adapter/active.ts`. Mock mode never calls `/models`.
