@@ -63,3 +63,43 @@ in words instead of guessing an endpoint. On the live path that means the
 record views show that message and the left column's subject folders come
 from `GET /lessons` only. A whole-record read in the contract would fix it.
 A `/chat` reply that is not a `ChatTurn` is refused with an error.
+
+## The model switch (Book / Movie)
+
+Frankenstein's Book/Movie switch picks the model, not only the voice.
+
+| Position | Model | Set by |
+|---|---|---|
+| Movie | Meta Spark (`meta`) | `MOVIE_PROVIDER` / `MOVIE_MODEL`, default the loop's own route |
+| Book | Mercury or SubQ | `BOOK_PROVIDER` (`mercury` or `subq`). No default: unset, a Book turn is refused with the missing setting named |
+
+The map is config in the bots repo's environment. Flipping Book between
+Mercury and SubQ is a `.env` edit and a connector restart, with no rebuild.
+The exact names are in `.kiro/specs/model-switch/notes.md`.
+
+Provider sockets in the bot loop (`bot/model.py`): `meta`, `openrouter`,
+`subq` (SubQ, OpenAI-compatible, `SUBQ_API_KEY`) and `mercury` (Inception
+Labs, OpenAI-compatible, `INCEPTION_API_KEY`). Any other provider is refused.
+SubQ's Snap model is a decision model and is refused as a voice.
+
+Connector additions:
+
+| Call | Change |
+|---|---|
+| `POST /chat` | honours `register`; every reply carries `served_by: { provider, model }`, the model that actually served the turn |
+| `GET /models` | the live map: `{ persona, default, registers: { movie, book }, register_voices }`, each position `{ provider, model }` or `{ error }` |
+
+The announcement: under the chat box, a band names the live model from the
+connector (`GET /models` before a turn, `served_by` after; `served_by` wins).
+Movie is amber, Book is violet, and flipping the switch changes the band,
+the position word and the model name. Mock mode shows "No live model". The
+app holds no provider or model names.
+
+Limits:
+
+- Mercury's API is available through December 28, 2026. After that, Book
+  must point at SubQ.
+- SubQ is socketed but not configured: its chat model id and key are still
+  to come from the SubQ console.
+- Voice words: the Frankenstein cartridge carries a Book and a Movie voice,
+  drafted at the user's request and awaiting Darren's approval.

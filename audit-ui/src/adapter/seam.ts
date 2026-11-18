@@ -132,9 +132,17 @@ export interface ReplyLink {
   entry_id: string;
 }
 
+/** The provider + model that actually served one live turn (from the connector). */
+export interface ServedBy {
+  provider: string;
+  model: string;
+}
+
 /** One chat exchange (mirrors POST /chat). */
 export interface ChatTurn {
   message: string;
+  /** Live only: who served this turn. Absent in mock (no model runs). */
+  served_by?: ServedBy;
   /** false = the script had no answer; the reply is the scripted not-knowing reply. */
   known: boolean;
   /** Scenario step this turn played (1-based), or null when nothing advanced. */
@@ -180,6 +188,17 @@ export function isChatTurn(v: unknown): v is ChatTurn {
     typeof t.engines.lessons_in_prompt === 'object' && t.engines.lessons_in_prompt !== null &&
     Array.isArray(t.engines.lessons_in_prompt.injected) &&
     Array.isArray(t.engines.lessons_in_prompt.held) &&
-    (t.links === undefined || Array.isArray(t.links))
+    (t.links === undefined || Array.isArray(t.links)) &&
+    (t.served_by === undefined || isServedBy(t.served_by))
+  );
+}
+
+/** True when `v` names a provider and a model, both non-empty strings. */
+export function isServedBy(v: unknown): v is ServedBy {
+  const s = v as ServedBy | null;
+  return (
+    typeof s === 'object' && s !== null &&
+    typeof s.provider === 'string' && s.provider !== '' &&
+    typeof s.model === 'string' && s.model !== ''
   );
 }

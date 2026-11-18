@@ -1,12 +1,25 @@
 import type { View } from '../router/router.ts';
-import { isChatTurn, type ChatOptions, type SeamAdapter } from '../adapter/seam.ts';
-import { ACTIVE_ADAPTER_KIND } from '../adapter/active.ts';
+import { isChatTurn, type AdapterResult, type ChatOptions, type SeamAdapter, type ServedBy } from '../adapter/seam.ts';
+import { ACTIVE_ADAPTER_KIND, LIVE_BASE_URL } from '../adapter/active.ts';
+import { fetchModelStatus, type ModelStatus } from '../adapter/live-models.ts';
+import { announce, renderModelBanner, type StatusState } from './model-banner.ts';
 import { ChatLog } from './chat-log.ts';
 import { renderChatTurn } from './chat-turn.ts';
 import { createIntro } from './intro.ts';
 import { renderPersonaPicker, renderRegisterSwitch } from './persona-picker.ts';
 
 const PICK_FIRST = 'Choose a persona to start chatting.';
+
+/** Where the model announcement reads from. Tests pass their own. */
+export interface ModelSource {
+  kind: 'mock' | 'live';
+  status: () => Promise<AdapterResult<ModelStatus>>;
+}
+
+const ACTIVE_MODELS: ModelSource = {
+  kind: ACTIVE_ADAPTER_KIND,
+  status: () => fetchModelStatus(LIVE_BASE_URL),
+};
 
 export class ChatView implements View {
   private adapter: SeamAdapter;
@@ -25,10 +38,17 @@ export class ChatView implements View {
   private pending = false;
   /** Incremented per submit and on unmount; stale replies are dropped. */
   private requestToken = 0;
+  private models: ModelSource;
+  private modelSlot: HTMLElement | null = null;
+  private status: StatusState = { state: 'loading' };
+  /** served_by of the last reply per switch position ("persona|register"). */
+  private served = new Map<string, ServedBy>();
+  private lastPositionKey: string | null = null;
 
-  constructor(adapter: SeamAdapter, log: ChatLog) {
+  constructor(adapter: SeamAdapter, log: ChatLog, models: ModelSource = ACTIVE_MODELS) {
     this.adapter = adapter;
     this.log = log;
+    this.models = models;
   }
 
   mount(container: HTMLElement): void {
@@ -44,6 +64,7 @@ export class ChatView implements View {
           <label for="chat-message" class="sr-only">Your message</label>
           <input type="text" id="chat-message" autocomplete="off">
           <button type="submit">Send</button>
+          <div class="model-slot"></div>
         </form>
       </div>
     `;
@@ -63,6 +84,7 @@ export class ChatView implements View {
     this.input = container.querySelector<HTMLInputElement>('#chat-message');
     this.sendBtn = container.querySelector<HTMLButtonElement>('.chat-form button');
     this.form = container.querySelector<HTMLFormElement>('.chat-form');
+    this.modelSlot = container.querySelector<HTMLElement>('.model-slot');
 
     this.submitHandler = (e: Event) => {
       e.preventDefault();
@@ -72,6 +94,47 @@ export class ChatView implements View {
 
     this.renderControls();
     this.renderTranscript();
+    this.loadStatus();
+  }
+
+  /** Live: read the model map before the first turn. Mock: nothing to read. */
+  private loadStatus(): void {
+    if (this.models.kind === 'mock') return;
+    const root = this.container;
+    this.status = { state: 'loading' };
+    void this.models.status().then(
+      (r) => {
+        if (this.container !== root) return;
+        this.status = r.ok ? { state: 'ok', data: r.data } : { state: 'error', error: r.error };
+        this.renderModel();
+      },
+      (e: unknown) => {
+        if (this.container !== root) return;
+        this.status = { state: 'error', error: `Connector unreachable: ${e instanceof Error ? e.message : String(e)}` };
+        this.renderModel();
+      },
+    );
+  }
+
+  private positionKey(): string {
+    const persona = this.log.persona();
+    return persona === 'Frankenstein' ? `${persona}|${this.log.register()}` : `${persona ?? ''}|`;
+  }
+
+  /** The announcement under the chat box, for the current switch position. */
+  private renderModel(): void {
+    if (!this.modelSlot) return;
+    const persona = this.log.persona();
+    const key = this.positionKey();
+    const flipped = this.lastPositionKey !== null && this.lastPositionKey !== key;
+    this.lastPositionKey = key;
+    const a = announce({
+      kind: this.models.kind,
+      register: persona === 'Frankenstein' ? this.log.register() : null,
+      status: this.status,
+      served: this.served.get(key) ?? null,
+    });
+    this.modelSlot.replaceChildren(renderModelBanner(a, flipped));
   }
 
   /** Heading, picker, Book/Movie switch and composer state follow the chosen persona. */
@@ -111,6 +174,7 @@ export class ChatView implements View {
       this.input.placeholder = ready ? `Message ${persona}` : PICK_FIRST;
     }
     if (this.sendBtn) this.sendBtn.disabled = !ready || this.pending;
+    this.renderModel();
   }
 
   private renderTranscript(): void {
@@ -157,6 +221,7 @@ export class ChatView implements View {
 
     const options: ChatOptions =
       persona === 'Frankenstein' ? { persona, register: this.log.register() } : { persona };
+    const positionKey = this.positionKey();
 
     const token = ++this.requestToken;
     const root = this.container;
@@ -180,6 +245,8 @@ export class ChatView implements View {
     // The turn already happened on the agent's side (the scenario advanced),
     // so it is logged even when this view is gone; only the DOM work is skipped.
     if (result.ok) this.log.push(result.data, persona);
+    // Truth wins over config: the turn says who served it.
+    if (result.ok && result.data.served_by) this.served.set(positionKey, result.data.served_by);
     if (token !== this.requestToken || this.container !== root) return;
 
     btn.disabled = this.log.persona() === null;
@@ -191,6 +258,7 @@ export class ChatView implements View {
       return;
     }
     input.value = '';
+    this.renderModel();
     this.renderTranscript();
     this.transcript?.lastElementChild?.scrollIntoView?.({ block: 'end' });
   }
@@ -210,6 +278,8 @@ export class ChatView implements View {
     this.transcript = null;
     this.progress = null;
     this.errorSlot = null;
+    this.modelSlot = null;
+    this.lastPositionKey = null;
     if (this.container) {
       this.container.innerHTML = '';
       this.container = null;
