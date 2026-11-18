@@ -92,13 +92,42 @@ Belief pool: an entry is live at `M` when its start (`tek_t` in ms) is at
 or before `M` and `M` is before its end; no end means still live. In the
 loop no entry has an end, so the pool at `M` is every entry written by `M`.
 
+## The model switch (Book / Movie)
+
+Frankenstein's Book/Movie switch picks the model, not only the voice.
+
+| Position | Model | Set by |
+|---|---|---|
+| Movie | Meta Spark (`meta`) | `MOVIE_PROVIDER` / `MOVIE_MODEL`, default Meta Spark |
+| Book | Mercury or SubQ | `BOOK_PROVIDER` (`mercury` or `subq`). No default: unset, a Book turn is refused with the missing setting named |
+
+The map is config in the bots repo's environment. Flipping Book between
+Mercury and SubQ is a `.env` edit and a connector restart, with no rebuild.
+The exact names are in `.kiro/specs/model-switch/notes.md`.
+
+Provider sockets in the bot loop (`bot/model.py`): `meta`, `openrouter`,
+`subq` (SubQ, OpenAI-compatible, `SUBQ_API_KEY`) and `mercury` (Inception
+Labs, OpenAI-compatible, `INCEPTION_API_KEY`). Any other provider is refused.
+SubQ's Snap model is a decision model and is refused as a voice.
+
+Connector additions:
+
+| Call | Change |
+|---|---|
+| `POST /chat` | honours `register`; every reply carries `served_by: { provider, model }`, the model that actually served the turn |
+| `GET /models` | the live map: `{ persona, default, registers: { movie, book }, register_voices }`, each position `{ provider, model }` or `{ error }` |
+
+The announcement: under the chat box, a band names the live model from the
+connector (`GET /models` before a turn, `served_by` after; `served_by` wins).
+Movie is amber, Book is violet, and flipping the switch changes the band,
+the position word and the model name. Mock mode shows "No live model". The
+app holds no provider or model names.
+
 ## Limits
 
 - One booted persona. The connector serves the persona its `CARTRIDGE`
   booted. `/chat` with another persona name is refused (HTTP 409) and the
   refusal names the booted one.
-- Register is pending. The loop has no register machinery; the connector
-  accepts `register` and does not act on it. No voice prompt was written.
 - `POST /update` is out.
 - Loopback only. The connector listens on 127.0.0.1 and answers browser
   pages from 127.0.0.1 / localhost (or `CONNECTOR_ALLOW_ORIGINS`); any other
@@ -109,3 +138,9 @@ loop no entry has an end, so the pool at `M` is every entry written by `M`.
 - No `links`: the loop marks no spans in its replies.
 - Turn text is not an `Entry` field, so the record views show each turn's
   reason and evidence, not its words. The words are in the chat.
+- Mercury's API is available through December 28, 2026. After that, Book
+  must point at SubQ.
+- SubQ is socketed but not configured: its chat model id and key are still
+  to come from the SubQ console.
+- Voice words: the Frankenstein cartridge carries a Book and a Movie voice,
+  drafted at the user's request and awaiting Darren's approval.

@@ -1,0 +1,120 @@
+/* The live-model announcement under the chat box (views/model-banner.ts).
+   The switch position owns the whole band: Movie is amber, Book is violet,
+   with the position word in a solid block and the model name large. Flipping
+   the switch changes the band's colour, the block and the name at once. */
+
+.chat-form .model-slot {
+  grid-column: 1 / -1;
+}
+
+.model-banner {
+  --band: var(--line-strong);
+  --band-bg: var(--surface);
+  --band-text: var(--text);
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-areas:
+    'pos main'
+    'pos source'
+    'pos note';
+  column-gap: var(--s4);
+  align-items: center;
+  padding: var(--s3) var(--s4);
+  border: 2px solid var(--band);
+  border-left-width: 10px;
+  background: var(--band-bg);
+  color: var(--band-text);
+}
+
+.model-banner[data-position='movie'] {
+  --band: #ffb648;
+  --band-bg: #2b1d06;
+  --band-text: #ffe3b3;
+}
+
+.model-banner[data-position='book'] {
+  --band: #b49cff;
+  --band-bg: #1c1236;
+  --band-text: #e6ddff;
+}
+
+.model-banner[data-state='mock'] {
+  --band: var(--mock);
+  --band-bg: var(--surface);
+  --band-text: var(--text);
+  border-style: dashed;
+}
+
+.model-banner[data-state='unreachable'],
+.model-banner[data-state='unconfigured'] {
+  --band: var(--error);
+  --band-bg: var(--error-bg);
+  --band-text: var(--text);
+}
+
+.model-position {
+  grid-area: pos;
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  padding: 0 var(--s3);
+  background: var(--band);
+  color: #0b0710;
+  font-family: var(--mono);
+  font-size: var(--fs-title);
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.model-main {
+  grid-area: main;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--s2) var(--s3);
+  min-width: 0;
+}
+
+.model-name {
+  font-family: var(--mono);
+  font-size: 22px;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.model-provider {
+  padding: 1px var(--s2);
+  border: 1px solid var(--band);
+  font-family: var(--mono);
+  font-size: var(--fs-meta);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.model-source {
+  grid-area: source;
+  font-size: var(--fs-meta);
+  opacity: 0.85;
+}
+
+.model-note {
+  grid-area: note;
+  margin-top: var(--s1);
+  font-size: var(--fs-meta);
+  font-weight: 700;
+}
+
+/* A short pulse when the switch flips, so the change is seen, not hunted. */
+.model-flip {
+  animation: model-flip 700ms ease-out 1;
+}
+
+@keyframes model-flip {
+  0% { box-shadow: 0 0 0 6px var(--band); }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .model-flip { animation: none; }
+}
