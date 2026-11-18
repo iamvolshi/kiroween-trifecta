@@ -18,6 +18,9 @@ export interface ModelStatus {
   registers: { movie: ModelRoute; book: ModelRoute };
   /** Registers whose voice the register mask's cartridge carries. */
   register_voices: string[];
+  // `personas` and `persona_routes` are optional on purpose: a connector
+  // from before the shared entity still validates, and the banner then says
+  // in words that it reports no route for Elara or ARCHETRON.
   /** The masks the connector serves, by name. */
   personas?: string[];
   /** Each mask without registers (Elara, ARCHETRON) -> its route. */
