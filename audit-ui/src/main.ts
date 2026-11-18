@@ -6,12 +6,12 @@ import './styles/calendar.css';
 import './styles/shell.css';
 import './styles/telemetry.css';
 import './styles/folders.css';
-import { createActiveAdapter } from './adapter/active.ts';
+import { createLiveAdapter } from './adapter/live.ts';
+import { CONNECTOR_URL } from './adapter/connector-url.ts';
 import { boot } from './boot.ts';
 
-// The adapter and its chrome label both come from ACTIVE_ADAPTER_KIND in
-// adapter/active.ts: switch it there, nowhere else.
-const adapter = createActiveAdapter();
+// Live-only: one adapter, the connector at the build-time address.
+const adapter = createLiveAdapter(CONNECTOR_URL);
 const appEl = document.getElementById('app');
 
 if (!appEl) {

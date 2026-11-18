@@ -24,7 +24,9 @@ loop through a connector.
 ## Connector contract (as built in the app)
 
 Plain JSON over HTTP, no auth. The app points at one base URL, set at build
-time as `VITE_CONNECTOR_URL`. The shapes are the types in
+time as `VITE_CONNECTOR_URL`. The app is live-only: it has no other data
+source. With no URL set, or no connector answering, every view says the
+connector is unreachable, in words. The shapes are the types in
 `audit-ui/src/adapter/seam.ts`; those types are the contract.
 
 | Call | Request | Response |
@@ -56,7 +58,7 @@ an array.
 provenance, in `links`:
 
 ```json
-{ "start": 21, "end": 31, "kid": 4, "subject": "order-1042.delivery_date", "entry_id": "scn-s3" }
+{ "start": 21, "end": 31, "kid": 1, "subject": "turn", "entry_id": "<the entry's id>" }
 ```
 
 `start` and `end` are offsets into the reply text in UTF-16 code units
@@ -120,7 +122,8 @@ Connector additions:
 The announcement: under the chat box, a band names the live model from the
 connector (`GET /models` before a turn, `served_by` after; `served_by` wins).
 Movie is amber, Book is violet, and flipping the switch changes the band,
-the position word and the model name. Mock mode shows "No live model". The
+the position word and the model name. With no connector, the band says the
+connector is unreachable. The
 app holds no provider or model names.
 
 ## Limits

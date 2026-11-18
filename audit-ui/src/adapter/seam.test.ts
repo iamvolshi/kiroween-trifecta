@@ -5,17 +5,17 @@
 
 import { describe, it, expect } from 'vitest';
 import * as fc from 'fast-check';
-import { createMockAdapter, createErrorMock } from './mock';
+import { createRecordStub, createFailingStub } from '../test-helpers.ts';
 import { createLiveAdapter } from './live';
 import type { SeamAdapter } from './seam';
 
 // ---------------------------------------------------------------------------
-// 1. TypeScript assignability: createMockAdapter() satisfies SeamAdapter
+// 1. TypeScript assignability: createRecordStub() satisfies SeamAdapter
 //    This is a compile-time check — if the file compiles, the type is correct.
 // ---------------------------------------------------------------------------
 
-const _mockAssignability: SeamAdapter = createMockAdapter();
-void _mockAssignability; // prevent unused-variable warning
+const _stubAssignability: SeamAdapter = createRecordStub();
+void _stubAssignability; // prevent unused-variable warning
 
 // ---------------------------------------------------------------------------
 // 2. TypeScript assignability: createLiveAdapter() satisfies SeamAdapter
@@ -25,11 +25,11 @@ const _liveAssignability: SeamAdapter = createLiveAdapter('https://example.com')
 void _liveAssignability;
 
 // ---------------------------------------------------------------------------
-// 3. createErrorMock() — behavioral: all methods return { ok: false }
+// 3. createFailingStub() — behavioral: all methods return { ok: false }
 // ---------------------------------------------------------------------------
 
-describe('createErrorMock', () => {
-  const errorAdapter = createErrorMock();
+describe('createFailingStub', () => {
+  const errorAdapter = createFailingStub();
 
   it('fetchAllEntries returns { ok: false }', async () => {
     const result = await errorAdapter.fetchAllEntries();
@@ -66,7 +66,7 @@ describe('createErrorMock', () => {
 
 // ---------------------------------------------------------------------------
 // 4. Property 17: Error adapter typed result
-//    Generate arbitrary non-empty error strings; assert createErrorMock()
+//    Generate arbitrary non-empty error strings; assert createFailingStub()
 //    always returns { ok: false, error } where error is a non-empty string.
 //    Validates: Requirements 1.7, 9.6
 // ---------------------------------------------------------------------------
@@ -77,8 +77,8 @@ describe('Property 17: Error adapter typed result', () => {
       fc.asyncProperty(
         fc.string({ minLength: 1 }),
         async (_arbitraryError) => {
-          // createErrorMock() always returns its fixed error; we test the shape holds
-          const adapter = createErrorMock();
+          // createFailingStub() always returns its fixed error; we test the shape holds
+          const adapter = createFailingStub();
           const result = await adapter.fetchAllEntries();
           expect(result.ok).toBe(false);
           if (!result.ok) {
@@ -95,7 +95,7 @@ describe('Property 17: Error adapter typed result', () => {
       fc.asyncProperty(
         fc.string({ minLength: 1 }),
         async (_arbitraryError) => {
-          const adapter = createErrorMock();
+          const adapter = createFailingStub();
           const result = await adapter.fetchBeliefPool(0);
           expect(result.ok).toBe(false);
           if (!result.ok) {
@@ -112,7 +112,7 @@ describe('Property 17: Error adapter typed result', () => {
       fc.asyncProperty(
         fc.string({ minLength: 1 }),
         async (_arbitraryError) => {
-          const adapter = createErrorMock();
+          const adapter = createFailingStub();
           const result = await adapter.fetchChain(1, 'x');
           expect(result.ok).toBe(false);
           if (!result.ok) {
@@ -129,7 +129,7 @@ describe('Property 17: Error adapter typed result', () => {
       fc.asyncProperty(
         fc.string({ minLength: 1 }),
         async (_arbitraryError) => {
-          const adapter = createErrorMock();
+          const adapter = createFailingStub();
           const result = await adapter.fetchKidMap();
           expect(result.ok).toBe(false);
           if (!result.ok) {

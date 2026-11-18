@@ -1,7 +1,7 @@
 /**
  * Bug hunt round 2 (Elara, 2026-11-17): one regression test per fix.
- * MED-1, MED-2, LOW-1, LOW-3, LOW-4, LOW-5, LOW-6, LOW-7, LOW-8.
- * (LOW-2, the end-of-scenario signal, waits for Darren's design call.)
+ * MED-1, MED-2, LOW-1, LOW-3, LOW-4, LOW-6, LOW-7, LOW-8.
+ * (LOW-5 tested a deleted fixture; LOW-2 was never built.)
  */
 import { describe, it, expect, afterEach } from 'vitest';
 import indexHtml from '../index.html?raw';
@@ -14,10 +14,9 @@ import { EntryDetailView } from './views/entry-detail.ts';
 import { CalendarView } from './views/calendar.ts';
 import { Router } from './router/router.ts';
 import { createShell } from './shell/shell.ts';
-import { createMockAdapter, createErrorMock } from './adapter/mock.ts';
-import { ACTIVE_ADAPTER_KIND, createAdapterFor, createActiveAdapter } from './adapter/active.ts';
-import { before } from './scenario/script.ts';
-import { SCENARIO } from './scenario/script.ts';
+import { createRecordStub, createFailingStub } from './test-helpers.ts';
+import { NO_ADDRESS_ERROR } from './adapter/live.ts';
+import type { ChatTurn } from './adapter/seam.ts';
 import { makeEntry, tick } from './test-helpers.ts';
 import type { SeamAdapter } from './adapter/seam.ts';
 
@@ -38,7 +37,7 @@ describe('MED-1: a throwing chat adapter does not leave Send disabled', () => {
   it('shows the error and re-enables Send', async () => {
     const root = host();
     const throwing: SeamAdapter = {
-      ...createMockAdapter(),
+      ...createRecordStub(),
       chat: async () => {
         throw new Error('network down');
       },
@@ -59,7 +58,7 @@ describe('MED-1: a throwing chat adapter does not leave Send disabled', () => {
 describe('MED-2: card fields, chat lines and the no-match box carry real text labels', () => {
   it('every labelled card value has a spoken label in front of it', async () => {
     const root = host();
-    new ActionListView(createMockAdapter([makeEntry({ id: 'a' })])).mount(root);
+    new ActionListView(createRecordStub([makeEntry({ id: 'a' })])).mount(root);
     await settle();
     const li = root.querySelector('.action-list > li')!;
     const spoken = (cls: string) => {
@@ -83,10 +82,17 @@ describe('MED-2: card fields, chat lines and the no-match box carry real text la
   it('chat lines say who spoke', async () => {
     const root = host();
     const log = new ChatLog();
-    const view = new ChatView(createMockAdapter(), log);
+    const turn: ChatTurn = {
+      message: 'hi', known: true, step: null, total_steps: 0,
+      engines: {
+        arche: { reply: 'hello' }, erie: null, elle: null, elle_promoted: null,
+        lessons_in_prompt: { subjects: [], injected: [], held: [] }, katie: [],
+      },
+    };
+    const view = new ChatView(createRecordStub(undefined, { chat: async () => ({ ok: true, data: turn }) }), log);
     view.mount(root);
     root.querySelector<HTMLButtonElement>('.persona-picker [data-value="ARCHETRON"]')!.click();
-    root.querySelector<HTMLInputElement>('#chat-message')!.value = SCENARIO.steps[0]!.prompt;
+    root.querySelector<HTMLInputElement>('#chat-message')!.value = 'hi';
     root.querySelector('form')!.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
     await settle();
     expect(root.querySelector('.chat-user .sr-only')?.textContent).toBe('You said: ');
@@ -95,7 +101,7 @@ describe('MED-2: card fields, chat lines and the no-match box carry real text la
 
   it('the filters no-match box starts with a spoken "No match" label', async () => {
     const root = host();
-    new ActionListView(createMockAdapter([makeEntry({ id: 'a', state: 'confirmed', authority: 7 })])).mount(root);
+    new ActionListView(createRecordStub([makeEntry({ id: 'a', state: 'confirmed', authority: 7 })])).mount(root);
     await settle();
     const press = (filter: string, value: string) =>
       Array.from(root.querySelectorAll<HTMLButtonElement>('.action-filters button'))
@@ -124,7 +130,7 @@ describe('MED-2: card fields, chat lines and the no-match box carry real text la
 
 describe('LOW-1: Entry Detail always has its heading and question', () => {
   it('empty and error states keep h1 + intro', async () => {
-    for (const adapter of [createMockAdapter([]), createErrorMock()]) {
+    for (const adapter of [createRecordStub([]), createFailingStub()]) {
       const root = host();
       new EntryDetailView(adapter, 999, 'nope', 'nope').mount(root);
       expect(root.querySelector('h1')?.textContent).toBe('Entry Detail');
@@ -139,7 +145,7 @@ describe('LOW-1: Entry Detail always has its heading and question', () => {
 
   it('not-found keeps one h1 (the section uses h2)', async () => {
     const root = host();
-    new EntryDetailView(createMockAdapter([makeEntry({ id: 'real' })]), 1, 'temperature', 'missing').mount(root);
+    new EntryDetailView(createRecordStub([makeEntry({ id: 'real' })]), 1, 'temperature', 'missing').mount(root);
     await settle();
     expect(root.querySelector('.entry-not-found h2')?.textContent).toBe('Entry not found');
     expect(root.querySelectorAll('h1')).toHaveLength(1);
@@ -153,24 +159,16 @@ describe('LOW-3: the tab title and favicon are ours', () => {
   });
 });
 
-describe('LOW-4: one switch decides both the adapter and its label', () => {
-  it('createActiveAdapter follows ACTIVE_ADAPTER_KIND, and the chrome reads the same constant', async () => {
-    expect(ACTIVE_ADAPTER_KIND).toBe('mock');
-    expect((await createActiveAdapter().fetchAllEntries()).ok).toBe(true);
-    expect((await createAdapterFor('live').fetchAllEntries()).ok).toBe(false);
+describe('LOW-4: the app runs one adapter, the live one, and its chip says so', () => {
+  it('main.ts builds the live adapter from the connector address; with none set, the chip says so', () => {
+    expect(mainTs).toContain('createLiveAdapter(CONNECTOR_URL)');
+    expect(mainTs).not.toContain('createRecordStub');
     const root = host();
     createShell(root);
-    expect(root.querySelector('.seam-chip')?.getAttribute('data-seam')).toBe(ACTIVE_ADAPTER_KIND);
-    expect(mainTs).toContain('createActiveAdapter()');
-    expect(mainTs).not.toContain('createMockAdapter');
-  });
-});
-
-describe('LOW-5: before() is safe at midnight', () => {
-  it('rolls back across the day, and is unchanged elsewhere', () => {
-    expect(before('00:00')).toBe('2026-11-15T23:59:00.000Z');
-    expect(before('09:12')).toBe('2026-11-16T09:11:00.000Z');
-    expect(SCENARIO.steps[0]!.entries[0]!.e_time).toBe('2026-11-16T09:11:00.000Z');
+    // Tests build with no VITE_CONNECTOR_URL.
+    expect(root.querySelector('.seam-chip')?.getAttribute('data-seam')).toBe('no-address');
+    expect(root.querySelector('.seam-chip')?.textContent).toBe('Seam: live adapter. No connector address set.');
+    expect(NO_ADDRESS_ERROR).toMatch(/^Connector unreachable: /);
   });
 });
 
@@ -189,7 +187,7 @@ describe('LOW-6: the header view label is set from the mounted view', () => {
     it(`${path} -> "View: ${name}"`, () => {
       window.history.replaceState({}, '', path);
       const root = host();
-      const router = new Router(createMockAdapter(), root);
+      const router = new Router(createRecordStub(), root);
       const label = root.querySelector<HTMLElement>('.brand-view')!;
       expect(label.hidden).toBe(false);
       expect(label.textContent).toBe(`View: ${name}`);
@@ -201,7 +199,7 @@ describe('LOW-6: the header view label is set from the mounted view', () => {
 describe('LOW-7: the month grid has thead, tbody and column scope', () => {
   it('seven scoped column headers in thead, weeks in tbody', async () => {
     const root = host();
-    new CalendarView(createMockAdapter(), { level: 'month', year: 2026, month: 11 }).mount(root);
+    new CalendarView(createRecordStub(), { level: 'month', year: 2026, month: 11 }).mount(root);
     await settle();
     const grid = root.querySelector('table.calendar-grid')!;
     const ths = grid.querySelectorAll('thead th[scope="col"]');
@@ -215,7 +213,7 @@ describe('LOW-8: a skip link is the first Tab stop and moves focus to the view',
   it('first focusable element; click focuses the center without changing the URL', () => {
     window.history.replaceState({}, '', '/actions');
     const root = host();
-    const router = new Router(createMockAdapter(), root);
+    const router = new Router(createRecordStub(), root);
     const first = root.querySelector<HTMLElement>('a[href], button')!;
     expect(first.classList.contains('skip-link')).toBe(true);
     first.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, button: 0 }));

@@ -43,21 +43,21 @@ describe('TelemetryPanel: the work column', () => {
     document.body.appendChild(slot);
   });
 
-  it('heading names the work column and keeps the mock marker; empty state in words', async () => {
+  it('heading names the work column; empty state in words', async () => {
     new TelemetryPanel(fake(ok([])), new ChatLog()).mount(slot);
     await tick();
     expect(slot.querySelector('h2')?.textContent).toBe(WORK_HEADING);
-    expect(WORK_HEADING).toBe('What the machine is doing (mock)');
+    expect(WORK_HEADING).toBe('What the machine is doing');
     expect(slot.querySelector('.empty-state')?.textContent).toMatch(/Nothing has happened yet/);
     expect(slot.querySelector('.subject-folder')).toBeNull();
   });
 
   it('one item per event, newest first, each with its small engine tag', async () => {
     const log = new ChatLog();
-    new TelemetryPanel(fake(ok([makeEntry({ id: 'e1', kid: 4, subject: SUBJ, evidence: 'value=x (mock)' })])), log).mount(slot);
+    new TelemetryPanel(fake(ok([makeEntry({ id: 'e1', kid: 4, subject: SUBJ, evidence: 'value=x (stub)' })])), log).mount(slot);
     log.push(
       turn('first', 1, {
-        erie: { question: 'q', state: 'found', text: 'it says x', provenance: [{ source: 'mock:src', content: 'c', excerpt: 'ex' }] },
+        erie: { question: 'q', state: 'found', text: 'it says x', provenance: [{ source: 'stub:src', content: 'c', excerpt: 'ex' }] },
         katie: [{ kid: 4, subject: SUBJ, entry_id: 'e1', seated: true }],
       }),
     );
@@ -81,9 +81,9 @@ describe('TelemetryPanel: the work column', () => {
     expect(katie.dataset.subject).toBe(SUBJ);
     expect(katie.dataset.entryId).toBe('e1');
     expect(katie.querySelector('a')?.getAttribute('href')).toBe(`/entry/4/${encodeURIComponent(SUBJ)}/e1`);
-    expect(katie.querySelector('.katie-evidence')?.textContent).toBe('value=x (mock)');
+    expect(katie.querySelector('.katie-evidence')?.textContent).toBe('value=x (stub)');
     expect(katie.querySelector('.feed-from')?.textContent).toBe('from: "first" (step 1)');
-    expect(items[4]!.querySelector('.feed-source')?.textContent).toBe('mock:src ex');
+    expect(items[4]!.querySelector('.feed-source')?.textContent).toBe('stub:src ex');
     expect(slot.textContent).not.toContain('ARCHE');
   });
 

@@ -42,15 +42,16 @@ export interface AskResult {
 
 /**
  * An ELLE lesson (mirrors one item of GET /lessons).
- * `subject` and `status` are a MOCK extension decided 2026-11-16 (GRAY-2):
- * the trifecta /lessons shape does not carry them today.
+ * `subject` and `status` were added to the seam 2026-11-16 (GRAY-2); the
+ * connector sends `subject` null and `status` 'promoted' (the loop has no
+ * subjects for lessons and no held stage).
  */
 export interface Lesson {
   event_id: string;
   event_type: string;
   detail: string;
   rule: string | null;
-  /** The subject this lesson is about, named by the script (mock). null = no subject. */
+  /** The subject this lesson is about. null = no subject. */
   subject: string | null;
   /**
    * 'candidate' = recorded but not learned yet: shown grey, never injected.
@@ -85,7 +86,7 @@ export interface RecordResult {
 
 /** Lessons on the subjects one prompt seeks, read BEFORE the turn plays. */
 export interface LessonsInPrompt {
-  /** Subjects this prompt seeks (mock: matched by the script's subject keywords). */
+  /** Subjects this prompt seeks (the connector sends []). */
   subjects: string[];
   /** Promoted lessons on those subjects: injected into this prompt. */
   injected: Lesson[];
@@ -141,11 +142,11 @@ export interface ServedBy {
 /** One chat exchange (mirrors POST /chat). */
 export interface ChatTurn {
   message: string;
-  /** Live only: who served this turn. Absent in mock (no model runs). */
+  /** Who served this turn (provider + model), as the connector reports it. */
   served_by?: ServedBy;
-  /** false = the script had no answer; the reply is the scripted not-knowing reply. */
+  /** false = the responding side had no answer. */
   known: boolean;
-  /** Scenario step this turn played (1-based), or null when nothing advanced. */
+  /** Step this turn played (1-based), or null; the connector sends null. */
   step: number | null;
   total_steps: number;
   engines: EngineActivity;
@@ -163,8 +164,7 @@ export interface SeamAdapter {
   ask(question: string): Promise<AdapterResult<AskResult>>;
   /**
    * One chat turn (POST /chat). `options` carries the persona name (and the
-   * Frankenstein register). The mock adapter ignores it: its replies are
-   * scripted. The live adapter sends it with every call.
+   * Frankenstein register); the live adapter sends it with every call.
    */
   chat(message: string, options?: ChatOptions): Promise<AdapterResult<ChatTurn>>;
   /** KATIE write (POST /update). The UI never calls this; the agent does. */

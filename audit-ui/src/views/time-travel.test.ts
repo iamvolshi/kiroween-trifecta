@@ -7,11 +7,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import * as fc from 'fast-check';
 import { TimeTravelView } from './time-travel';
-import {
-  createMockAdapter,
-  createErrorMock,
-  MOCK_CURSORS,
-} from '../adapter/mock';
+import { createRecordStub, createFailingStub, STUB_TIMES } from '../test-helpers.ts';
 import { isLiveAt } from '../util/interval';
 import type { Entry, SeamAdapter } from '../adapter/seam';
 import { assemblyNotUsed } from '../test-helpers';
@@ -112,7 +108,7 @@ afterEach(() => {
 
 describe('Example: datetime-local input present on mount', () => {
   it('renders #moment-cursor input immediately after mount (Req 4.1)', () => {
-    const view = new TimeTravelView(createMockAdapter());
+    const view = new TimeTravelView(createRecordStub());
     view.mount(container);
     const input = container.querySelector('input[type="datetime-local"]');
     expect(input).not.toBeNull();
@@ -127,9 +123,9 @@ describe('Example: datetime-local input present on mount', () => {
 
 describe('Example: empty state when no live entries', () => {
   it('renders .empty-state when cursor is before all entries (Req 4.6, 9.4)', async () => {
-    const view = new TimeTravelView(createMockAdapter());
+    const view = new TimeTravelView(createRecordStub());
     view.mount(container);
-    await triggerCursor(view, container, MOCK_CURSORS.beforeAll);
+    await triggerCursor(view, container, STUB_TIMES.beforeAll);
     const emptyState = container.querySelector('.empty-state');
     expect(emptyState).not.toBeNull();
     expect(container.querySelector('.error-state')).toBeNull();
@@ -137,9 +133,9 @@ describe('Example: empty state when no live entries', () => {
   });
 
   it('renders .empty-state when cursor is after all entries', async () => {
-    const view = new TimeTravelView(createMockAdapter());
+    const view = new TimeTravelView(createRecordStub());
     view.mount(container);
-    await triggerCursor(view, container, MOCK_CURSORS.afterAll);
+    await triggerCursor(view, container, STUB_TIMES.afterAll);
     const emptyState = container.querySelector('.empty-state');
     expect(emptyState).not.toBeNull();
     view.unmount();
@@ -152,9 +148,9 @@ describe('Example: empty state when no live entries', () => {
 
 describe('Example: error state on adapter error', () => {
   it('renders .error-state when adapter.fetchBeliefPool errors (Req 4.7)', async () => {
-    const view = new TimeTravelView(createErrorMock());
+    const view = new TimeTravelView(createFailingStub());
     view.mount(container);
-    await triggerCursor(view, container, MOCK_CURSORS.insideT0T1);
+    await triggerCursor(view, container, STUB_TIMES.insideT0T1);
     const errorState = container.querySelector('.error-state');
     expect(errorState).not.toBeNull();
     expect(container.querySelector('.empty-state')).toBeNull();
@@ -168,14 +164,14 @@ describe('Example: error state on adapter error', () => {
 
 describe('Example: cursor change replaces pool content', () => {
   it('changing cursor twice does not accumulate .cursor-display elements (Req 4.4)', async () => {
-    const view = new TimeTravelView(createMockAdapter());
+    const view = new TimeTravelView(createRecordStub());
     view.mount(container);
 
-    await triggerCursor(view, container, MOCK_CURSORS.insideT0T1);
+    await triggerCursor(view, container, STUB_TIMES.insideT0T1);
     const firstCount = container.querySelectorAll('.cursor-display').length;
     expect(firstCount).toBe(1);
 
-    await triggerCursor(view, container, MOCK_CURSORS.insideT1T2);
+    await triggerCursor(view, container, STUB_TIMES.insideT1T2);
     const secondCount = container.querySelectorAll('.cursor-display').length;
     expect(secondCount).toBe(1);
 
@@ -183,13 +179,13 @@ describe('Example: cursor change replaces pool content', () => {
   });
 
   it('belief-pool content is replaced, not appended', async () => {
-    const view = new TimeTravelView(createMockAdapter());
+    const view = new TimeTravelView(createRecordStub());
     view.mount(container);
 
-    await triggerCursor(view, container, MOCK_CURSORS.insideT0T1);
+    await triggerCursor(view, container, STUB_TIMES.insideT0T1);
     const firstPoolItems = container.querySelectorAll('.belief-pool li').length;
 
-    await triggerCursor(view, container, MOCK_CURSORS.insideT1T2);
+    await triggerCursor(view, container, STUB_TIMES.insideT1T2);
     const secondPoolItems = container.querySelectorAll('.belief-pool li').length;
 
     // Second cursor selects only entry B (1 item), first cursor selects A+D (2 items).
@@ -210,16 +206,16 @@ describe('Example: cursor change replaces pool content', () => {
 
 describe('Property 7: Time Travel pool correctness', () => {
   const knownMoments = [
-    MOCK_CURSORS.beforeAll,       // before all entries → empty
-    MOCK_CURSORS.insideT0T1,      // inside first interval → A + D
-    MOCK_CURSORS.insideT1T2,      // inside second interval → B only
-    MOCK_CURSORS.insideT2T3,      // inside third interval → C only
-    MOCK_CURSORS.afterAll,        // after all entries → empty
+    STUB_TIMES.beforeAll,       // before all entries → empty
+    STUB_TIMES.insideT0T1,      // inside first interval → A + D
+    STUB_TIMES.insideT1T2,      // inside second interval → B only
+    STUB_TIMES.insideT2T3,      // inside third interval → C only
+    STUB_TIMES.afterAll,        // after all entries → empty
   ];
 
   for (const momentMs of knownMoments) {
     it(`pool matches isLiveAt filter for cursor=${momentMs}ms`, async () => {
-      const adapter = createMockAdapter();
+      const adapter = createRecordStub();
       const allResult = await adapter.fetchAllEntries();
       if (!allResult.ok) throw new Error('fixture failed');
       const allEntries = allResult.data;
@@ -315,7 +311,7 @@ describe('Property 8: Cursor display', () => {
 
     await fc.assert(
       fc.asyncProperty(timestampArb, async (momentMs) => {
-        const adapter = createMockAdapter();
+        const adapter = createRecordStub();
         const c = document.createElement('div');
         document.body.appendChild(c);
         const view = new TimeTravelView(adapter);

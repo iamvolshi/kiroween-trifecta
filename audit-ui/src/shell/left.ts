@@ -34,7 +34,7 @@ function groupHref(name: string, entries: Entry[]): string | null {
 }
 
 /**
- * Left column: destinations nav (with the MOCK label); the record, one group
+ * Left column: destinations nav; the record, one group
  * per account / project (subject prefix) with its subject folders nested
  * inside (0-9 meter, history, lessons); any lessons without a subject; and
  * the Calendar / Time Travel "going back" links. Stays mounted across

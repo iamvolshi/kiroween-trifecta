@@ -1,10 +1,10 @@
 // The connector's model status (GET /models): which provider + model each
-// register position points at, read from the loop's own config. Live only;
-// the mock has no model. No provider or model name is written in this app:
+// register position points at, read from the loop's own config. No provider
+// or model name is written in this app:
 // every name shown comes from here or from a turn's served_by.
 import type { AdapterResult, ServedBy } from './seam';
 import { isServedBy } from './seam';
-import type { FetchLike } from './live';
+import { NO_ADDRESS_ERROR, type FetchLike } from './live';
 
 /** One position: the route it points at, or the config error naming what is missing. */
 export type ModelRoute = ServedBy | { error: string };
@@ -39,7 +39,7 @@ export function isModelStatus(v: unknown): v is ModelStatus {
 /** GET /models on the connector. Errors come back in words. */
 export async function fetchModelStatus(baseUrl: string, fetchImpl?: FetchLike): Promise<AdapterResult<ModelStatus>> {
   const base = baseUrl.trim().replace(/\/+$/, '');
-  if (base === '') return { ok: false, error: 'Live adapter not wired' };
+  if (base === '') return { ok: false, error: NO_ADDRESS_ERROR };
   const doFetch: FetchLike = fetchImpl ?? ((url, init) => fetch(url, init));
   try {
     const res = await doFetch(`${base}/models`);

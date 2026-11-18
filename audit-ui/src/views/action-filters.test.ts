@@ -7,7 +7,7 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import * as fc from 'fast-check';
 import { ActionListView } from './action-list.ts';
-import { createMockAdapter } from '../adapter/mock.ts';
+import { createRecordStub } from '../test-helpers.ts';
 import { makeEntry, tick } from '../test-helpers.ts';
 import { applyFilters, BANDS, matches, statesIn, type FilterState } from './action-filters.ts';
 import type { Entry } from '../adapter/seam.ts';
@@ -26,7 +26,7 @@ let c: HTMLElement;
 async function mount(entries: Entry[] = E): Promise<HTMLElement> {
   c = document.createElement('div');
   document.body.appendChild(c);
-  new ActionListView(createMockAdapter(entries)).mount(c);
+  new ActionListView(createRecordStub(entries)).mount(c);
   for (let i = 0; i < 4; i++) await tick();
   return c;
 }

@@ -23,7 +23,7 @@
   --muted: #9fb1c8;
   --faint: #8698b2;
 
-  /* Meaning: signal (cyan), warning (amber), good (emerald), error, mock. */
+  /* Meaning: signal (cyan), warning (amber), good (emerald), error. */
   --accent: #38d1f5;
   --accent-bg: #08283a;
   --accent-bg-hover: #0d3a52;
@@ -33,8 +33,6 @@
   --ok-bg: #082a1d;
   --error: #ff7d7d;
   --error-bg: #2a1013;
-  --mock: #ffd23f;
-  --mock-text: #14110a;
 
   /* Kept name from the readability pass */
   --rule: var(--line);

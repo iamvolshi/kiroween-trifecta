@@ -6,7 +6,7 @@
 import { describe, it, expect } from 'vitest';
 import * as fc from 'fast-check';
 import { EntryDetailView } from './entry-detail';
-import { createErrorMock } from '../adapter/mock';
+import { createFailingStub } from '../test-helpers.ts';
 import type { Entry, KidMap, SeamAdapter } from '../adapter/seam';
 import { assemblyNotUsed } from '../test-helpers';
 
@@ -45,7 +45,7 @@ function makeAdapter(chain: Entry[], kidMap: KidMap): SeamAdapter {
 /** Build an adapter whose fetchChain returns an error. */
 function makeChainErrorAdapter(): SeamAdapter {
   return {
-    ...createErrorMock(),
+    ...createFailingStub(),
     // override fetchKidMap so both settle — render checks chainResult first
     fetchKidMap: async () => ({ ok: true, data: {} }),
   };

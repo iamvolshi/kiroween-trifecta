@@ -4,7 +4,7 @@
  */
 import { describe, it, expect, afterEach, vi } from 'vitest';
 import { Router } from './router.ts';
-import { createMockAdapter } from '../adapter/mock.ts';
+import { createRecordStub } from '../test-helpers.ts';
 
 let container: HTMLElement;
 let router: Router;
@@ -13,7 +13,7 @@ function start(path = '/actions') {
   window.history.replaceState({}, '', path);
   container = document.createElement('div');
   document.body.appendChild(container);
-  router = new Router(createMockAdapter(), container);
+  router = new Router(createRecordStub(), container);
 }
 
 afterEach(() => {

@@ -12,7 +12,7 @@ function turn1(): ChatTurn {
     step: 1,
     total_steps: 4,
     engines: {
-      arche: { reply: 'Your order arrives 2026-11-18. (mock)' },
+      arche: { reply: 'Your order arrives 2026-11-18.' },
       erie: {
         question: 'When will my order arrive?',
         state: 'found',
@@ -34,7 +34,7 @@ function turnUnknown(): ChatTurn {
     step: null,
     total_steps: 4,
     engines: {
-      arche: { reply: "I don't know. The script has no answer for that. (mock)" },
+      arche: { reply: "I don't know. There is no record of that." },
       erie: null,
       elle: null,
       elle_promoted: null,
@@ -81,7 +81,7 @@ describe('ChatView', () => {
     document.body.appendChild(container);
   });
 
-  it('before a persona is chosen: picker, disabled composer, words, labeled input, mock note', () => {
+  it('before a persona is chosen: picker, disabled composer, words, labeled input', () => {
     const { adapter } = fake(async () => ({ ok: true, data: turn1() }));
     new ChatView(adapter, new ChatLog()).mount(container);
     expect(container.querySelector('nav.main-nav')).toBeNull(); // the shell owns the nav
@@ -96,9 +96,8 @@ describe('ChatView', () => {
     const label = container.querySelector('label[for="chat-message"]')!;
     expect(label.textContent).toBe('Your message');
     expect(label.classList.contains('sr-only')).toBe(true);
-    expect(container.querySelector('.mock-note')?.textContent).toMatch(/mock/i);
-    expect(container.querySelector('.step-progress')?.textContent).toBe('Scenario not started');
-    expect(container.querySelector('.empty-state')?.textContent).toMatch(/not started/);
+    expect(container.querySelector('.step-progress')).toBeNull();
+    expect(container.querySelector('.empty-state')?.textContent).toMatch(/No messages yet/);
   });
 
   it('a submit before choosing a persona does nothing', async () => {
@@ -144,7 +143,6 @@ describe('ChatView', () => {
     expect(container.querySelector('.bubble-row-reply .chat-reply')?.textContent).toContain('Your order arrives');
     expect(container.querySelector('.engines, .engine, .engine-label, .provenance')).toBeNull();
     expect(container.textContent).not.toContain('did not act this turn');
-    expect(container.querySelector('.step-progress')?.textContent).toBe('Step 1 of 4');
     expect(container.querySelector<HTMLInputElement>('#chat-message')!.value).toBe('');
     expect(container.querySelector<HTMLButtonElement>('.chat-form button')!.disabled).toBe(false);
   });
@@ -211,7 +209,6 @@ describe('ChatView', () => {
     send(container, 'blah');
     await tick();
     expect(container.querySelector('.chat-turn.not-knowing .chat-reply')).not.toBeNull();
-    expect(container.querySelector('.step-progress')?.textContent).toBe('Scenario not started');
   });
 
   it('error result shows error-state and is not logged', async () => {
@@ -265,7 +262,6 @@ describe('ChatView', () => {
     expect(log.personaAt(0)).toBe('Elara');
 
     new ChatView(adapter, log).mount(container);
-    expect(container.querySelector('.step-progress')?.textContent).toBe('Step 1 of 4');
   });
 
   it('the log and the chosen persona survive a remount', async () => {

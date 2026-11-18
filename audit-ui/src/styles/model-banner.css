@@ -39,13 +39,6 @@
   --band-text: #e6ddff;
 }
 
-.model-banner[data-state='mock'] {
-  --band: var(--mock);
-  --band-bg: var(--surface);
-  --band-text: var(--text);
-  border-style: dashed;
-}
-
 .model-banner[data-state='unreachable'],
 .model-banner[data-state='unconfigured'] {
   --band: var(--error);

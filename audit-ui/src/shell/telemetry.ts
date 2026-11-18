@@ -1,7 +1,6 @@
 import type { Entry, SeamAdapter } from '../adapter/seam.ts';
 import type { ChatLog } from '../views/chat-log.ts';
 import type { Panel } from './panel.ts';
-import { ACTIVE_ADAPTER_KIND } from '../adapter/active.ts';
 import { feedItems, type FeedItem } from './activity-feed.ts';
 import { provenanceChannel, type ProvenanceTarget } from './provenance-channel.ts';
 
@@ -12,7 +11,7 @@ function el(tag: string, className: string, text?: string): HTMLElement {
   return e;
 }
 
-export const WORK_HEADING = ACTIVE_ADAPTER_KIND === 'mock' ? 'What the machine is doing (mock)' : 'What the machine is doing';
+export const WORK_HEADING = 'What the machine is doing';
 
 function renderItem(item: FeedItem): HTMLElement {
   const li = el('li', 'feed-item');

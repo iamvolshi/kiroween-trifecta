@@ -1,15 +1,13 @@
 /**
  * Wired chat: provenance link spans authored by the responding side, proven
- * against the LIVE path with a stub fetch (a test double, not mock content),
+ * against the LIVE path with a stub fetch (a test double),
  * through the real Router, ChatView and TelemetryPanel.
  */
 import { describe, it, expect, afterEach } from 'vitest';
 import { Router } from './router/router.ts';
 import { createLiveAdapter, type FetchLike } from './adapter/live.ts';
-import { createMockAdapter } from './adapter/mock.ts';
 import { validLinks } from './views/chat-turn.ts';
 import type { ChatTurn } from './adapter/seam.ts';
-import { SCENARIO } from './scenario/script.ts';
 import { tick } from './test-helpers.ts';
 
 const SUBJ = 'order-1042.delivery_date';
@@ -143,20 +141,6 @@ describe('provenance links (live path, stub connector)', () => {
         { ...ok, start: 6, end: 8, entry_id: 'b' },
       ]).map((l) => [l.start, l.end]),
     ).toEqual([[0, 4], [6, 8]]);
-  });
-});
-
-describe('the mock adapter ignores persona and register', () => {
-  it('same scripted reply whichever persona or voice is chosen', async () => {
-    const replies: string[] = [];
-    for (const [persona, voice] of [['Frankenstein', 'book'], ['Frankenstein', 'movie'], ['Elara', null]] as const) {
-      const a = createMockAdapter();
-      const r = await a.chat(SCENARIO.steps[0]!.prompt, voice ? { persona, register: voice } : { persona });
-      replies.push(r.ok ? r.data.engines.arche.reply : 'ERR');
-      expect(r.ok && r.data.links).toBeUndefined();
-    }
-    expect(new Set(replies).size).toBe(1);
-    expect(replies[0]).toBe(SCENARIO.steps[0]!.reply);
   });
 });
 

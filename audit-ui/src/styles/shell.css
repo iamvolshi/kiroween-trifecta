@@ -1,6 +1,6 @@
 /*
  * Shell: header strip, three full-height columns, left directories,
- * MOCK DATA label, record view. Tokens come from style.css.
+ * record view. Tokens come from style.css.
  */
 
 .shell {
@@ -149,20 +149,6 @@
   border-left-color: var(--accent);
   background: var(--accent-bg);
   color: var(--text);
-}
-
-/* MOCK DATA: the only yellow in the app, first thing in the left column. */
-.mock-badge {
-  order: -1;
-  display: block;
-  margin: 0 0 var(--s3);
-  padding: var(--s2) var(--s3);
-  border-radius: var(--radius);
-  background: var(--mock);
-  color: var(--mock-text);
-  font-size: var(--fs-meta);
-  font-weight: 750;
-  line-height: 1.35;
 }
 
 /* ---- Left: record folders and going back ---------------------------- */

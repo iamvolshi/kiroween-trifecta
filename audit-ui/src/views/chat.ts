@@ -1,6 +1,6 @@
 import type { View } from '../router/router.ts';
 import { isChatTurn, type AdapterResult, type ChatOptions, type SeamAdapter, type ServedBy } from '../adapter/seam.ts';
-import { ACTIVE_ADAPTER_KIND, LIVE_BASE_URL } from '../adapter/active.ts';
+import { CONNECTOR_URL } from '../adapter/connector-url.ts';
 import { fetchModelStatus, type ModelStatus } from '../adapter/live-models.ts';
 import { announce, renderModelBanner, type StatusState } from './model-banner.ts';
 import { ChatLog } from './chat-log.ts';
@@ -12,13 +12,11 @@ const PICK_FIRST = 'Choose a persona to start chatting.';
 
 /** Where the model announcement reads from. Tests pass their own. */
 export interface ModelSource {
-  kind: 'mock' | 'live';
   status: () => Promise<AdapterResult<ModelStatus>>;
 }
 
-const ACTIVE_MODELS: ModelSource = {
-  kind: ACTIVE_ADAPTER_KIND,
-  status: () => fetchModelStatus(LIVE_BASE_URL),
+const CONNECTOR_MODELS: ModelSource = {
+  status: () => fetchModelStatus(CONNECTOR_URL),
 };
 
 export class ChatView implements View {
@@ -28,7 +26,6 @@ export class ChatView implements View {
   private heading: HTMLElement | null = null;
   private controls: HTMLElement | null = null;
   private transcript: HTMLElement | null = null;
-  private progress: HTMLElement | null = null;
   private errorSlot: HTMLElement | null = null;
   private input: HTMLInputElement | null = null;
   private sendBtn: HTMLButtonElement | null = null;
@@ -47,7 +44,7 @@ export class ChatView implements View {
   /** Counts /models reads; only the latest answer is kept. */
   private statusRead = 0;
 
-  constructor(adapter: SeamAdapter, log: ChatLog, models: ModelSource = ACTIVE_MODELS) {
+  constructor(adapter: SeamAdapter, log: ChatLog, models: ModelSource = CONNECTOR_MODELS) {
     this.adapter = adapter;
     this.log = log;
     this.models = models;
@@ -59,7 +56,6 @@ export class ChatView implements View {
       <div class="chat-view">
         <h1></h1>
         <div class="chat-controls"></div>
-        <p class="step-progress"></p>
         <div class="chat-transcript"></div>
         <div class="chat-error"></div>
         <form class="chat-form">
@@ -71,17 +67,10 @@ export class ChatView implements View {
       </div>
     `;
     container.querySelector('.chat-view h1')?.after(createIntro('chat'));
-    if (ACTIVE_ADAPTER_KIND === 'mock') {
-      const note = document.createElement('p');
-      note.className = 'mock-note';
-      note.textContent = 'Replies are scripted mock. No model is running.';
-      container.querySelector('.chat-controls')?.before(note);
-    }
 
     this.heading = container.querySelector<HTMLElement>('.chat-view h1');
     this.controls = container.querySelector<HTMLElement>('.chat-controls');
     this.transcript = container.querySelector<HTMLElement>('.chat-transcript');
-    this.progress = container.querySelector<HTMLElement>('.step-progress');
     this.errorSlot = container.querySelector<HTMLElement>('.chat-error');
     this.input = container.querySelector<HTMLInputElement>('#chat-message');
     this.sendBtn = container.querySelector<HTMLButtonElement>('.chat-form button');
@@ -99,9 +88,8 @@ export class ChatView implements View {
     this.loadStatus();
   }
 
-  /** Live: read the model map before the first turn. Mock: nothing to read. */
+  /** Read the model map from the connector (before the first turn, on flips, after failures). */
   private loadStatus(reset = true): void {
-    if (this.models.kind === 'mock') return;
     const root = this.container;
     // A re-read keeps showing the last answer until the new one lands.
     if (reset) this.status = { state: 'loading' };
@@ -133,7 +121,6 @@ export class ChatView implements View {
     const flipped = this.lastPositionKey !== null && this.lastPositionKey !== key;
     this.lastPositionKey = key;
     const a = announce({
-      kind: this.models.kind,
       register: persona === 'Frankenstein' ? this.log.register() : null,
       status: this.status,
       served: this.served.get(key) ?? null,
@@ -190,30 +177,13 @@ export class ChatView implements View {
     if (turns.length === 0) {
       const p = document.createElement('p');
       p.className = 'empty-state';
-      p.textContent = 'The scenario has not started. Choose a persona, then send a message to begin.';
+      p.textContent = 'No messages yet. Choose a persona, then send a message.';
       box.replaceChildren(p);
     } else {
       box.replaceChildren(
         ...turns.flatMap((t, i) => (isChatTurn(t) ? [renderChatTurn(t, this.log.personaAt(i))] : [])),
       );
     }
-    this.renderProgress(turns.length);
-  }
-
-  private renderProgress(count: number): void {
-    if (!this.progress) return;
-    let text = 'Scenario not started';
-    if (count > 0) {
-      const turns = this.log.turns();
-      for (let i = turns.length - 1; i >= 0; i--) {
-        const t = turns[i];
-        if (t.step !== null) {
-          text = `Step ${t.step} of ${t.total_steps}`;
-          break;
-        }
-      }
-    }
-    this.progress.textContent = text;
   }
 
   private async onSubmit(): Promise<void> {
@@ -248,7 +218,7 @@ export class ChatView implements View {
     if (result.ok && !isChatTurn(result.data)) {
       result = { ok: false, error: 'The reply is not a chat turn the app can show.' };
     }
-    // The turn already happened on the agent's side (the scenario advanced),
+    // The turn already happened on the agent's side (it is recorded there),
     // so it is logged even when this view is gone; only the DOM work is skipped.
     if (result.ok) this.log.push(result.data, persona);
     // Truth wins over config: the turn says who served it.
@@ -289,7 +259,6 @@ export class ChatView implements View {
     this.heading = null;
     this.controls = null;
     this.transcript = null;
-    this.progress = null;
     this.errorSlot = null;
     this.modelSlot = null;
     this.lastPositionKey = null;

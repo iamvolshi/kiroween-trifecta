@@ -4,7 +4,7 @@
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { Router } from './router.ts';
-import { createMockAdapter } from '../adapter/mock.ts';
+import { createRecordStub } from '../test-helpers.ts';
 import { ActionListView } from '../views/action-list.ts';
 import { makeEntry, tick } from '../test-helpers.ts';
 import type { Entry } from '../adapter/seam.ts';
@@ -16,7 +16,7 @@ function start(entries?: Entry[], path = '/actions') {
   window.history.replaceState({}, '', path);
   container = document.createElement('div');
   document.body.appendChild(container);
-  router = new Router(createMockAdapter(entries), container);
+  router = new Router(createRecordStub(entries), container);
 }
 
 afterEach(() => {
@@ -85,7 +85,7 @@ describe('entry ids in links', () => {
 
   it('ActionListView alone emits an encoded id', async () => {
     const c = document.createElement('div');
-    const view = new ActionListView(createMockAdapter([makeEntry({ id: 'x/y' })]));
+    const view = new ActionListView(createRecordStub([makeEntry({ id: 'x/y' })]));
     view.mount(c);
     await tick();
     expect(c.querySelector('.action-list a')!.getAttribute('href')).toBe('/entry/1/temperature/x%2Fy');
@@ -107,7 +107,7 @@ describe('malformed percent-encoding', () => {
     container = document.createElement('div');
     document.body.appendChild(container);
     expect(() => {
-      router = new Router(createMockAdapter(), container);
+      router = new Router(createRecordStub(), container);
     }).not.toThrow();
     expect(container.querySelector('.not-found')).not.toBeNull();
   });
