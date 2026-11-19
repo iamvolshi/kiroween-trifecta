@@ -47,7 +47,7 @@ export class Router {
     left.mount();
     this.unsubscribeLog = this.chatLog.subscribe(() => this.leftPanel.refresh());
     // Right column: Curator + ELLE telemetry. It subscribes to the log itself.
-    this.layout = new ShellLayout(this.slots.shell, this.slots.right);
+    this.layout = new ShellLayout(this.slots);
     this.rightPanel = new TelemetryPanel(adapter, this.chatLog, this.layout);
     this.rightPanel.mount(this.slots.right);
 

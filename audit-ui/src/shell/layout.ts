@@ -6,8 +6,12 @@
  * stored, a reload starts from the defaults.
  *
  * Widths live in two inline CSS variables on the shell (--left-width,
- * --right-width) that shell.css feeds into grid-template-columns. The
- * terminal state lives in data-terminal on the shell.
+ * --right-width) that shell.css feeds into grid-template-columns. They are
+ * set only once a panel has been resized: until then shell.css's own
+ * defaults apply (16 / 20rem, or 11.5 / 15.5rem at 1100px and under). A
+ * width never squeezes the center column under MIN_CENTER_REM, and is
+ * re-clamped when the window resizes. The terminal state lives in
+ * data-terminal on the shell.
  *
  * Dragging listens on window for pointermove / pointerup: a grip's
  * pointerdown starts it, and the window listeners (reached by bubbling,
@@ -25,12 +29,17 @@ export const RANGES: Record<Side, { min: number; max: number; def: number }> = {
 };
 
 const VAR: Record<Side, string> = { left: '--left-width', right: '--right-width' };
+/** Room always kept for the center column (the chat), in rem. */
+export const MIN_CENTER_REM = 20;
+const RAIL_PX = 56;
+/** The widths shell.css draws before any resize (they shrink at 1100px and under). */
+function drawnDefault(side: Side): number {
+  const compact = typeof window.matchMedia === 'function' && window.matchMedia('(max-width: 1100px)').matches;
+  return side === 'left' ? (compact ? 11.5 : RANGES.left.def) : compact ? 15.5 : RANGES.right.def;
+}
 const GRIP_LABEL: Record<Side, string> = { left: 'Resize left panel', right: 'Resize right panel' };
 
-const clamp = (side: Side, rem: number): number => {
-  const r = RANGES[side];
-  return Math.min(r.max, Math.max(r.min, Math.round(rem * 100) / 100));
-};
+const round = (rem: number): number => Math.round(rem * 100) / 100;
 
 function rootRem(): number {
   const px = parseFloat(getComputedStyle(document.documentElement).fontSize);
@@ -48,11 +57,19 @@ function button(className: string, glyph: string, label: string, onClick: () => 
   return b;
 }
 
+export interface LayoutSlots {
+  shell: HTMLElement;
+  left: HTMLElement;
+  right: HTMLElement;
+}
+
 export class ShellLayout {
   /** The terminal's window buttons; the telemetry panel places them in its heading row. */
   readonly controls: HTMLElement;
   private shell: HTMLElement;
-  private widths: Record<Side, number> = { left: RANGES.left.def, right: RANGES.right.def };
+  /** null: never resized, shell.css's default is drawn. */
+  private widths: Record<Side, number | null> = { left: null, right: null };
+  private listeners = new Set<(s: TerminalState) => void>();
   private terminal: TerminalState = 'normal';
   private grips: Record<Side, HTMLElement>;
   private strip: HTMLElement;
@@ -61,16 +78,32 @@ export class ShellLayout {
   private onMove = (e: PointerEvent): void => {
     const d = this.drag;
     if (!d) return;
+    // Released outside the window (no pointerup reached us): the drag is over.
+    if (e.buttons === 0) {
+      this.endDrag();
+      return;
+    }
     const dx = (e.clientX - d.startX) / rootRem();
     // The left grip is the left panel's right edge; the right grip is the terminal's left edge.
     this.setWidth(d.side, d.side === 'left' ? d.startW + dx : d.startW - dx);
   };
   private onUp = (): void => this.endDrag();
+  private onResize = (): void => {
+    if (this.widths.left === null && this.widths.right === null) return;
+    for (const side of ['left', 'right'] as const) {
+      const w = this.widths[side];
+      if (w !== null) this.widths[side] = this.clamp(side, w);
+    }
+    this.apply();
+  };
 
-  constructor(shell: HTMLElement, rightSlot: HTMLElement) {
-    this.shell = shell;
+  constructor(slots: LayoutSlots) {
+    this.shell = slots.shell;
+    const rightSlot = slots.right;
     this.grips = { left: this.makeGrip('left'), right: this.makeGrip('right') };
-    shell.append(this.grips.left, this.grips.right);
+    // In Tab order beside the panel each one resizes.
+    slots.left.after(this.grips.left);
+    rightSlot.before(this.grips.right);
 
     this.controls = document.createElement('div');
     this.controls.className = 'window-controls';
@@ -96,11 +129,21 @@ export class ShellLayout {
     window.addEventListener('pointermove', this.onMove);
     window.addEventListener('pointerup', this.onUp);
     window.addEventListener('pointercancel', this.onUp);
+    window.addEventListener('resize', this.onResize);
     this.apply();
   }
 
+  /** The panel's width in rem: the resized one, else the default shell.css draws. */
   width(side: Side): number {
-    return this.widths[side];
+    return this.widths[side] ?? drawnDefault(side);
+  }
+
+  /** Called after every terminal state change. Returns the unsubscribe function. */
+  onChange(fn: (s: TerminalState) => void): () => void {
+    this.listeners.add(fn);
+    return () => {
+      this.listeners.delete(fn);
+    };
   }
 
   state(): TerminalState {
@@ -109,8 +152,20 @@ export class ShellLayout {
 
   /** Set a panel's width in rem, clamped to its range. */
   setWidth(side: Side, rem: number): void {
-    this.widths[side] = clamp(side, rem);
+    this.widths[side] = this.clamp(side, rem);
     this.apply();
+  }
+
+  /** Into the side's range, and never so wide that the center column drops under MIN_CENTER_REM. */
+  private clamp(side: Side, rem: number): number {
+    const r = RANGES[side];
+    const px = parseFloat(getComputedStyle(document.documentElement).fontSize);
+    const unit = Number.isFinite(px) && px > 0 ? px : 16;
+    const other: Side = side === 'left' ? 'right' : 'left';
+    const otherW = this.terminal === 'minimized' && other === 'right' ? 2.5 : this.width(other);
+    const room = (window.innerWidth - RAIL_PX) / unit - MIN_CENTER_REM - otherW;
+    const max = Math.max(r.min, Math.min(r.max, room));
+    return round(Math.min(max, Math.max(r.min, rem)));
   }
 
   /** Minimize, maximize or restore the terminal. The dragged widths are kept. */
@@ -120,6 +175,7 @@ export class ShellLayout {
     const hadFocus = (Object.values(this.buttons) as HTMLElement[]).includes(document.activeElement as HTMLElement);
     this.terminal = s;
     this.apply();
+    for (const fn of [...this.listeners]) fn(s);
     const next = s === 'minimized' ? this.buttons.stripRestore : s === 'maximized' ? this.buttons.restore : this.buttons.maximize;
     if (hadFocus) next.focus();
   }
@@ -129,6 +185,8 @@ export class ShellLayout {
     window.removeEventListener('pointermove', this.onMove);
     window.removeEventListener('pointerup', this.onUp);
     window.removeEventListener('pointercancel', this.onUp);
+    window.removeEventListener('resize', this.onResize);
+    this.listeners.clear();
     this.grips.left.remove();
     this.grips.right.remove();
     this.strip.remove();
@@ -151,16 +209,22 @@ export class ShellLayout {
     g.addEventListener('pointerdown', (e: PointerEvent) => {
       if (e.button !== 0) return;
       e.preventDefault();
-      this.drag = { side, startX: e.clientX, startW: this.widths[side] };
+      this.drag = { side, startX: e.clientX, startW: this.width(side) };
       this.shell.classList.add('is-resizing');
     });
     g.addEventListener('keydown', (e: KeyboardEvent) => {
-      if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
       if (e.altKey || e.ctrlKey || e.metaKey) return;
+      if (e.key === 'Home' || e.key === 'End') {
+        // Home: the narrowest; End: the widest the range and the window allow.
+        e.preventDefault();
+        this.setWidth(side, e.key === 'Home' ? RANGES[side].min : RANGES[side].max);
+        return;
+      }
+      if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
       e.preventDefault();
       const step = (e.shiftKey ? 4 : 1) * (e.key === 'ArrowRight' ? 1 : -1);
       // Right arrow moves the edge right: wider on the left, narrower on the right.
-      this.setWidth(side, this.widths[side] + (side === 'left' ? step : -step));
+      this.setWidth(side, this.width(side) + (side === 'left' ? step : -step));
     });
     return g;
   }
@@ -172,12 +236,16 @@ export class ShellLayout {
   }
 
   private apply(): void {
-    this.shell.style.setProperty(VAR.left, `${this.widths.left}rem`);
-    this.shell.style.setProperty(VAR.right, `${this.widths.right}rem`);
     this.shell.dataset.terminal = this.terminal;
     for (const side of ['left', 'right'] as const) {
-      this.grips[side].setAttribute('aria-valuenow', String(this.widths[side]));
-      this.grips[side].setAttribute('aria-valuetext', `${this.widths[side]} rem`);
+      const set = this.widths[side];
+      if (set === null) this.shell.style.removeProperty(VAR[side]);
+      else this.shell.style.setProperty(VAR[side], `${set}rem`);
+      const now = this.width(side);
+      // Before any resize the compact default (11.5rem) can sit under the drag range's floor.
+      this.grips[side].setAttribute('aria-valuemin', String(Math.min(RANGES[side].min, now)));
+      this.grips[side].setAttribute('aria-valuenow', String(now));
+      this.grips[side].setAttribute('aria-valuetext', `${now} rem`);
     }
     // The right grip hides when the terminal is minimized or maximized; the left one when maximized (its panel hides).
     this.grips.right.hidden = this.terminal !== 'normal';

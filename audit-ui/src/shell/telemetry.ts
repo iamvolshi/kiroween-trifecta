@@ -84,8 +84,21 @@ export class TelemetryPanel implements Panel {
   private readError: string | null = null;
   /** The engine box whose detail is showing; null = the general feed. */
   private focus: EngineFocus | null = null;
-  /** General-feed items last drawn: more means new lines arrived. */
-  private drawn = 0;
+  /** The heading row (heading + window controls), built once so its buttons keep focus. */
+  private head: HTMLElement | null = null;
+  /** Everything under the heading row; re-rendered. */
+  private body: HTMLElement | null = null;
+  /** Is the reader at the live end of the general feed? Kept from scrolls, not guessed at render time. */
+  private following = true;
+  /** The general feed's place while a detail view is open, given back on return. */
+  private saved: { top: number; following: boolean } | null = null;
+  private unsubscribeLayout: (() => void) | null = null;
+  private onScroll = (): void => {
+    const slot = this.slot;
+    // Only the general feed, and only while it can be seen, sets the follow state.
+    if (!slot || this.focus !== null || this.minimized()) return;
+    this.following = slot.scrollHeight - slot.scrollTop - slot.clientHeight <= FOLLOW_SLACK_PX;
+  };
 
   constructor(adapter: SeamAdapter, log: ChatLog, layout: ShellLayout | null = null) {
     this.adapter = adapter;
@@ -96,18 +109,49 @@ export class TelemetryPanel implements Panel {
   mount(slot: HTMLElement): void {
     this.slot = slot;
     this.root = el('div', 'telemetry');
+    this.head = el('div', 'telemetry-head');
+    this.head.appendChild(el('h2', 'telemetry-heading', WORK_HEADING));
+    if (this.layout) this.head.appendChild(this.layout.controls);
+    this.body = el('div', 'telemetry-body');
+    this.root.append(this.head, this.body);
     slot.appendChild(this.root);
+    slot.addEventListener('scroll', this.onScroll);
     this.focus = engineFocusChannel.current();
+    this.following = true;
     this.unsubscribe = this.log.subscribe(() => this.refresh());
     this.unsubscribeLinks = provenanceChannel.subscribe((t) => this.highlight(t));
-    this.unsubscribeFocus = engineFocusChannel.subscribe((f) => {
-      this.focus = f;
-      this.render();
-      // A new view starts at its top; going back returns to the live end of the feed.
-      if (this.slot) this.slot.scrollTop = f === null ? this.slot.scrollHeight : 0;
-    });
+    this.unsubscribeFocus = engineFocusChannel.subscribe((f) => this.setFocus(f));
+    // Back from minimized: a reader who was following is put back at the live end.
+    this.unsubscribeLayout = this.layout?.onChange((s) => {
+      if (s !== 'minimized' && this.focus === null && this.following && this.slot) this.slot.scrollTop = this.slot.scrollHeight;
+    }) ?? null;
     this.render();
     this.refresh();
+  }
+
+  private minimized(): boolean {
+    return this.layout?.state() === 'minimized';
+  }
+
+  private setFocus(f: EngineFocus | null): void {
+    const slot = this.slot;
+    const was = this.focus;
+    // Leaving the general feed: keep its place to give back on return.
+    if (was === null && f !== null && slot) this.saved = { top: slot.scrollTop, following: this.following };
+    const fromBack = this.root?.contains(document.activeElement) ?? false;
+    this.focus = f;
+    this.render();
+    if (!slot) return;
+    if (f !== null) {
+      slot.scrollTop = 0; // a detail view starts at its top
+    } else {
+      const saved = this.saved;
+      this.saved = null;
+      this.following = saved?.following ?? true;
+      slot.scrollTop = this.following ? slot.scrollHeight : saved?.top ?? 0;
+      // The back button that had focus is gone: the feed takes it.
+      if (fromBack) this.body?.querySelector<HTMLElement>('.activity-feed, .empty-state')?.focus();
+    }
   }
 
   refresh(): void {
@@ -139,7 +183,14 @@ export class TelemetryPanel implements Panel {
     const hit = items.find(
       (li) => li.dataset.entryId === t.entry_id && li.dataset.subject === t.subject && li.dataset.kid === String(t.kid),
     );
-    if (!hit) return;
+    if (!hit) {
+      // A detail view holds only one engine's turn: go back to the general feed and look there.
+      if (this.focus !== null) {
+        engineFocusChannel.publish(null);
+        this.highlight(t, scroll);
+      }
+      return;
+    }
     this.lastTarget = t;
     for (const li of root.querySelectorAll('.katie-entry.is-highlighted')) li.classList.remove('is-highlighted');
     hit.classList.add('is-highlighted');
@@ -154,58 +205,57 @@ export class TelemetryPanel implements Panel {
     this.unsubscribeLinks = null;
     this.unsubscribeFocus?.();
     this.unsubscribeFocus = null;
+    this.unsubscribeLayout?.();
+    this.unsubscribeLayout = null;
+    this.slot?.removeEventListener('scroll', this.onScroll);
     this.layout?.controls.remove();
+    this.head = null;
+    this.body = null;
+    this.saved = null;
     this.root?.remove();
     this.root = null;
     this.slot = null;
     this.loaded = false;
-    this.drawn = 0;
     // The focus belongs to this panel: with it gone, the boxes show none pressed.
     if (engineFocusChannel.current() !== null) engineFocusChannel.publish(null);
   }
 
-  private heading(): HTMLElement {
-    const row = el('div', 'telemetry-head');
-    row.appendChild(el('h2', 'telemetry-heading', WORK_HEADING));
-    if (this.layout) row.appendChild(this.layout.controls);
-    return row;
-  }
-
   private render(): void {
-    const root = this.root;
+    const root = this.body;
     const slot = this.slot;
     if (!root || !slot) return;
-    // Follow the terminal only when the reader is already at (or near) its bottom.
-    const following = slot.scrollHeight - slot.scrollTop - slot.clientHeight <= FOLLOW_SLACK_PX;
     const keepTop = slot.scrollTop;
-    root.replaceChildren(this.heading());
+    // A re-render must not drop keyboard focus from the back button.
+    const backHadFocus = document.activeElement?.classList.contains('engine-detail-back') === true && root.contains(document.activeElement);
+    root.replaceChildren();
     if (this.readError !== null) root.appendChild(el('p', 'error-state', this.readError));
     if (this.focus) {
       this.renderDetail(root, this.focus);
-      slot.scrollTop = keepTop; // one turn's detail: never auto-scrolled
+      if (!this.minimized()) slot.scrollTop = keepTop; // one turn's detail: never auto-scrolled
+      if (backHadFocus) root.querySelector<HTMLElement>('.engine-detail-back')?.focus();
     } else {
-      const grew = this.renderGeneral(root);
-      if (grew && following) slot.scrollTop = slot.scrollHeight;
-      else slot.scrollTop = keepTop;
+      this.renderGeneral(root);
+      // Hidden while minimized: nothing to measure; the place is set again on restore.
+      if (!this.minimized()) slot.scrollTop = this.following ? slot.scrollHeight : keepTop;
     }
     // Keep the last highlight across re-renders (a new turn rebuilds the feed).
     if (this.lastTarget) this.highlight(this.lastTarget, false);
   }
 
-  /** The general feed. Returns whether it holds more items than last drawn. */
-  private renderGeneral(root: HTMLElement): boolean {
+  /** The general feed, oldest first. */
+  private renderGeneral(root: HTMLElement): void {
     const items = feedItems(this.log.turns(), this.entries);
-    const grew = items.length > this.drawn;
-    this.drawn = items.length;
     if (items.length === 0 && this.readError === null && this.loaded) {
-      root.appendChild(el('p', 'empty-state', 'Nothing has happened yet. Each step the engines take shows up here.'));
+      const empty = el('p', 'empty-state', 'Nothing has happened yet. Each step the engines take shows up here.');
+      empty.tabIndex = -1;
+      root.appendChild(empty);
     }
-    if (items.length === 0) return grew;
+    if (items.length === 0) return;
     const feed = el('ul', 'activity-feed');
     feed.setAttribute('aria-label', 'Activity, oldest first');
+    feed.tabIndex = -1; // takes focus when the detail view's back button goes away
     for (const item of items) feed.appendChild(renderItem(item));
     root.appendChild(feed);
-    return grew;
   }
 
   /** One engine's events on one turn, in place of the general feed. */

@@ -95,6 +95,8 @@ describe('engine boxes beside a reply', () => {
     ]);
     expect(boxes.map((b) => b.getAttribute('aria-pressed'))).toEqual(['false', 'false', 'false']);
     expect(container.querySelector('.proof-card, .proof-cards')).toBeNull();
+    // Lit or dark is said in words too, not by colour alone.
+    expect(boxes.map((b) => b.getAttribute('aria-description'))).toEqual(['Worked this turn', 'Worked this turn', 'Worked this turn']);
   });
 
   it('lit when the engine worked the turn: all three; ELLE dark; none', async () => {
@@ -106,6 +108,7 @@ describe('engine boxes beside a reply', () => {
     expect(lit(0)).toEqual(['true', 'true', 'true']);
     expect(lit(1)).toEqual(['true', 'true', 'false']); // ERIE looked and found nothing: still lit
     expect(lit(2)).toEqual(['false', 'false', 'false']);
+    expect(replyBoxes(1)[2]!.getAttribute('aria-description')).toBe('Sat this turn out');
   });
 
   it('the lit rule reads each ELLE event: injected, held, recorded, promoted', () => {

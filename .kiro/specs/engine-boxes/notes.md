@@ -32,13 +32,35 @@ words. Live data only: every line comes from the turns and the record.
 - At 1100px and under, the default widths stay 11.5 / 15.5rem as before;
   a drag overrides them. Under 800px (stacked shell) there are no grips and
   no window controls.
+- Widths are set on the shell only after a resize, so shell.css's 1100px
+  compact defaults still apply until the user drags. A width never leaves
+  the center column under 20rem (MIN_CENTER_REM), and is re-clamped on a
+  window resize. Home / End on a grip jump to the narrowest / widest.
+- The follow state comes from the reader's scrolls (within 48px of the
+  bottom), not from a guess at render time: the feed follows growth of any
+  kind while the reader is at the end. A detail view keeps the general
+  feed's place and gives it back on return. A minimized terminal is not
+  measured; restoring it puts a following reader back at the live end.
+- Focus: the heading row (and its window buttons) is built once, so a
+  refresh does not drop focus from them; a re-render keeps it on the back
+  button; pressing back hands it to the feed. A pointer move with no button
+  down ends a drag released outside the window.
+- A box's lit or dark state is also said in words (aria-description and
+  title: "Worked this turn" / "Sat this turn out").
+- A provenance link clicked while a detail view is open goes back to the
+  general feed and highlights its KATIE row there.
 - A telemetry panel that unmounts (only when the Router is destroyed)
   publishes `null`, so no box stays pressed with no panel to show it.
 
 ## Known limits
 
-- `aria-valuenow` starts at the 16 / 20rem defaults even at 1100px and
-  under, where the panels draw at 11.5 / 15.5rem until first dragged.
+- Restore always returns to the normal layout, even from a minimize that
+  followed a maximize.
+- The colour-token test reads the CSS text (jsdom draws no CSS); the colours
+  themselves are checked in the proof shots.
+- At 1100px and under, the compact default (11.5rem) sits under the drag
+  range's 12rem floor; the grip reports it (aria-valuemin follows) and the
+  first drag or key step lifts it into the range.
 - The window glyphs are text (− ☐ ❐), small at 12px.
 
 ## Not built
@@ -59,7 +81,7 @@ returned to the dragged 36rem.
 
 ## Tests
 
-404 pass (388 at base). The proof-card tests in `views/stitch-face.test.ts`
+412 pass (388 at base). The proof-card tests in `views/stitch-face.test.ts`
 are replaced by box tests (order, lit / dark rules, swap, back, toggle,
 switch, did-nothing, focus across turns). `shell/engine-terminal.test.ts`
 covers the terminal (follow / no-yank / detail no-scroll, colour tokens) and

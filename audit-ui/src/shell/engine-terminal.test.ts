@@ -5,13 +5,14 @@
  * with events dispatched on window, the code path the grips use. Record
  * data comes from the record stub (a test double).
  */
-import { describe, it, expect, afterEach } from 'vitest';
+import { describe, it, expect, afterEach, beforeEach } from 'vitest';
 import type { ChatTurn, SeamAdapter } from '../adapter/seam.ts';
 import { ChatLog } from '../views/chat-log.ts';
 import { Router } from '../router/router.ts';
 import { createModelsStub, createRecordStub, tick } from '../test-helpers.ts';
 import { TelemetryPanel, FOLLOW_SLACK_PX } from './telemetry.ts';
-import { RANGES } from './layout.ts';
+import { RANGES, MIN_CENTER_REM } from './layout.ts';
+import { provenanceChannel } from './provenance-channel.ts';
 import { engineFocusChannel } from './engine-focus-channel.ts';
 
 function turn(message: string): ChatTurn {
@@ -61,6 +62,7 @@ describe('the terminal feed', () => {
     const box = scrollBox(1000, 200);
     const log = await terminal(box);
     box.scrollTop = 1000 - 200 - FOLLOW_SLACK_PX; // just inside the slack
+    box.dispatchEvent(new Event('scroll'));
     log.push(turn('one'));
     await tick();
     expect(box.scrollTop).toBe(800);
@@ -70,9 +72,54 @@ describe('the terminal feed', () => {
     const box = scrollBox(1000, 200);
     const log = await terminal(box);
     box.scrollTop = 300;
+    box.dispatchEvent(new Event('scroll'));
     log.push(turn('one'));
     await tick();
     expect(box.scrollTop).toBe(300);
+  });
+
+  it('back from a detail view gives the general feed its place again', async () => {
+    const box = scrollBox(1000, 200);
+    const log = await terminal(box);
+    log.push(turn('one'));
+    await tick();
+    box.scrollTop = 300; // reading, not following
+    box.dispatchEvent(new Event('scroll'));
+    engineFocusChannel.publish({ engine: 'ERIE', turnIndex: 0 });
+    expect(box.scrollTop).toBe(0); // the detail starts at its top
+    engineFocusChannel.publish(null);
+    expect(box.scrollTop).toBe(300);
+    // A reader who was following goes back to the live end.
+    box.scrollTop = 800;
+    box.dispatchEvent(new Event('scroll'));
+    engineFocusChannel.publish({ engine: 'ERIE', turnIndex: 0 });
+    engineFocusChannel.publish(null);
+    expect(box.scrollTop).toBe(800);
+  });
+
+  it('the back button hands focus to the feed; a re-render keeps it on the back button', async () => {
+    const box = scrollBox(1000, 200);
+    const log = await terminal(box);
+    log.push(turn('one'));
+    await tick();
+    engineFocusChannel.publish({ engine: 'ERIE', turnIndex: 0 });
+    box.querySelector<HTMLButtonElement>('.engine-detail-back')!.focus();
+    log.push(turn('two')); // a new turn re-renders the detail
+    await tick();
+    expect(document.activeElement?.classList.contains('engine-detail-back')).toBe(true);
+    (document.activeElement as HTMLButtonElement).click();
+    expect(document.activeElement?.classList.contains('activity-feed')).toBe(true);
+  });
+
+  it('a provenance link while a detail view is open goes back to the general feed and highlights there', async () => {
+    const box = scrollBox(1000, 200);
+    const log = await terminal(box);
+    log.push({ ...turn('one'), engines: { ...turn('one').engines, katie: [{ kid: 1, subject: 'turn', entry_id: 'stub-e1', seated: true }] } });
+    await tick();
+    engineFocusChannel.publish({ engine: 'ERIE', turnIndex: 0 });
+    provenanceChannel.publish({ kid: 1, subject: 'turn', entry_id: 'stub-e1' });
+    expect(engineFocusChannel.current()).toBeNull();
+    expect(box.querySelector<HTMLElement>('.katie-entry.is-highlighted')?.dataset.entryId).toBe('stub-e1');
   });
 
   it('the specific feed does not auto-scroll on a new turn', async () => {
@@ -108,6 +155,9 @@ describe('the terminal feed', () => {
 });
 
 describe('the layout: drag grips and the terminal window', () => {
+  const realWidth = window.innerWidth;
+  beforeEach(() => { Object.defineProperty(window, 'innerWidth', { configurable: true, value: 1600 }); });
+  afterEach(() => { Object.defineProperty(window, 'innerWidth', { configurable: true, value: realWidth }); });
   async function start(adapter: SeamAdapter = createRecordStub()): Promise<HTMLElement> {
     window.history.replaceState({}, '', '/chat');
     container = document.createElement('div');
@@ -119,8 +169,8 @@ describe('the layout: drag grips and the terminal window', () => {
   const grip = (side: string): HTMLElement => container.querySelector<HTMLElement>(`.shell-grip[data-side="${side}"]`)!;
   const ctl = (label: string): HTMLButtonElement => container.querySelector<HTMLButtonElement>(`.window-button[aria-label="${label}"]:not([hidden])`)!;
   const Ptr = (window.PointerEvent ?? MouseEvent) as typeof MouseEvent;
-  const pointer = (target: EventTarget, type: string, clientX: number): void => {
-    target.dispatchEvent(new Ptr(type, { bubbles: true, cancelable: true, clientX, button: 0 }));
+  const pointer = (target: EventTarget, type: string, clientX: number, buttons = type === 'pointerup' ? 0 : 1): void => {
+    target.dispatchEvent(new Ptr(type, { bubbles: true, cancelable: true, clientX, button: 0, buttons }));
   };
 
   it('two grips: separators on the inner edges, focusable, with their range in rem; the rail has none', async () => {
@@ -231,6 +281,68 @@ describe('the layout: drag grips and the terminal window', () => {
     expect(document.activeElement?.getAttribute('aria-label')).toBe('Maximize terminal');
   });
 
+  it('before any resize the shell sets no width: shell.css\'s own defaults (and its 1100px ones) apply', async () => {
+    const shell = await start();
+    expect(shell.style.getPropertyValue('--left-width')).toBe('');
+    expect(shell.style.getPropertyValue('--right-width')).toBe('');
+    router!.destroy();
+    router = null;
+    container.remove();
+    // A compact window: the grips report the widths shell.css draws there.
+    const mm = window.matchMedia;
+    window.matchMedia = ((q: string) => ({ matches: q === '(max-width: 1100px)' })) as unknown as typeof window.matchMedia;
+    try {
+      const compact = await start();
+      expect(compact.style.getPropertyValue('--left-width')).toBe('');
+      expect(grip('left').getAttribute('aria-valuenow')).toBe('11.5');
+      expect(grip('right').getAttribute('aria-valuenow')).toBe('15.5');
+    } finally {
+      window.matchMedia = mm;
+    }
+  });
+
+  it('a panel never squeezes the center column under its floor, also after a window resize', async () => {
+    const shell = await start();
+    Object.defineProperty(window, 'innerWidth', { configurable: true, value: 1100 });
+    grip('right').dispatchEvent(new KeyboardEvent('keydown', { key: 'End', bubbles: true, cancelable: true }));
+    // (1100 - 56) / 16 = 65.25rem; less the center floor and the left 16rem.
+    expect(shell.style.getPropertyValue('--right-width')).toBe(`${65.25 - MIN_CENTER_REM - 16}rem`);
+    Object.defineProperty(window, 'innerWidth', { configurable: true, value: 1000 });
+    window.dispatchEvent(new Event('resize'));
+    expect(shell.style.getPropertyValue('--right-width')).toBe(`${(1000 - 56) / 16 - MIN_CENTER_REM - 16}rem`);
+    grip('right').dispatchEvent(new KeyboardEvent('keydown', { key: 'Home', bubbles: true, cancelable: true }));
+    expect(shell.style.getPropertyValue('--right-width')).toBe(`${RANGES.right.min}rem`);
+  });
+
+  it('a drag released outside the window ends at the next move with no button down', async () => {
+    const shell = await start();
+    pointer(grip('left'), 'pointerdown', 0);
+    pointer(window, 'pointermove', 32);
+    expect(shell.style.getPropertyValue('--left-width')).toBe('18rem');
+    pointer(window, 'pointermove', 64, 0); // no pointerup reached us; the button is up
+    pointer(window, 'pointermove', 96);
+    expect(shell.style.getPropertyValue('--left-width')).toBe('18rem');
+  });
+
+  it('a grip sits next to the panel it resizes, in Tab order', async () => {
+    await start();
+    expect(container.querySelector('.shell-left')!.nextElementSibling).toBe(grip('left'));
+    expect(container.querySelector('.shell-right')!.previousElementSibling).toBe(grip('right'));
+  });
+
+  it('a minimized terminal that was following is back at its live end on restore', async () => {
+    await start();
+    const right = container.querySelector<HTMLElement>('.shell-right')!;
+    let top = 0;
+    Object.defineProperty(right, 'scrollHeight', { configurable: true, get: () => 900 });
+    Object.defineProperty(right, 'clientHeight', { configurable: true, get: () => 300 });
+    Object.defineProperty(right, 'scrollTop', { configurable: true, get: () => top, set: (v: number) => { top = Math.max(0, Math.min(v, 600)); } });
+    ctl('Minimize terminal').click();
+    top = 0; // hidden content lost its place
+    container.querySelector<HTMLButtonElement>('.terminal-strip .window-button')!.click();
+    expect(top).toBe(600);
+  });
+
   it('widths are session-only: nothing is stored, a new shell starts at the defaults', async () => {
     const shell = await start();
     pointer(grip('left'), 'pointerdown', 0);
@@ -242,6 +354,7 @@ describe('the layout: drag grips and the terminal window', () => {
     router = null;
     container.remove();
     const again = await start();
-    expect(again.style.getPropertyValue('--left-width')).toBe('16rem');
+    expect(again.style.getPropertyValue('--left-width')).toBe('');
+    expect(grip('left').getAttribute('aria-valuenow')).toBe('16');
   });
 });

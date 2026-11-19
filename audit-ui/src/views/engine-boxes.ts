@@ -51,6 +51,10 @@ export function renderEngineBoxes(turn: ChatTurn, turnIndex: number): HTMLElemen
     b.dataset.lit = String(engineLit(turn, engine));
     b.textContent = BOX_LABEL[engine];
     b.setAttribute('aria-label', `Show ${BOX_LABEL[engine]} detail for this turn`);
+    // Lit or dark is more than a colour: say it to screen readers and on hover.
+    const said = engineLit(turn, engine) ? 'Worked this turn' : 'Sat this turn out';
+    b.setAttribute('aria-description', said);
+    b.title = `${BOX_LABEL[engine]}: ${said.toLowerCase()}`;
     b.addEventListener('click', () => {
       const f = engineFocusChannel.current();
       const isOn = f !== null && f.engine === engine && f.turnIndex === turnIndex;
