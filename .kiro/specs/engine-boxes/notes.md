@@ -13,10 +13,10 @@ words. Live data only: every line comes from the turns and the record.
 | Engine colours | `--engine-katie` (cyan), `--engine-erie` (amber), `--engine-elle` (green) in `style.css`. The boxes, the feed tags and the feed markers use them; ERIE moves off grey onto amber. Voice accents unchanged. |
 | Engine boxes | `views/engine-boxes.ts`: three real buttons KTIE / ERIE / ELLE in a column on the reply row's right (`.bubble-row-reply` is a flex row; the bubble takes the rest). Lit from `turn.engines`: KTIE when `katie` is not empty, ERIE when `erie` is not null (found or not_found), ELLE on any injected / held / recorded / promoted lesson. Dark boxes are still buttons. |
 | Focus channel | `shell/engine-focus-channel.ts`: publish / subscribe like `provenance-channel.ts`, carrying `{engine, turnIndex}` or `null`. It also remembers the last focus (`current()`) so boxes drawn later show which one is pressed and a click can tell a toggle-off from a switch. |
-| Specific feed | The telemetry panel shows one engine's events on one turn instead of the general feed: heading `KTIE — this turn` (name in its colour), `← All activity` back button, the same `renderItem` lines (`engineItems` in `activity-feed.ts`, the `eventsOf` order). A dark box: `KTIE did nothing on this turn.` The focus sticks across new turns. |
+| Specific feed | The telemetry panel shows one engine's events on one turn instead of the general feed: heading `KTIE â€” this turn` (name in its colour), `â† All activity` back button, the same `renderItem` lines (`engineItems` in `activity-feed.ts`, the `eventsOf` order). A dark box: `KTIE did nothing on this turn.` The focus sticks across new turns. |
 | Terminal | Feed items are plain mono lines (no border / background / padding), the tag plain coloured text, a small coloured marker. Oldest first, newest at the bottom; it follows the bottom only when the reader is within 48px of it. The specific feed never auto-scrolls. |
-| Drag grips | `shell/layout.ts`: grips on the list panel's right edge and the terminal's left edge (`role=separator`, focusable, `aria-value*` in rem). Pointer drags run on window `pointermove` / `pointerup`. Ranges: left 12–24rem (16), right 14–36rem (20). Arrows ±1rem, Shift ±4rem. Widths are inline `--left-width` / `--right-width` on the shell; session-only. |
-| Window controls | Minimize (−), maximize (☐), restore (❐) in the terminal heading row. Minimized: a 2.5rem strip with a vertical TERMINAL label and restore. Maximized: the terminal fills the row; the list panel and the chat hide but stay mounted. Restore returns to the dragged width. Grips hide when their panel cannot be dragged. |
+| Drag grips | `shell/layout.ts`: grips on the list panel's right edge and the terminal's left edge (`role=separator`, focusable, `aria-value*` in rem). Pointer drags run on window `pointermove` / `pointerup`. Ranges: left 12â€“24rem (16), right 14â€“36rem (20). Arrows Â±1rem, Shift Â±4rem. Widths are inline `--left-width` / `--right-width` on the shell; session-only. |
+| Window controls | Minimize (âˆ’), maximize (â˜), restore (â) in the terminal heading row. Minimized: a 2.5rem strip with a vertical TERMINAL label and restore. Maximized: the terminal fills the row; the list panel and the chat hide but stay mounted. Restore returns to the dragged width. Grips hide when their panel cannot be dragged. |
 | Deleted | `views/proof-cards.ts`, ChatView's `loadEntry` / `entryReads`, the proof-card CSS (stitch-chat.css block, stitch-system.css overrides), the card-style feed overrides in stitch-system.css. `fetchChain` stays. |
 
 ## Decisions
@@ -61,7 +61,7 @@ words. Live data only: every line comes from the turns and the record.
 - At 1100px and under, the compact default (11.5rem) sits under the drag
   range's 12rem floor; the grip reports it (aria-valuemin follows) and the
   first drag or key step lifts it into the range.
-- The window glyphs are text (− ☐ ❐), small at 12px.
+- The window glyphs are text (âˆ’ â˜ â), small at 12px.
 
 ## Not built
 
@@ -81,7 +81,7 @@ returned to the dragged 36rem.
 
 ## Tests
 
-412 pass (388 at base). The proof-card tests in `views/stitch-face.test.ts`
+416 pass (388 at base). The proof-card tests in `views/stitch-face.test.ts`
 are replaced by box tests (order, lit / dark rules, swap, back, toggle,
 switch, did-nothing, focus across turns). `shell/engine-terminal.test.ts`
 covers the terminal (follow / no-yank / detail no-scroll, colour tokens) and

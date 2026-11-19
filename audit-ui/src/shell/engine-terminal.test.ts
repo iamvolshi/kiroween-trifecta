@@ -111,6 +111,30 @@ describe('the terminal feed', () => {
     expect(document.activeElement?.classList.contains('activity-feed')).toBe(true);
   });
 
+  it('after a provenance click, a detail view without that entry stays open (round-2 regression)', async () => {
+    const box = scrollBox(1000, 200);
+    const log = await terminal(box);
+    log.push({ ...turn('one'), engines: { ...turn('one').engines, katie: [{ kid: 1, subject: 'turn', entry_id: 'stub-e1', seated: true }] } });
+    await tick();
+    provenanceChannel.publish({ kid: 1, subject: 'turn', entry_id: 'stub-e1' });
+    engineFocusChannel.publish({ engine: 'ERIE', turnIndex: 0 });
+    expect(engineFocusChannel.current()).toEqual({ engine: 'ERIE', turnIndex: 0 });
+    expect(box.querySelector('.engine-detail-name')?.textContent).toBe('ERIE');
+    log.push(turn('two')); // a re-render with the old highlight target still set
+    await tick();
+    expect(box.querySelector('.engine-detail-name')?.textContent).toBe('ERIE');
+  });
+
+  it('a link to an entry no feed holds leaves the detail view open', async () => {
+    const box = scrollBox(1000, 200);
+    const log = await terminal(box);
+    log.push(turn('one'));
+    await tick();
+    engineFocusChannel.publish({ engine: 'ERIE', turnIndex: 0 });
+    provenanceChannel.publish({ kid: 1, subject: 'turn', entry_id: 'nowhere' });
+    expect(engineFocusChannel.current()).toEqual({ engine: 'ERIE', turnIndex: 0 });
+  });
+
   it('a provenance link while a detail view is open goes back to the general feed and highlights there', async () => {
     const box = scrollBox(1000, 200);
     const log = await terminal(box);
@@ -322,6 +346,44 @@ describe('the layout: drag grips and the terminal window', () => {
     pointer(window, 'pointermove', 64, 0); // no pointerup reached us; the button is up
     pointer(window, 'pointermove', 96);
     expect(shell.style.getPropertyValue('--left-width')).toBe('18rem');
+  });
+
+  it('a reader who scrolled up keeps their place across minimize and restore', async () => {
+    await start();
+    const right = container.querySelector<HTMLElement>('.shell-right')!;
+    let top = 0;
+    Object.defineProperty(right, 'scrollHeight', { configurable: true, get: () => 900 });
+    Object.defineProperty(right, 'clientHeight', { configurable: true, get: () => 300 });
+    Object.defineProperty(right, 'scrollTop', { configurable: true, get: () => top, set: (v: number) => { top = Math.max(0, Math.min(v, 600)); } });
+    top = 200;
+    right.dispatchEvent(new Event('scroll'));
+    ctl('Minimize terminal').click();
+    top = 0; // the hidden content lost its place
+    right.dispatchEvent(new Event('scroll')); // ignored while minimized
+    container.querySelector<HTMLButtonElement>('.terminal-strip .window-button')!.click();
+    expect(top).toBe(200);
+  });
+
+  it('narrowing from the compact default never widens the panel; a window that grows gives a width back', async () => {
+    const mm = window.matchMedia;
+    window.matchMedia = ((q: string) => ({ matches: q === '(max-width: 1100px)' })) as unknown as typeof window.matchMedia;
+    try {
+      const shell = await start();
+      grip('left').dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', shiftKey: true, bubbles: true, cancelable: true }));
+      expect(shell.style.getPropertyValue('--left-width')).toBe('11.5rem');
+    } finally {
+      window.matchMedia = mm;
+    }
+    router!.destroy();
+    router = null;
+    container.remove();
+    const shell = await start();
+    Object.defineProperty(window, 'innerWidth', { configurable: true, value: 1100 });
+    grip('right').dispatchEvent(new KeyboardEvent('keydown', { key: 'End', bubbles: true, cancelable: true }));
+    expect(shell.style.getPropertyValue('--right-width')).toBe(`${65.25 - MIN_CENTER_REM - 16}rem`);
+    Object.defineProperty(window, 'innerWidth', { configurable: true, value: 1600 });
+    window.dispatchEvent(new Event('resize'));
+    expect(shell.style.getPropertyValue('--right-width')).toBe(`${RANGES.right.max}rem`);
   });
 
   it('a grip sits next to the panel it resizes, in Tab order', async () => {

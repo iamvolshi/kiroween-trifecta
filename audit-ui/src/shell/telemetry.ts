@@ -93,11 +93,15 @@ export class TelemetryPanel implements Panel {
   /** The general feed's place while a detail view is open, given back on return. */
   private saved: { top: number; following: boolean } | null = null;
   private unsubscribeLayout: (() => void) | null = null;
+  /** The last place read in whichever view shows, kept to give back after a minimize. */
+  private lastTop = 0;
   private onScroll = (): void => {
     const slot = this.slot;
-    // Only the general feed, and only while it can be seen, sets the follow state.
-    if (!slot || this.focus !== null || this.minimized()) return;
-    this.following = slot.scrollHeight - slot.scrollTop - slot.clientHeight <= FOLLOW_SLACK_PX;
+    // Nothing is measured while minimized (the content is hidden).
+    if (!slot || this.minimized()) return;
+    this.lastTop = slot.scrollTop;
+    // Only the general feed sets the follow state.
+    if (this.focus === null) this.following = slot.scrollHeight - slot.scrollTop - slot.clientHeight <= FOLLOW_SLACK_PX;
   };
 
   constructor(adapter: SeamAdapter, log: ChatLog, layout: ShellLayout | null = null) {
@@ -113,17 +117,19 @@ export class TelemetryPanel implements Panel {
     this.head.appendChild(el('h2', 'telemetry-heading', WORK_HEADING));
     if (this.layout) this.head.appendChild(this.layout.controls);
     this.body = el('div', 'telemetry-body');
+    this.body.tabIndex = -1; // the focus target of last resort (back with nothing drawn yet)
     this.root.append(this.head, this.body);
     slot.appendChild(this.root);
     slot.addEventListener('scroll', this.onScroll);
     this.focus = engineFocusChannel.current();
     this.following = true;
     this.unsubscribe = this.log.subscribe(() => this.refresh());
-    this.unsubscribeLinks = provenanceChannel.subscribe((t) => this.highlight(t));
+    this.unsubscribeLinks = provenanceChannel.subscribe((t) => this.onLink(t));
     this.unsubscribeFocus = engineFocusChannel.subscribe((f) => this.setFocus(f));
-    // Back from minimized: a reader who was following is put back at the live end.
+    // Back from minimized: a following reader goes to the live end, any other back to their place.
     this.unsubscribeLayout = this.layout?.onChange((s) => {
-      if (s !== 'minimized' && this.focus === null && this.following && this.slot) this.slot.scrollTop = this.slot.scrollHeight;
+      if (s === 'minimized' || !this.slot) return;
+      this.slot.scrollTop = this.focus === null && this.following ? this.slot.scrollHeight : this.lastTop;
     }) ?? null;
     this.render();
     this.refresh();
@@ -138,7 +144,7 @@ export class TelemetryPanel implements Panel {
     const was = this.focus;
     // Leaving the general feed: keep its place to give back on return.
     if (was === null && f !== null && slot) this.saved = { top: slot.scrollTop, following: this.following };
-    const fromBack = this.root?.contains(document.activeElement) ?? false;
+    const fromBack = document.activeElement?.classList.contains('engine-detail-back') === true && (this.root?.contains(document.activeElement) ?? false);
     this.focus = f;
     this.render();
     if (!slot) return;
@@ -150,7 +156,7 @@ export class TelemetryPanel implements Panel {
       this.following = saved?.following ?? true;
       slot.scrollTop = this.following ? slot.scrollHeight : saved?.top ?? 0;
       // The back button that had focus is gone: the feed takes it.
-      if (fromBack) this.body?.querySelector<HTMLElement>('.activity-feed, .empty-state')?.focus();
+      if (fromBack) (this.body?.querySelector<HTMLElement>('.activity-feed, .empty-state') ?? this.body)?.focus();
     }
   }
 
@@ -183,18 +189,27 @@ export class TelemetryPanel implements Panel {
     const hit = items.find(
       (li) => li.dataset.entryId === t.entry_id && li.dataset.subject === t.subject && li.dataset.kid === String(t.kid),
     );
-    if (!hit) {
-      // A detail view holds only one engine's turn: go back to the general feed and look there.
-      if (this.focus !== null) {
-        engineFocusChannel.publish(null);
-        this.highlight(t, scroll);
-      }
-      return;
-    }
+    if (!hit) return;
     this.lastTarget = t;
     for (const li of root.querySelectorAll('.katie-entry.is-highlighted')) li.classList.remove('is-highlighted');
     hit.classList.add('is-highlighted');
     if (scroll) hit.scrollIntoView?.({ block: 'nearest' });
+  }
+
+  /**
+   * A provenance link was activated. If a detail view is open and does not
+   * show the entry, but the general feed holds it, go back there first.
+   * Only a link does this: a re-render's highlight never leaves a detail view.
+   */
+  private onLink(t: ProvenanceTarget): void {
+    const shown = Array.from(this.root?.querySelectorAll<HTMLElement>('.katie-entry') ?? []).some(
+      (li) => li.dataset.entryId === t.entry_id && li.dataset.subject === t.subject && li.dataset.kid === String(t.kid));
+    if (this.focus !== null && !shown) {
+      const inFeed = feedItems(this.log.turns(), this.entries).some((i) =>
+        (i.entries ?? []).some((e) => e.entry_id === t.entry_id && e.subject === t.subject && e.kid === t.kid));
+      if (inFeed) engineFocusChannel.publish(null);
+    }
+    this.highlight(t);
   }
 
   unmount(): void {
