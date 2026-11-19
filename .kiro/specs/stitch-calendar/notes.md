@@ -68,5 +68,5 @@ stale Elara unconfigured state; voice.
 
 ## Tests
 
-335 pass (321 at base): 14 new in `views/calendar-face.test.ts`; the month
+337 pass (321 at base): 16 new in `views/calendar-face.test.ts`; the month
 test in `views/calendar.test.ts` now checks the heatmap.

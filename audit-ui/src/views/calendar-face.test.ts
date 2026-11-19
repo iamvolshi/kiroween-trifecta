@@ -233,3 +233,31 @@ describe('rail fixes (review round 1)', () => {
     rail.root.remove();
   });
 });
+
+describe('rail keyboard (review round 2)', () => {
+  const NOV18 = { year: 2026, month: 11, day: 18 };
+  const key = (target: Element, k: string, mods: KeyboardEventInit = {}): KeyboardEvent => {
+    const e = new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true, ...mods });
+    target.dispatchEvent(e);
+    return e;
+  };
+
+  it('Tier 4 arrows step from the focused hour', () => {
+    const rail = new CalendarRail(ENTRIES, NOV18, null);
+    document.body.appendChild(rail.root);
+    const h5 = rail.root.querySelector<HTMLElement>('.rail-hour[data-hour="5"]')!;
+    h5.focus();
+    key(h5, 'ArrowRight');
+    expect((document.activeElement as HTMLElement).dataset.hour).toBe('6');
+    rail.root.remove();
+  });
+
+  it('modified arrows are left to the browser', () => {
+    const rail = new CalendarRail(ENTRIES, NOV18, 10);
+    document.body.appendChild(rail.root);
+    const h10 = rail.root.querySelector<HTMLElement>('.rail-hour[data-hour="10"]')!;
+    expect(key(h10, 'ArrowLeft', { altKey: true }).defaultPrevented).toBe(false);
+    expect(rail.root.querySelector<HTMLElement>('.rail-hour[data-cursor]')?.dataset.hour).toBe('10');
+    rail.root.remove();
+  });
+});

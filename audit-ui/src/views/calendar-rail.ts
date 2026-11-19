@@ -187,7 +187,12 @@ export class CalendarRail {
     // Keyboard twin of the wheel: arrow keys move the focused tier.
     sec.addEventListener('keydown', (e: KeyboardEvent) => {
       if (ticks === null || (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight')) return;
+      // Leave modified arrows to the browser (Alt+Left/Right is history).
+      if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
       e.preventDefault();
+      // Tier 4 steps from the hour that has focus, not a stale cursor.
+      const focusedHour = n === 4 ? (e.target as HTMLElement).closest<HTMLElement>('.rail-hour')?.dataset.hour : undefined;
+      if (focusedHour !== undefined) this.hourCursor = Number(focusedHour);
       if (this.move(n, e.key === 'ArrowRight' ? 1 : -1)) this.refocus(n);
     });
     return sec;
