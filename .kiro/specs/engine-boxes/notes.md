@@ -48,7 +48,9 @@ words. Live data only: every line comes from the turns and the record.
 - A box's lit or dark state is also said in words (aria-description and
   title: "Worked this turn" / "Sat this turn out").
 - A provenance link clicked while a detail view is open goes back to the
-  general feed and highlights its KATIE row there.
+  general feed only when the entry is not shown in the detail view (and is
+  in the general feed); when the entry is shown in the detail view it
+  highlights in place and the view stays open.
 - A telemetry panel that unmounts (only when the Router is destroyed)
   publishes `null`, so no box stays pressed with no panel to show it.
 
