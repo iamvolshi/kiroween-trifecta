@@ -158,6 +158,11 @@
   .chat-view > h1::before { animation: none; }
 }
 
+/* Under 800px the page scrolls, not the column: stick to the top edge. */
+@media (max-width: 800px) {
+  .chat-view > h1 { top: 0; }
+}
+
 /* ---- Chat: mask cards -------------------------------------------------- */
 
 .mask-card {
