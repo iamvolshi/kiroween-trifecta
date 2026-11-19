@@ -1,9 +1,9 @@
 import { PERSONAS, type Persona, type Register } from '../adapter/seam.ts';
 
 /**
- * Before a pick: the three masks of the one entity as cards. Each card's
- * main button is a radio (role=radio, data-value = the mask name), so the
- * cards are the persona picker. Frankenstein's card also offers its two
+ * Before a pick: the three masks of the one entity as cards, a plain group
+ * of buttons in Tab order (data-value = the mask name). After a pick the
+ * compact persona picker (a radio group) takes over. Frankenstein's card also offers its two
  * grounding positions, Book (1818) and Movie (1931); either one picks
  * Frankenstein with that register. The words here are the app's own labels,
  * not data: names and the model come from the connector after a pick.
@@ -33,10 +33,9 @@ export function renderMaskCards(
 ): HTMLDivElement {
   const group = document.createElement('div');
   group.className = 'persona-picker mask-cards';
-  group.setAttribute('role', 'radiogroup');
-  group.setAttribute('aria-label', 'Persona');
+  group.setAttribute('role', 'group');
+  group.setAttribute('aria-label', 'Choose a persona');
 
-  const radios: HTMLButtonElement[] = [];
   PERSONAS.forEach((p, i) => {
     const card = el('div', 'mask-card');
     card.dataset.mask = p;
@@ -44,19 +43,10 @@ export function renderMaskCards(
 
     const b = document.createElement('button');
     b.type = 'button';
-    b.className = 'radio-option mask-pick';
-    b.setAttribute('role', 'radio');
-    b.setAttribute('aria-checked', 'false');
+    b.className = 'mask-pick';
     b.dataset.value = p;
     b.append(el('span', 'mask-name', p), el('span', 'mask-voice', VOICE[p]));
     b.addEventListener('click', () => onPick(p));
-    b.addEventListener('keydown', (e) => {
-      const step = e.key === 'ArrowRight' || e.key === 'ArrowDown' ? 1 : e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? -1 : 0;
-      if (step === 0) return;
-      e.preventDefault();
-      radios[(i + step + radios.length) % radios.length]!.focus();
-    });
-    radios.push(b);
     card.appendChild(b);
 
     if (p === 'Frankenstein') {

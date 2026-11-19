@@ -14,9 +14,9 @@ Base: `main` at `2a5fbd2`. Branch: `feat/stitch-chat-face`.
 | Palette (`style.css`) | background `#111318`, panels a step lighter, text `#e2e2e9`, accent cyan `#00f0ff` (`--accent-dim` `#00dbe9`) |
 | Band (`styles/model-banner.css`) | Movie amber `#ffbd58`, Book violet `#eacfff` / `#f0dbff` |
 | Header | "View: Chat / Observability" (the chat intro's view name) |
-| Left column | "Calendar" in Going back is "Calendar Index"; each record folder carries its 0-9 value (latest entry's authority) on its head |
+| Left column | "Calendar" in Going back is "Calendar Index"; each record folder carries its 0-9 value on its head: the authority of the folder's LATEST entry by `k_start` (the same ordering as the folder's link), not the highest |
 | Right column | heading "Telemetry — Machine state"; feed sentences start with the engine ("ERIE found nothing for '...'", "ELLE promoted a lesson: ...", "KATIE recorded 2 entries for this turn."); one KATIE item per turn, each written entry a row inside it (the provenance highlight now marks the row) |
-| Chat, before a pick (`views/mask-cards.ts`) | heading "Chat with [nothing yet]"; three mask cards (MASK_01 Frankenstein, MASK_02 Elara, MASK_03 ARCHETRON) with a one-line voice; Frankenstein's card has "[BOOK] 1818" and "[MOVIE] 1931", each picks Frankenstein on that position; composer locked with placeholder "INPUT // AWAITING_MASK"; nothing under the chat box |
+| Chat, before a pick (`views/mask-cards.ts`) | a plain group of buttons in Tab order (after a pick the compact radio-group picker takes over); heading "Chat with [nothing yet]"; three mask cards (MASK_01 Frankenstein, MASK_02 Elara, MASK_03 ARCHETRON) with a one-line voice; Frankenstein's card has "[BOOK] 1818" and "[MOVIE] 1931", each picks Frankenstein on that position; composer locked with placeholder "INPUT // AWAITING_MASK"; nothing under the chat box |
 | Chat, talking | the compact mask switcher (and Frankenstein's Book/Movie switch) above the chat; band as before |
 | Proof-anchor cards (`views/proof-cards.ts`) | under a reply that carries links: one card per linked entry with KID, subject, the entry's reason read live (`GET /chain`), and "Inspect →" to Entry Detail; a missing entry or a failed read is said in words |
 
@@ -35,6 +35,12 @@ commit, KID-8812 / KID-9041); the belief-graph panel; the observability
 runtime strip; the stale Elara "unconfigured" state; the "STATE //
 00_UNINITIALIZED" line; voice.
 
+## Empty feed
+
+The empty feed is the existing NOT KNOWN box: `.empty-state` draws the
+"Not known" caption (`style.css`), and its words are the order's: "Nothing
+has happened yet. Each step the engines take shows up here."
+
 ## Known limit
 
 The live connector authors no reply links today, so proof-anchor cards
@@ -49,5 +55,6 @@ and its proof card on Elara, 04 Frankenstein on Book.
 
 ## Tests
 
-329 pass (321 at base): 7 new in `views/stitch-face.test.ts`, 1 new in
-`shell/telemetry.test.ts`; tests pinned to old wording updated.
+334 pass (321 at base): 12 new in `views/stitch-face.test.ts`, 1 new in
+`shell/telemetry.test.ts`; tests pinned to old wording updated. Unreachable
+words on every view stay covered by `no-connector.test.ts`.

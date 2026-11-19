@@ -177,3 +177,69 @@ describe('proof-anchor cards', () => {
     expect(q('.proof-reason')?.getAttribute('data-state')).toBe('error');
   });
 });
+
+describe('review-1 additions', () => {
+  it('mask cards are plain buttons in Tab order, Frankenstein positions inside its card', async () => {
+    await mount(stubFetch((m) => stubTurn(m, false), noChain).fetch);
+    expect(q('.mask-cards')?.getAttribute('role')).toBe('group');
+    const order = Array.from(slot.querySelectorAll<HTMLButtonElement>('.mask-cards button')).map(
+      (b) => b.dataset.value ?? b.textContent,
+    );
+    expect(order).toEqual(['Frankenstein', '[BOOK] 1818', '[MOVIE] 1931', 'Elara', 'ARCHETRON']);
+    expect(slot.querySelectorAll('.mask-cards [role="radio"]')).toHaveLength(0);
+    expect(Array.from(slot.querySelectorAll<HTMLButtonElement>('.mask-cards button')).every((b) => b.tabIndex === 0)).toBe(true);
+  });
+
+  it('a failed proof read is read again on the next render, and a thrown read is said in words', async () => {
+    let fail = true;
+    const s = stubFetch((m) => stubTurn(m, true), () =>
+      fail ? new Response('{"error":"down"}', { status: 503 }) : new Response(JSON.stringify([LINKED]), { status: 200 }));
+    await mount(s.fetch);
+    q<HTMLButtonElement>('.mask-cards [data-value="ARCHETRON"]')!.click();
+    await send('one');
+    expect(q('.proof-reason')?.getAttribute('data-state')).toBe('error');
+    fail = false;
+    await send('two'); // re-renders the transcript
+    const reasons = Array.from(slot.querySelectorAll('.proof-reason')).map((r) => r.textContent);
+    expect(reasons).toEqual(['user turn (connector)', 'user turn (connector)']);
+    expect(s.chainCalls.length).toBe(2); // the failure was not cached; the success was
+  });
+
+  it('a rejected entry read becomes words, never a card stuck on "Reading"', async () => {
+    const { renderProofCards } = await import('./proof-cards.ts');
+    const box = renderProofCards(stubTurn('x', true), () => Promise.reject(new Error('socket closed')))!;
+    for (let i = 0; i < 3; i++) await tick();
+    expect(box.querySelector('.proof-reason')?.textContent).toBe('The entry read failed: socket closed');
+  });
+});
+
+describe('the shell pieces of the face', () => {
+  it('an empty feed is the NOT KNOWN box with the order\'s words', async () => {
+    const { TelemetryPanel } = await import('../shell/telemetry.ts');
+    slot = document.createElement('div');
+    document.body.appendChild(slot);
+    const adapter = createLiveAdapter('http://c.test', async () => new Response('[]', { status: 200 }));
+    new TelemetryPanel(adapter, new ChatLog()).mount(slot);
+    for (let i = 0; i < 3; i++) await tick();
+    const box = q('.empty-state')!;
+    expect(box.textContent).toBe('Nothing has happened yet. Each step the engines take shows up here.');
+    // The "NOT KNOWN" label is the empty-state's own caption (style.css .empty-state::before).
+    expect(box.className).toBe('empty-state');
+  });
+
+  it('the folder value is the LATEST entry\'s authority, not the highest', async () => {
+    const { LeftPanel } = await import('../shell/left.ts');
+    const entries: Entry[] = [
+      makeEntry({ id: 'a', subject: 'turn', authority: 8, k_start: '2026-11-18T15:00:00.000Z' }),
+      makeEntry({ id: 'b', subject: 'turn', authority: 3, k_start: '2026-11-18T15:05:00.000Z' }),
+    ];
+    const adapter = createLiveAdapter('http://c.test', async (url) =>
+      new Response(JSON.stringify(new URL(url).pathname === '/entries' ? entries : []), { status: 200 }));
+    slot = document.createElement('div');
+    document.body.appendChild(slot);
+    new LeftPanel(adapter).mount(slot);
+    for (let i = 0; i < 4; i++) await tick();
+    expect(q('.folder-head-value')?.textContent).toBe('3');
+    expect(q('.folder-head-value')?.getAttribute('aria-label')).toBe('authority 3 of 9');
+  });
+});

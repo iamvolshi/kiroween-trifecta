@@ -57,7 +57,10 @@ export function renderProofCards(turn: ChatTurn, load: EntryLoader): HTMLElement
     inspect.textContent = 'Inspect \u2192';
     card.append(head, reason, inspect);
     list.appendChild(card);
-    void load(l.kid, l.subject, l.entry_id).then((r) => {
+    void load(l.kid, l.subject, l.entry_id).catch((e: unknown) => ({
+      ok: false as const,
+      error: `The entry read failed: ${e instanceof Error ? e.message : String(e)}`,
+    })).then((r) => {
       if (!r.ok) {
         reason.textContent = r.error;
         reason.dataset.state = 'error';

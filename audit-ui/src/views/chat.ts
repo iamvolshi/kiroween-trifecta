@@ -49,13 +49,17 @@ export class ChatView implements View {
   private entryReads = new Map<string, ReturnType<EntryLoader>>();
   private loadEntry: EntryLoader = (kid, subject, entryId) => {
     const key = `${kid}|${subject}|${entryId}`;
-    let read = this.entryReads.get(key);
-    if (!read) {
-      read = this.adapter.fetchChain(kid, subject).then((r) =>
-        r.ok ? { ok: true as const, data: r.data.find((e) => e.id === entryId) ?? null } : r,
-      );
-      this.entryReads.set(key, read);
-    }
+    const cached = this.entryReads.get(key);
+    if (cached) return cached;
+    const read = this.adapter.fetchChain(kid, subject).then((r) =>
+      r.ok ? { ok: true as const, data: r.data.find((e) => e.id === entryId) ?? null } : r,
+    );
+    // Keep only a found entry: a failure or a not-yet-written entry is read again next render.
+    void read.then(
+      (r) => { if (!r.ok || r.data === null) this.entryReads.delete(key); },
+      () => this.entryReads.delete(key),
+    );
+    this.entryReads.set(key, read);
     return read;
   };
   /** Counts /models reads; only the latest answer is kept. */
