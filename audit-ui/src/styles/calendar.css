@@ -12,7 +12,9 @@
 
 .calendar-head .calendar-title {
   margin: 0;
-  font-size: var(--fs-title);
+  font-size: var(--t-body-lg-size);
+  line-height: var(--t-body-lg-lh);
+  font-weight: var(--t-body-lg-wt);
   letter-spacing: 0;
   text-transform: none;
   color: var(--text);
@@ -25,7 +27,9 @@
   padding: var(--s1) var(--s3);
   border: 1px solid var(--line-strong);
   border-radius: var(--radius);
-  font-size: var(--fs-meta);
+  font-size: var(--t-body-sm-size);
+  line-height: var(--t-body-sm-lh);
+  font-weight: var(--t-body-sm-wt);
   text-decoration: none;
 }
 
@@ -51,7 +55,8 @@
 
 .calendar-grid th {
   padding: var(--s1);
-  font-size: var(--fs-caption);
+  font-size: var(--t-body-sm-size);
+  line-height: var(--t-body-sm-lh);
   font-weight: 650;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -90,7 +95,9 @@
   border-radius: var(--radius);
   color: var(--muted);
   font-family: var(--mono);
-  font-size: var(--fs-dense);
+  font-size: var(--t-telemetry-data-size);
+  line-height: var(--t-telemetry-data-lh);
+  letter-spacing: var(--t-telemetry-data-ls);
   font-weight: 600;
   text-decoration: none;
 }
@@ -104,8 +111,9 @@
   right: var(--s2);
   bottom: var(--s1);
   color: var(--accent);
-  font-size: var(--fs-title);
-  line-height: 1;
+  font-size: var(--t-body-lg-size);
+  line-height: var(--t-body-lg-lh);
+  font-weight: var(--t-body-lg-wt);
   pointer-events: none;
 }
 
@@ -125,7 +133,10 @@
   border-radius: var(--radius);
   background: var(--surface);
   font-family: var(--mono);
-  font-size: var(--fs-dense);
+  font-size: var(--t-telemetry-data-size);
+  line-height: var(--t-telemetry-data-lh);
+  font-weight: var(--t-telemetry-data-wt);
+  letter-spacing: var(--t-telemetry-data-ls);
 }
 
 .hour-list li:has(.hour-count) {
@@ -174,7 +185,9 @@
   border-collapse: separate;
   border-spacing: 0;
   table-layout: fixed;
-  font-size: var(--fs-dense);
+  font-size: var(--t-body-md-size);
+  line-height: var(--t-body-md-lh);
+  font-weight: var(--t-body-md-wt);
 }
 
 /* Column widths: KID | Subject | State | Authority | Evidence | Reason. */
@@ -189,7 +202,8 @@
   padding: var(--s2) var(--s3);
   border-bottom: 1px solid var(--line-strong);
   background: var(--surface-2);
-  font-size: var(--fs-caption);
+  font-size: var(--t-body-sm-size);
+  line-height: var(--t-body-sm-lh);
   font-weight: 650;
   letter-spacing: 0.05em;
   text-align: left;
@@ -247,7 +261,10 @@
 .entry-table td.kid,
 .entry-table td.evidence {
   font-family: var(--mono);
-  font-size: var(--fs-meta);
+  font-size: var(--t-telemetry-data-size);
+  line-height: var(--t-telemetry-data-lh);
+  font-weight: var(--t-telemetry-data-wt);
+  letter-spacing: var(--t-telemetry-data-ls);
 }
 
 .entry-table td.subject {
@@ -256,9 +273,10 @@
 
 .entry-table td.authority {
   font-family: var(--mono);
-  font-size: var(--fs-title);
+  font-size: var(--t-label-lg-size);
+  line-height: var(--t-label-lg-lh);
+  letter-spacing: var(--t-label-lg-ls);
   font-weight: 700;
-  line-height: 1.2;
 }
 
 .entry-table td.reason {
@@ -296,7 +314,9 @@
   }
 
   .entry-table td.authority {
-    font-size: var(--fs-dense);
+    font-size: var(--t-body-md-size);
+  line-height: var(--t-body-md-lh);
+  font-weight: var(--t-body-md-wt);
   }
 
   /* Narrow centre: give short words (state) room, wrap long mono values
@@ -313,6 +333,8 @@
   }
 
   .entry-table td {
-    font-size: var(--fs-meta);
+    font-size: var(--t-body-sm-size);
+  line-height: var(--t-body-sm-lh);
+  font-weight: var(--t-body-sm-wt);
   }
 }

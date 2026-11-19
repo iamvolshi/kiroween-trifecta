@@ -30,9 +30,10 @@
 
 .mask-code {
   font-family: var(--mono);
-  font-size: var(--fs-caption);
+  font-size: var(--t-label-md-size);
+  line-height: var(--t-label-md-lh);
   font-weight: 700;
-  letter-spacing: 0.14em;
+  letter-spacing: var(--t-label-md-ls);
   color: var(--accent-dim);
 }
 
@@ -57,15 +58,17 @@
 
 .mask-name {
   font-family: var(--display);
-  font-size: var(--fs-title);
+  font-size: var(--t-headline-sm-size);
+  line-height: var(--t-headline-sm-lh);
   font-weight: 800;
-  letter-spacing: 0.04em;
+  letter-spacing: var(--t-headline-sm-ls);
   text-transform: uppercase;
   color: var(--text);
 }
 
 .mask-voice {
-  font-size: var(--fs-dense);
+  font-size: var(--t-body-md-size);
+  line-height: var(--t-body-md-lh);
   font-weight: 400;
   color: var(--muted);
 }
@@ -83,9 +86,10 @@
   background: var(--inset);
   color: var(--text);
   font-family: var(--mono);
-  font-size: var(--fs-meta);
+  font-size: var(--t-label-lg-size);
+  line-height: var(--t-label-lg-lh);
   font-weight: 700;
-  letter-spacing: 0.06em;
+  letter-spacing: var(--t-label-lg-ls);
 }
 
 .mask-position[data-register='book'] {
@@ -145,8 +149,10 @@
   gap: var(--s2);
   margin: 0;
   font-family: var(--mono);
-  font-size: var(--fs-meta);
-  letter-spacing: 0.06em;
+  font-size: var(--t-label-lg-size);
+  line-height: var(--t-label-lg-lh);
+  font-weight: var(--t-label-lg-wt);
+  letter-spacing: var(--t-label-lg-ls);
   text-transform: uppercase;
 }
 
@@ -161,7 +167,9 @@
 
 .proof-reason {
   margin: 0;
-  font-size: var(--fs-dense);
+  font-size: var(--t-body-md-size);
+  line-height: var(--t-body-md-lh);
+  font-weight: var(--t-body-md-wt);
   color: var(--text);
   overflow-wrap: anywhere;
 }
@@ -178,9 +186,10 @@
 .proof-inspect {
   align-self: end;
   font-family: var(--mono);
-  font-size: var(--fs-meta);
+  font-size: var(--t-label-lg-size);
+  line-height: var(--t-label-lg-lh);
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: var(--t-label-lg-ls);
   text-transform: uppercase;
 }
 
@@ -195,7 +204,9 @@
   border: 1px solid var(--accent);
   color: var(--accent);
   font-family: var(--mono);
-  font-size: var(--fs-meta);
+  font-size: var(--t-telemetry-data-size);
+  line-height: var(--t-telemetry-data-lh);
+  letter-spacing: var(--t-telemetry-data-ls);
   font-weight: 800;
 }
 

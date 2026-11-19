@@ -62,9 +62,10 @@
   background: var(--band);
   color: #0b0710;
   font-family: var(--mono);
-  font-size: var(--fs-title);
+  font-size: var(--t-label-lg-size);
+  line-height: var(--t-label-lg-lh);
   font-weight: 800;
-  letter-spacing: 0.12em;
+  letter-spacing: var(--t-label-lg-ls);
 }
 
 .model-main {
@@ -78,7 +79,9 @@
 
 .model-name {
   font-family: var(--mono);
-  font-size: 22px;
+  font-size: var(--t-headline-lg-size);
+  line-height: var(--t-headline-lg-lh);
+  letter-spacing: var(--t-headline-lg-ls);
   font-weight: 800;
   overflow-wrap: anywhere;
 }
@@ -87,21 +90,26 @@
   padding: 1px var(--s2);
   border: 1px solid var(--band);
   font-family: var(--mono);
-  font-size: var(--fs-meta);
+  font-size: var(--t-label-lg-size);
+  line-height: var(--t-label-lg-lh);
+  font-weight: var(--t-label-lg-wt);
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: var(--t-label-lg-ls);
 }
 
 .model-source {
   grid-area: source;
-  font-size: var(--fs-meta);
+  font-size: var(--t-body-sm-size);
+  line-height: var(--t-body-sm-lh);
+  font-weight: var(--t-body-sm-wt);
   opacity: 0.85;
 }
 
 .model-note {
   grid-area: note;
   margin-top: var(--s1);
-  font-size: var(--fs-meta);
+  font-size: var(--t-body-sm-size);
+  line-height: var(--t-body-sm-lh);
   font-weight: 700;
 }
 

@@ -33,9 +33,10 @@
 .radio-caption {
   margin-right: var(--s1);
   font-family: var(--mono);
-  font-size: var(--fs-caption);
+  font-size: var(--t-label-md-size);
+  line-height: var(--t-label-md-lh);
   font-weight: 700;
-  letter-spacing: 0.1em;
+  letter-spacing: var(--t-label-md-ls);
   text-transform: uppercase;
   color: var(--faint);
 }
@@ -48,7 +49,8 @@
   letter-spacing: 0.04em;
   text-transform: none;
   font-family: var(--sans);
-  font-size: var(--fs-dense);
+  font-size: var(--t-body-md-size);
+  line-height: var(--t-body-md-lh);
   font-weight: 600;
 }
 
@@ -108,7 +110,7 @@
   padding: var(--s2) var(--s3);
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  line-height: 1.45;
+  line-height: var(--t-body-md-lh);
   overflow-wrap: break-word;
 }
 
@@ -126,16 +128,19 @@
 .bubble-name {
   margin: 0 0 2px;
   font-family: var(--mono);
-  font-size: var(--fs-caption);
+  font-size: var(--t-label-md-size);
+  line-height: var(--t-label-md-lh);
   font-weight: 700;
-  letter-spacing: 0.1em;
+  letter-spacing: var(--t-label-md-ls);
   text-transform: uppercase;
   color: var(--accent);
 }
 
 .bubble-text {
   margin: 0;
-  font-size: var(--fs-body);
+  font-size: var(--t-body-md-size);
+  line-height: var(--t-body-md-lh);
+  font-weight: var(--t-body-md-wt);
 }
 
 /* Not-knowing is content: its own look, dashed, italic, muted. */
@@ -181,7 +186,9 @@
   width: 100%;
   padding: var(--s3);
   font-family: var(--sans);
-  font-size: var(--fs-body);
+  font-size: var(--t-body-md-size);
+  line-height: var(--t-body-md-lh);
+  font-weight: var(--t-body-md-wt);
 }
 
 .chat-form input:disabled {

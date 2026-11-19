@@ -51,6 +51,7 @@ export function renderMaskCards(
 
     if (p === 'Frankenstein') {
       const pos = el('div', 'mask-positions');
+      pos.appendChild(el('span', 'mask-grounding', 'Grounding position'));
       for (const o of POSITIONS) {
         const pb = document.createElement('button');
         pb.type = 'button';

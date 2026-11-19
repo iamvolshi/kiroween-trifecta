@@ -1,9 +1,10 @@
 /*
  * Audit UI - base styles: tokens, type roles, view intro, the record-card
  * skeleton, entry detail, explicit states. Identity: .kiro/specs/presentation/
- * notes.md (deep blue-black instrument). The palette below took cues from a
- * reference mockup (Stitch, Nov 18); the code is written fresh. Shell, chat, calendar and telemetry live in
- * styles/*.css.
+ * notes.md (deep blue-black instrument). The visual system below (fonts,
+ * type roles, surface ramp, borders, radii) took cues from a reference
+ * mockup (Stitch, Nov 18), measured from its export; the code is written
+ * fresh. Shell, chat, calendar and telemetry live in styles/*.css.
  */
 
 :root {
@@ -11,44 +12,64 @@
 
   /* Planes: canvas, panel, card, raised, inset. Depth = layers + 1px lines. */
   --bg: #111318;
-  --panel: #161920;
-  --surface: #1b1e26;
-  --surface-2: #22262f;
-  --inset: #0c0e12;
-  --line: #2a2e38;
-  --line-strong: #3d4250;
+  --panel: #1a1b21; /* surface-container-low */
+  --surface: #1e1f25; /* surface-container */
+  --surface-2: #282a2f; /* surface-container-high */
+  --surface-3: #33353a; /* surface-container-highest */
+  --surface-bright: #37393f;
+  --inset: #0c0e13; /* surface-container-lowest */
+  --line: #3b494b; /* outline-variant */
+  --line-strong: #849495; /* outline: used sparingly */
+  --outline: #849495;
 
   /* Text */
-  --text: #e2e2e9;
-  --muted: #b3b6c2;
-  --faint: #9296a3;
+  --text: #e2e2e9; /* on-surface */
+  --muted: #b9cacb; /* on-surface-variant */
+  --faint: #849495; /* outline */
+  --primary: #dbfcff;
 
   /* Meaning: signal (cyan), warning (amber), good (emerald), error. */
   --accent: #00f0ff;
   --accent-dim: #00dbe9;
   --accent-bg: #00353a;
   --accent-bg-hover: #00494f;
-  --warn: #ffb648;
+  --warn: #ffbd58; /* secondary */
+  --secondary: #ffbd58;
+  --secondary-dim: #ffba4b;
+  --secondary-container: #ea9f00;
+  --on-secondary: #442b00;
+  --on-secondary-container: #5b3b00;
+  --tertiary-fixed: #f0dbff;
+  --tertiary-dim: #ddb7ff;
+  --tertiary-container: #eacfff;
   --warn-bg: #2b1d06;
   --ok: #3ddc97;
   --ok-bg: #082a1d;
-  --error: #ff7d7d;
+  --error: #ffb4ab;
   --error-bg: #2a1013;
 
   /* Kept name from the readability pass */
   --rule: var(--line);
 
-  /* Type roles (system stacks only, nothing downloaded) */
-  --display: system-ui, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  --sans: ui-sans-serif, system-ui, 'Segoe UI', Roboto, sans-serif;
-  --mono: ui-monospace, 'Cascadia Mono', 'Cascadia Code', 'SF Mono', Consolas,
+  /* Families: Space Grotesk / Geist / JetBrains Mono from Google Fonts
+     (index.html); offline, the system stacks behind them. */
+  --display: 'Space Grotesk', system-ui, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --sans: 'Geist', ui-sans-serif, system-ui, 'Segoe UI', Roboto, sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, 'Cascadia Mono', 'Cascadia Code', 'SF Mono', Consolas,
     'Liberation Mono', monospace;
-  --fs-caption: 11px;
-  --fs-meta: 12px;
-  --fs-dense: 13px;
-  --fs-body: 14px;
-  --fs-title: 16px;
-  --fs-view: 26px;
+
+  /* The eleven type roles: size / line-height / letter-spacing / weight. */
+  --t-label-sm-size: 9px; --t-label-sm-lh: 12px; --t-label-sm-ls: 0.06em; --t-label-sm-wt: 500;
+  --t-label-md-size: 11px; --t-label-md-lh: 14px; --t-label-md-ls: 0.05em; --t-label-md-wt: 500;
+  --t-label-lg-size: 12px; --t-label-lg-lh: 16px; --t-label-lg-ls: 0.08em; --t-label-lg-wt: 600;
+  --t-body-sm-size: 11px; --t-body-sm-lh: 16px; --t-body-sm-wt: 400;
+  --t-body-md-size: 13px; --t-body-md-lh: 18px; --t-body-md-wt: 400;
+  --t-body-lg-size: 15px; --t-body-lg-lh: 22px; --t-body-lg-wt: 400;
+  --t-headline-sm-size: 15px; --t-headline-sm-lh: 20px; --t-headline-sm-ls: 0.08em; --t-headline-sm-wt: 600;
+  --t-headline-lg-size: 22px; --t-headline-lg-lh: 28px; --t-headline-lg-ls: 0.10em; --t-headline-lg-wt: 700;
+  --t-headline-xl-size: 32px; --t-headline-xl-lh: 40px; --t-headline-xl-ls: 0.12em; --t-headline-xl-wt: 700;
+  --t-headline-xl-mobile-size: 24px; --t-headline-xl-mobile-lh: 32px; --t-headline-xl-mobile-ls: 0.10em; --t-headline-xl-mobile-wt: 700;
+  --t-telemetry-data-size: 12px; --t-telemetry-data-lh: 16px; --t-telemetry-data-ls: 0.02em; --t-telemetry-data-wt: 400;
 
   /* Space: 4px rhythm */
   --s1: 4px;
@@ -56,9 +77,11 @@
   --s3: 12px;
   --s4: 16px;
   --s5: 24px;
-  --radius: 2px;
+  --radius: 0.25rem; /* DEFAULT 4px */
+  --radius-lg: 0.5rem; /* 8px */
+  --radius-xl: 0.75rem; /* 12px */
 
-  font: var(--fs-body) / 1.5 var(--sans);
+  font: var(--t-body-md-wt) var(--t-body-md-size) / var(--t-body-md-lh) var(--sans);
   font-variant-numeric: tabular-nums;
 }
 
@@ -78,20 +101,29 @@ body {
 
 /* Small mono caps label: names every section, chip and field. */
 .caps,
-h2,
-.shell-center h1 {
+h2 {
   font-family: var(--mono);
-  font-size: var(--fs-caption);
+  font-size: var(--t-label-sm-size);
+  line-height: var(--t-label-sm-lh);
   font-weight: 700;
-  letter-spacing: 0.1em;
+  letter-spacing: var(--t-label-sm-ls);
+  text-transform: uppercase;
+}
+
+/* View title (CHAT WITH X, CALENDAR ...): headline-sm. */
+.shell-center h1 {
+  font-family: var(--display);
+  font-size: var(--t-headline-sm-size);
+  line-height: var(--t-headline-sm-lh);
+  font-weight: var(--t-headline-sm-wt);
+  letter-spacing: var(--t-headline-sm-ls);
   text-transform: uppercase;
 }
 
 /* View title: the eyebrow above the question. */
 h1 {
   margin: 0 0 var(--s1);
-  color: var(--accent);
-  line-height: 1.4;
+  color: var(--primary);
 }
 
 h2 {
@@ -101,7 +133,8 @@ h2 {
 
 h3 {
   margin: 0;
-  font-size: var(--fs-title);
+  font-size: var(--t-body-lg-size);
+  line-height: var(--t-body-lg-lh);
   font-weight: 700;
 }
 
@@ -144,9 +177,10 @@ button {
   border-radius: var(--radius);
   background: var(--accent-bg);
   font-family: var(--mono);
-  font-size: var(--fs-meta);
+  font-size: var(--t-label-lg-size);
+  line-height: var(--t-label-lg-lh);
   font-weight: 700;
-  letter-spacing: 0.1em;
+  letter-spacing: var(--t-label-lg-ls);
   text-transform: uppercase;
   cursor: pointer;
 }
@@ -173,17 +207,19 @@ button:disabled {
 .view-question {
   margin: 0;
   font-family: var(--display);
-  font-size: var(--fs-view);
+  font-size: var(--t-headline-xl-size);
+  line-height: var(--t-headline-xl-lh);
   font-weight: 800;
-  line-height: 1.1;
-  letter-spacing: -0.015em;
+  letter-spacing: var(--t-headline-xl-ls);
   text-transform: uppercase;
 }
 
 .view-how {
   margin: var(--s2) 0 0;
   max-width: 62ch;
-  font-size: var(--fs-dense);
+  font-size: var(--t-body-md-size);
+  line-height: var(--t-body-md-lh);
+  font-weight: var(--t-body-md-wt);
   color: var(--muted);
 }
 
@@ -193,9 +229,10 @@ button:disabled {
   display: block;
   margin-bottom: var(--s1);
   font-family: var(--mono);
-  font-size: var(--fs-caption);
+  font-size: var(--t-label-md-size);
+  line-height: var(--t-label-md-lh);
   font-weight: 700;
-  letter-spacing: 0.1em;
+  letter-spacing: var(--t-label-md-ls);
   text-transform: uppercase;
   color: var(--muted);
 }
@@ -212,7 +249,9 @@ button:disabled {
   border-radius: var(--radius);
   background: var(--accent-bg);
   font-family: var(--mono);
-  font-size: var(--fs-dense);
+  font-size: var(--t-telemetry-data-size);
+  line-height: var(--t-telemetry-data-lh);
+  letter-spacing: var(--t-telemetry-data-ls);
   font-weight: 700;
 }
 
@@ -226,7 +265,9 @@ button:disabled {
   border-radius: var(--radius);
   background: var(--surface);
   overflow: hidden;
-  font-size: var(--fs-dense);
+  font-size: var(--t-body-md-size);
+  line-height: var(--t-body-md-lh);
+  font-weight: var(--t-body-md-wt);
 }
 
 .entry-primary dt,
@@ -243,9 +284,10 @@ button:disabled {
 
 .entry-primary dt {
   font-family: var(--mono);
-  font-size: var(--fs-caption);
+  font-size: var(--t-label-md-size);
+  line-height: var(--t-label-md-lh);
   font-weight: 700;
-  letter-spacing: 0.1em;
+  letter-spacing: var(--t-label-md-ls);
   text-transform: uppercase;
   color: var(--faint);
   background: var(--inset);
@@ -270,12 +312,17 @@ button:disabled {
 .entry-primary .k-time,
 .entry-primary .state {
   font-family: var(--mono);
-  font-size: var(--fs-meta);
+  font-size: var(--t-telemetry-data-size);
+  line-height: var(--t-telemetry-data-lh);
+  font-weight: var(--t-telemetry-data-wt);
+  letter-spacing: var(--t-telemetry-data-ls);
 }
 
 .entry-primary .authority {
   font-family: var(--mono);
-  font-size: var(--fs-title);
+  font-size: var(--t-label-lg-size);
+  line-height: var(--t-label-lg-lh);
+  letter-spacing: var(--t-label-lg-ls);
   font-weight: 800;
 }
 
@@ -298,7 +345,9 @@ button:disabled {
   border: 1px dashed var(--line-strong);
   border-radius: var(--radius);
   background: var(--inset);
-  font-size: var(--fs-dense);
+  font-size: var(--t-body-md-size);
+  line-height: var(--t-body-md-lh);
+  font-weight: var(--t-body-md-wt);
   color: var(--muted);
 }
 
@@ -308,9 +357,10 @@ button:disabled {
   display: block;
   margin-bottom: var(--s1);
   font-family: var(--mono);
-  font-size: var(--fs-caption);
+  font-size: var(--t-label-md-size);
+  line-height: var(--t-label-md-lh);
   font-weight: 700;
-  letter-spacing: 0.1em;
+  letter-spacing: var(--t-label-md-ls);
   text-transform: uppercase;
 }
 
@@ -388,9 +438,10 @@ button:disabled {
   background: var(--accent-bg);
   color: var(--text);
   font-family: var(--mono);
-  font-size: var(--fs-meta);
+  font-size: var(--t-label-lg-size);
+  line-height: var(--t-label-lg-lh);
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: var(--t-label-lg-ls);
   text-transform: uppercase;
   text-decoration: none;
 }

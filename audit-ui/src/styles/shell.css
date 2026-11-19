@@ -5,8 +5,9 @@
 
 .shell {
   display: grid;
-  grid-template-columns: 15rem minmax(0, 1fr) 21rem;
-  grid-template-rows: auto minmax(0, 1fr);
+  /* w-64 / 1fr / w-80, header h-14 (cues from a reference mockup). */
+  grid-template-columns: 16rem minmax(0, 1fr) 20rem;
+  grid-template-rows: 56px minmax(0, 1fr);
   height: 100vh;
   background: var(--bg);
 }
@@ -16,25 +17,36 @@
 .shell-brand {
   grid-column: 1 / -1;
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
-  gap: var(--s2) var(--s4);
-  padding: var(--s2) var(--s4);
-  border-bottom: 1px solid var(--line-strong);
-  background: var(--panel);
+  gap: var(--s4);
+  height: 56px;
+  padding: 0 var(--s4);
+  border-bottom: 1px solid var(--line);
+  background: var(--inset);
+  overflow: hidden;
+  white-space: nowrap;
 }
 
 .brand-mark {
   font-family: var(--display);
-  font-size: var(--fs-title);
-  font-weight: 800;
-  letter-spacing: 0.04em;
+  font-size: var(--t-headline-sm-size);
+  line-height: var(--t-headline-sm-lh);
+  font-weight: 700;
+  letter-spacing: var(--t-headline-sm-ls);
   text-transform: uppercase;
+  color: var(--primary);
 }
 
 .brand-tag {
-  font-size: var(--fs-meta);
+  font-family: var(--mono);
+  font-size: var(--t-label-sm-size);
+  line-height: var(--t-label-sm-lh);
+  letter-spacing: var(--t-label-sm-ls);
+  font-weight: var(--t-label-sm-wt);
   color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Seam chip: the active adapter, in words. The square is its active marker. */
@@ -47,9 +59,10 @@
   border-radius: var(--radius);
   background: var(--accent-bg);
   font-family: var(--mono);
-  font-size: var(--fs-caption);
+  font-size: var(--t-label-md-size);
+  line-height: var(--t-label-md-lh);
   font-weight: 700;
-  letter-spacing: 0.06em;
+  letter-spacing: var(--t-label-md-ls);
   text-transform: uppercase;
 }
 
@@ -64,9 +77,10 @@
 .brand-view {
   margin-left: auto;
   font-family: var(--mono);
-  font-size: var(--fs-caption);
+  font-size: var(--t-label-md-size);
+  line-height: var(--t-label-md-lh);
   font-weight: 700;
-  letter-spacing: 0.1em;
+  letter-spacing: var(--t-label-md-ls);
   text-transform: uppercase;
   color: var(--muted);
 }
@@ -109,17 +123,21 @@
   padding: var(--s4) var(--s5) var(--s5);
 }
 
-/* Column caption from the column's own aria-label. */
+/* Column caption from the column's own aria-label: a section heading. */
 .shell-left::before,
 .shell-right::before {
   content: attr(aria-label);
   display: block;
   margin-bottom: var(--s3);
-  font-size: var(--fs-caption);
-  font-weight: 650;
-  letter-spacing: 0.1em;
+  padding-bottom: var(--s1);
+  border-bottom: 1px solid var(--line);
+  font-family: var(--mono);
+  font-size: var(--t-label-sm-size);
+  line-height: var(--t-label-sm-lh);
+  font-weight: 600;
+  letter-spacing: var(--t-label-sm-ls);
   text-transform: uppercase;
-  color: var(--faint);
+  color: var(--outline);
 }
 
 /* ---- Left: destinations --------------------------------------------- */
@@ -132,11 +150,16 @@
 
 .main-nav .nav-link {
   display: block;
-  padding: var(--s2) var(--s3);
-  border-left: 3px solid transparent;
+  padding: 6px var(--s2);
+  border-left: 2px solid transparent;
   border-radius: 0 var(--radius) var(--radius) 0;
   color: var(--muted);
-  font-weight: 600;
+  font-family: var(--mono);
+  font-size: var(--t-label-md-size);
+  line-height: var(--t-label-md-lh);
+  letter-spacing: var(--t-label-md-ls);
+  font-weight: var(--t-label-md-wt);
+  text-transform: uppercase;
   text-decoration: none;
 }
 
@@ -147,14 +170,19 @@
 
 .main-nav .nav-link[aria-current='page'] {
   border-left-color: var(--accent);
-  background: var(--accent-bg);
-  color: var(--text);
+  background: var(--surface-2);
+  color: var(--primary);
+  font-weight: 700;
 }
 
 /* ---- Left: record folders and going back ---------------------------- */
 
 .shell-left h2 {
-  margin: var(--s5) 0 var(--s2);
+  margin: var(--s5) 0 var(--s1);
+  padding-bottom: var(--s1);
+  border-bottom: 1px solid var(--line);
+  color: var(--outline);
+  font-weight: 600;
 }
 
 .shell-left ul {
@@ -180,7 +208,10 @@
   border-radius: var(--radius);
   color: var(--text);
   font-family: var(--mono);
-  font-size: var(--fs-dense);
+  font-size: var(--t-telemetry-data-size);
+  line-height: var(--t-telemetry-data-lh);
+  font-weight: var(--t-telemetry-data-wt);
+  letter-spacing: var(--t-telemetry-data-ls);
   text-decoration: none;
   /* Break a name only when it cannot fit on its own line. */
   overflow-wrap: break-word;
@@ -209,7 +240,10 @@
 .folder-count {
   padding-right: var(--s2);
   font-family: var(--mono);
-  font-size: var(--fs-meta);
+  font-size: var(--t-telemetry-data-size);
+  line-height: var(--t-telemetry-data-lh);
+  font-weight: var(--t-telemetry-data-wt);
+  letter-spacing: var(--t-telemetry-data-ls);
   color: var(--faint);
 }
 
@@ -217,8 +251,10 @@
 
 .record-subject h2 {
   font-family: var(--mono);
-  font-size: var(--fs-dense);
-  letter-spacing: 0;
+  font-size: var(--t-telemetry-data-size);
+  line-height: var(--t-telemetry-data-lh);
+  font-weight: var(--t-telemetry-data-wt);
+  letter-spacing: var(--t-telemetry-data-ls);
   text-transform: none;
   color: var(--text);
 }
@@ -237,7 +273,9 @@
 
   .folder-list .folder-head a {
     padding: var(--s1);
-    font-size: var(--fs-meta);
+    font-size: var(--t-body-sm-size);
+  line-height: var(--t-body-sm-lh);
+  font-weight: var(--t-body-sm-wt);
     overflow-wrap: normal;
   }
 
