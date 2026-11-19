@@ -228,6 +228,14 @@ describe('review-1 fixes', () => {
     pick('book'); // the re-read drops Young Frankenstein
     await tick(); await tick();
     expect(input().disabled).toBe(false); // book is still offered
+    // Remount with a pick from the log: usable before /models answers (nothing read yet).
+    const pending = new ChatLog();
+    pending.setVoice('book');
+    container.replaceChildren();
+    const never: ModelSource = { status: () => new Promise(() => {}) };
+    await open(adapter, pending, never);
+    expect(input().disabled).toBe(false);
+    expect(input().placeholder).toBe('Message Book');
     // Remount with the voice that is gone.
     const log = new ChatLog();
     log.setVoice('young-frankenstein');

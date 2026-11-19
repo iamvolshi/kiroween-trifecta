@@ -154,8 +154,9 @@ export class ResearchPanel implements Panel {
     out.replaceChildren(el('p', 'prompt-state', 'Searching...'));
     void this.adapter.ask(question).then(
       (r) => {
+        // Kept even if the panel was switched away meanwhile: it shows on return.
+        if (token === this.token) this.last = { question, result: r };
         if (token !== this.token || this.results !== out) return;
-        this.last = { question, result: r };
         renderHits(out, r);
       },
       (e: unknown) => {
@@ -167,7 +168,7 @@ export class ResearchPanel implements Panel {
   refresh(): void {}
 
   unmount(): void {
-    this.token++;
+    // The token stays: an answer still in flight is kept in `last` (not rendered).
     this.results = null;
   }
 }

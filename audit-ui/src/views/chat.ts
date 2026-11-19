@@ -194,8 +194,9 @@ export class ChatView implements View {
       else delete this.root.dataset.voice;
     }
     this.renderPicker(focus);
-    // Ready only while the picked voice is one the connector offers (a chip shows it).
-    const ready = voice !== null && this.voices.includes(voice);
+    // Ready while the picked voice is one the connector offers (a chip shows it), or,
+    // on a remount, while no voice list has been read yet: the pick from the log stands.
+    const ready = voice !== null && (this.voices.includes(voice) || (this.voices.length === 0 && this.status.state !== 'ok'));
     if (this.input) {
       this.input.disabled = !ready;
       this.input.placeholder = ready && voice ? `Message ${VOICE_LABELS[voice].name}` : AWAITING_MASK;

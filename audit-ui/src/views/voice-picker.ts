@@ -25,7 +25,7 @@ export function renderVoicePicker(
     b.setAttribute('role', 'radio');
     b.setAttribute('aria-checked', String(v === selected));
     b.dataset.voice = v;
-    b.tabIndex = v === selected || (!voices.includes(selected as Register) && i === 0) ? 0 : -1;
+    b.tabIndex = v === selected || ((selected === null || !voices.includes(selected)) && i === 0) ? 0 : -1;
     const t = document.createElement('span');
     t.className = 'voice-tag';
     t.textContent = `[${tag}]`;
