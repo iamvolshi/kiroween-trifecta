@@ -1,6 +1,7 @@
 import type { ChatTurn } from '../adapter/seam.ts';
 import type { Engine } from '../shell/activity-feed.ts';
 import { engineFocusChannel } from '../shell/engine-focus-channel.ts';
+import { playClick } from '../shell/click.ts';
 
 /**
  * The engine boxes beside a reply: KTIE, ERIE, ELLE, top to bottom. A box
@@ -56,6 +57,7 @@ export function renderEngineBoxes(turn: ChatTurn, turnIndex: number): HTMLElemen
     b.setAttribute('aria-description', said);
     b.title = `${BOX_LABEL[engine]}: ${said.toLowerCase()}`;
     b.addEventListener('click', () => {
+      playClick();
       const f = engineFocusChannel.current();
       const isOn = f !== null && f.engine === engine && f.turnIndex === turnIndex;
       engineFocusChannel.publish(isOn ? null : { engine, turnIndex });
