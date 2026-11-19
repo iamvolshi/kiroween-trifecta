@@ -83,9 +83,14 @@
   background: var(--surface-2);
 }
 
-.calendar-grid .day-cell:has(.day-dot) {
-  border-color: var(--accent);
+/* Heatmap: intensity follows the day's live entry count (data-heat 1-4). */
+.calendar-grid .day-cell[data-heat] {
+  border-color: rgba(0, 240, 255, 0.4);
 }
+.calendar-grid .day-cell[data-heat='1'] { background: rgba(0, 240, 255, 0.08); }
+.calendar-grid .day-cell[data-heat='2'] { background: rgba(0, 240, 255, 0.16); }
+.calendar-grid .day-cell[data-heat='3'] { background: rgba(0, 240, 255, 0.26); }
+.calendar-grid .day-cell[data-heat='4'] { background: rgba(0, 240, 255, 0.38); border-color: var(--accent); }
 
 .calendar-grid .day-link {
   display: flex;
@@ -102,27 +107,30 @@
   text-decoration: none;
 }
 
-.calendar-grid .day-cell:has(.day-dot) .day-link {
+.calendar-grid .day-cell[data-heat] .day-link {
   color: var(--text);
 }
 
-.calendar-grid .day-dot {
+.calendar-grid .day-count {
   position: absolute;
   right: var(--s2);
   bottom: var(--s1);
   color: var(--accent);
-  font-size: var(--t-body-lg-size);
-  line-height: var(--t-body-lg-lh);
-  font-weight: var(--t-body-lg-wt);
+  font-family: var(--mono);
+  font-size: var(--t-telemetry-data-size);
+  line-height: var(--t-telemetry-data-lh);
+  letter-spacing: var(--t-telemetry-data-ls);
+  font-weight: 700;
   pointer-events: none;
 }
 
 /* ---- 24 hours --------------------------------------------------------- */
 
+/* One row per hour. */
 .hour-list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(5.5rem, 1fr));
-  gap: var(--s1);
+  grid-template-columns: minmax(0, 1fr);
+  gap: 2px;
   margin: var(--s3) 0;
   padding: 0;
   list-style: none;
@@ -145,6 +153,7 @@
 
 .hour-list a {
   display: inline-block;
+  min-width: 3.5rem;
   padding: var(--s2) var(--s1) var(--s2) var(--s2);
   text-decoration: none;
 }

@@ -13,6 +13,8 @@ import {
 } from '../util/calendar.ts';
 import { parseUtcInput } from '../util/moment.ts';
 import { renderEntryTable } from './calendar-entries.ts';
+import { CalendarRail } from './calendar-rail.ts';
+import { PERSONAS } from '../adapter/seam.ts';
 import { createIntro } from './intro.ts';
 
 const p2 = (n: number): string => String(n).padStart(2, '0');
@@ -36,6 +38,30 @@ function link(href: string, text: string, className = ''): HTMLAnchorElement {
 
 function monthTitle(year: number, month: number): string {
   return `${MONTH_NAMES[month - 1]} ${year} (UTC)`;
+}
+
+/**
+ * The locked hour's knowledge state: live-derived counts only. Recorded =
+ * the hour's entries (the "did" table), live = the belief pool (the
+ * "believed" table), and the masks named in the hour's entry reasons.
+ */
+export function renderSnapshot(did: Entry[], pool: Entry[], hour: number): HTMLElement {
+  const sec = el('section', 'knowledge-state');
+  sec.appendChild(el('h2', '', `Knowledge state at ${p2(hour)}:00 UTC (hour #${p2(hour)} record closure)`));
+  sec.appendChild(el('p', 'knowledge-lede', 'Everything recorded and believed by the agent in this 60-minute window.'));
+  const masks = PERSONAS.filter((m) => did.some((e) => e.reason.includes(m)));
+  const dl = el('dl', 'knowledge-stats');
+  const stat = (term: string, value: string, key: string): void => {
+    const box = el('div', 'knowledge-stat');
+    box.dataset.stat = key;
+    box.append(el('dt', '', term), el('dd', '', value));
+    dl.appendChild(box);
+  };
+  stat('Recorded this hour', String(did.length), 'recorded');
+  stat('Live at this moment', String(pool.length), 'live');
+  stat('Masks named in the reasons', masks.length > 0 ? masks.join(', ') : 'None named', 'masks');
+  sec.appendChild(dl);
+  return sec;
 }
 
 export class CalendarView implements View {
@@ -74,14 +100,25 @@ export class CalendarView implements View {
     const entries = all.data;
 
     const t = this.target ?? this.defaultTarget(entries);
+    // The rail sits beside the calendar, built from the same loaded entries.
+    const rail = new CalendarRail(
+      entries,
+      { year: t.year, month: t.month, day: t.level === 'month' ? 0 : t.day },
+      t.level === 'hour' ? t.hour : null,
+    ).root;
+    const show = (parts: HTMLElement[]): void => {
+      const main = el('div', 'calendar-main');
+      main.append(...parts);
+      body.replaceChildren(main, rail);
+    };
 
     if (t.level === 'month') {
-      body.replaceChildren(...this.renderMonth(entries, t.year, t.month));
+      show(this.renderMonth(entries, t.year, t.month));
       return;
     }
 
     if (t.level === 'day') {
-      body.replaceChildren(...this.renderDay(entries, t.year, t.month, t.day));
+      show(this.renderDay(entries, t.year, t.month, t.day));
       return;
     }
 
@@ -95,9 +132,7 @@ export class CalendarView implements View {
     const pool = await this.adapter.fetchBeliefPool(moment);
     if (!isCurrent()) return;
     if (!pool.ok) return showError(pool.error);
-    body.replaceChildren(
-      ...this.renderHour(entries, pool.data, kidMap, t, input),
-    );
+    show(this.renderHour(entries, pool.data, kidMap, t, input));
   }
 
   /** Month of the newest entry by k_start, else the current UTC month. */
@@ -113,6 +148,8 @@ export class CalendarView implements View {
 
   private renderMonth(entries: Entry[], year: number, month: number): HTMLElement[] {
     const counts = daysWithEntries(entries, year, month);
+    // Heatmap: a day's intensity (1-4) follows its live entry count.
+    const maxCount = Math.max(0, ...counts.values());
     const prev = month === 1 ? { year: year - 1, month: 12 } : { year, month: month - 1 };
     const next = month === 12 ? { year: year + 1, month: 1 } : { year, month: month + 1 };
 
@@ -146,11 +183,12 @@ export class CalendarView implements View {
           td.appendChild(a);
           const n = counts.get(day) ?? 0;
           if (n > 0) {
-            const dot = el('span', 'day-dot', '\u25CF');
+            td.dataset.heat = String(Math.max(1, Math.ceil((n / maxCount) * 4)));
             const label = `${n} ${n === 1 ? 'entry' : 'entries'}`;
-            dot.setAttribute('title', label);
-            dot.setAttribute('aria-label', label);
-            td.appendChild(dot);
+            const count = el('span', 'day-count', String(n));
+            count.setAttribute('title', label);
+            count.setAttribute('aria-label', label);
+            td.appendChild(count);
           }
         }
         tr.appendChild(td);
@@ -199,6 +237,7 @@ export class CalendarView implements View {
     out.push(el('p', 'cursor-display', `Moment (UTC): ${input}`));
 
     const did = entriesInHour(entries, t.year, t.month, t.day, t.hour);
+    out.push(renderSnapshot(did, pool, t.hour));
     const didSec = el('section', 'hour-did');
     didSec.appendChild(el('h2', '', 'What the agent did this hour'));
     didSec.appendChild(

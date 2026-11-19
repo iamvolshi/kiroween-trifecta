@@ -21,7 +21,7 @@ export const INTROS = {
   calendar: {
     view: 'Calendar',
     question: 'When did it act, and what did it believe then?',
-    how: 'Dots mark days with record entries. Open a day, then an hour.',
+    how: 'Shaded days have record entries; the darker, the more. Open a day, then an hour, or use the rail.',
   },
   record: {
     view: 'Record',

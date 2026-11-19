@@ -4,6 +4,7 @@ import './styles/chat.css';
 import './styles/model-banner.css';
 import './styles/stitch-chat.css';
 import './styles/calendar.css';
+import './styles/calendar-rail.css';
 import './styles/shell.css';
 import './styles/telemetry.css';
 import './styles/folders.css';

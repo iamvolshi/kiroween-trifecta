@@ -44,14 +44,15 @@ async function mount(adapter: SeamAdapter, target: ConstructorParameters<typeof 
 }
 
 describe('CalendarView', () => {
-  it('month: dots only on days with entries, day links', async () => {
+  it('month: heat only on days with entries, day links', async () => {
     const { root } = await mount(fakeAdapter(E), { level: 'month', year: 2026, month: 11 });
     expect(root.querySelector('h1')?.textContent).toBe('Calendar');
     expect(root.querySelector('.calendar-title')?.textContent).toBe('November 2026 (UTC)');
-    const dotted = [...root.querySelectorAll('td')].filter((td) => td.querySelector('.day-dot'));
-    expect(dotted).toHaveLength(1);
-    expect(dotted[0].querySelector('a')?.getAttribute('href')).toBe('/calendar/2026-11-16');
-    expect(dotted[0].querySelector('.day-dot')?.getAttribute('title')).toBe('3 entries');
+    const marked = [...root.querySelectorAll<HTMLElement>('.calendar-grid td')].filter((td) => td.dataset.heat);
+    expect(marked).toHaveLength(1);
+    expect(marked[0].querySelector('a')?.getAttribute('href')).toBe('/calendar/2026-11-16');
+    expect(marked[0].querySelector('.day-count')?.getAttribute('title')).toBe('3 entries');
+    expect(marked[0].dataset.heat).toBe('4');
     expect(root.querySelector('.cal-prev')?.getAttribute('href')).toBe('/calendar/2026-10');
     expect(root.querySelector('.cal-next')?.getAttribute('href')).toBe('/calendar/2026-12');
     expect(root.querySelector('nav.main-nav')).toBeNull(); // the shell owns the nav
