@@ -28,8 +28,8 @@
 }
 
 .model-banner[data-position='movie'] {
-  --band: #ffbd58;
-  --band-bg: #2b1d06;
+  --band: var(--warn);
+  --band-bg: var(--warn-bg);
   --band-text: #ffe3b3;
 }
 
@@ -41,9 +41,9 @@
 }
 
 .model-banner[data-position='book'] {
-  --band: #eacfff;
+  --band: var(--tertiary-container);
   --band-bg: #22163a;
-  --band-text: #f0dbff;
+  --band-text: var(--tertiary-fixed);
 }
 
 .model-banner[data-state='unreachable'],

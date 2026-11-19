@@ -18,6 +18,8 @@ const indexHtml = read('../index.html');
 const styleCss = read('./style.css');
 const shellCss = read('./styles/shell.css');
 const systemCss = read('./styles/stitch-system.css');
+const mainTs = read('./main.ts');
+const CSS_FILES = ['./style.css', ...['calendar', 'chat', 'folders', 'model-banner', 'record-card', 'shell', 'stitch-chat', 'stitch-system', 'telemetry'].map((f) => `./styles/${f}.css`)];
 
 /** The declarations of the first rule whose selector list is exactly `selector`. */
 function rule(css: string, selector: string): string {
@@ -31,7 +33,8 @@ function rule(css: string, selector: string): string {
 }
 
 const token = (name: string): string => {
-  const m = new RegExp(`${name}:\\s*([^;]+);`).exec(styleCss);
+  // Anchored on a non-name character so `--accent` never matches `--x-accent`; the colon stops `--accent-dim`.
+  const m = new RegExp(`(?:^|[^\\w-])${name}:\\s*([^;]+);`, 'm').exec(styleCss);
   if (!m) throw new Error(`no token ${name}`);
   return m[1]!.trim();
 };
@@ -80,6 +83,23 @@ describe('the eleven type roles', () => {
     });
   }
 
+  it('every font-size in every stylesheet reads a role, and its line-height names the same role', () => {
+    const off: string[] = [];
+    for (const f of CSS_FILES) {
+      const css = read(f).replace(/\/\*[\s\S]*?\*\//g, '');
+      for (const m of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+        const body = m[2]!;
+        const size = /(?:^|[;\s])font-size:\s*([^;]+);/.exec(body)?.[1]?.trim();
+        if (size === undefined) continue;
+        const role = /^var\(--t-([a-z-]+)-size\)$/.exec(size)?.[1];
+        if (!role) { off.push(`${f} ${m[1]!.trim()}: ${size}`); continue; }
+        const lh = /(?:^|[;\s])line-height:\s*var\(--t-([a-z-]+)-lh\)/.exec(body)?.[1];
+        if (lh !== undefined && lh !== role) off.push(`${f} ${m[1]!.trim()}: size ${role}, line-height ${lh}`);
+      }
+    }
+    expect(off).toEqual([]);
+  });
+
   it('the old six size roles are gone', () => {
     expect(styleCss).not.toMatch(/--fs-[a-z]+:/);
   });
@@ -106,6 +126,14 @@ describe('surfaces, outlines, radii', () => {
     expect(token('--radius')).toBe('0.25rem');
     expect(token('--radius-lg')).toBe('0.5rem');
     expect(token('--radius-xl')).toBe('0.75rem');
+  });
+});
+
+describe('load order', () => {
+  it('main.ts imports stitch-system.css after every other stylesheet', () => {
+    const css = [...mainTs.matchAll(/^import '([^']+\.css)';/gm)].map((m) => m[1]!);
+    expect(css.length).toBeGreaterThan(1);
+    expect(css[css.length - 1]).toBe('./styles/stitch-system.css');
   });
 });
 

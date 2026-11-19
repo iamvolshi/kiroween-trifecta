@@ -93,12 +93,12 @@
 }
 
 .mask-position[data-register='book'] {
-  border-color: #eacfff;
-  color: #f0dbff;
+  border-color: var(--tertiary-container);
+  color: var(--tertiary-fixed);
 }
 
 .mask-position[data-register='movie'] {
-  border-color: #ffbd58;
+  border-color: var(--warn);
   color: #ffe3b3;
 }
 

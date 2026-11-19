@@ -20,12 +20,12 @@
   --inset: #0c0e13; /* surface-container-lowest */
   --line: #3b494b; /* outline-variant */
   --line-strong: #849495; /* outline: used sparingly */
-  --outline: #849495;
+  --outline: var(--line-strong);
 
   /* Text */
   --text: #e2e2e9; /* on-surface */
   --muted: #b9cacb; /* on-surface-variant */
-  --faint: #849495; /* outline */
+  --faint: var(--line-strong); /* outline */
   --primary: #dbfcff;
 
   /* Meaning: signal (cyan), warning (amber), good (emerald), error. */

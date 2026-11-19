@@ -10,7 +10,8 @@ unchanged and every view still reads live data only.
   JetBrains Mono and Space Grotesk.
 - `src/style.css`: surface ramp, outlines, colours, radii (4/8/12px) and the
   eleven type roles as `--t-<role>-size/-lh/-ls/-wt` tokens. The old `--fs-*`
-  size roles are gone; every `font-size` in the CSS reads a role.
+  size roles are gone; every `font-size` in the CSS reads a role, with that
+  same role's line-height (a test scans every stylesheet).
 - `src/styles/shell.css`: grid 16rem / 1fr / 20rem, 56px header, column
   headings label-sm in the outline colour with a bottom border, nav label-md,
   active item surface-2 / primary / 2px cyan left border.
@@ -71,6 +72,12 @@ stale Elara unconfigured state; voice.
 
 ## Known limits
 
+- Roles fix size and line-height everywhere. Some rules keep their own weight
+  (bold nav, chips) or letter-spacing (caps labels in folders, calendar and
+  chat) on top of the role, as before this round.
+- `#849495` text clears 4.5:1 on every surface up to `--surface-2` (4.55);
+  keep it off anything lighter.
+
 - 9px label-sm text is small at 1440 wide; it stays legible in the proof
   shots.
 - "Lessons without a subject" in the left column is a sub-heading inside
@@ -80,8 +87,9 @@ stale Elara unconfigured state; voice.
 
 `src/stitch-system.test.ts`: font link with three families, the eleven roles
 exact, ramp and outlines, shell 16/1fr/20 with a 56px header, mask name
-headline-lg, feed text telemetry-data, headings label-sm, rendered classes.
+headline-lg, feed text telemetry-data, headings label-sm, rendered classes,
+every font-size on a role (all stylesheets), stitch-system.css loaded last.
 The unreachable state on every view stays covered by `no-connector.test.ts`.
-353 tests pass (baseline 334). tsc and build clean. No new dependencies.
+355 tests pass (baseline 334). tsc and build clean. No new dependencies.
 
 Proof shots: `docs/stitch-exact-face-proof/` (stub connector, port 8799).

@@ -9,11 +9,21 @@
   max-width: 1680px;
 }
 
-@media (min-width: 640px) {
-  .shell-center {
-    padding-left: var(--s5);
-    padding-right: var(--s5);
-  }
+/* The center padding lives in two variables so the sticky view bar can
+   bleed to the column edges at every width: s4 / s5 on desktop, s3 top at
+   1100px and under, s4 sides under 640px. */
+.shell-center {
+  --pad-top: var(--s4);
+  --pad-x: var(--s5);
+  padding: var(--pad-top) var(--pad-x) var(--s5);
+}
+
+@media (max-width: 1100px) {
+  .shell-center { --pad-top: var(--s3); }
+}
+
+@media (max-width: 639.98px) {
+  .shell-center { --pad-x: var(--s4); }
 }
 
 /* ---- Left: the folder value chip ---------------------------------------- */
@@ -85,7 +95,7 @@
   font-family: var(--mono);
   font-size: var(--t-label-sm-size);
   line-height: var(--t-label-sm-lh);
-  letter-spacing: 0.1em;
+  letter-spacing: var(--t-label-sm-ls);
   font-weight: 700;
 }
 
@@ -115,13 +125,13 @@
 
 .chat-view > h1 {
   position: sticky;
-  top: calc(-1 * var(--s4));
+  top: calc(-1 * var(--pad-top));
   z-index: 2;
   display: flex;
   align-items: center;
   gap: var(--s2);
-  margin: calc(-1 * var(--s4)) calc(-1 * var(--s5)) var(--s3);
-  padding: var(--s3) var(--s5);
+  margin: calc(-1 * var(--pad-top)) calc(-1 * var(--pad-x)) var(--s3);
+  padding: var(--s3) var(--pad-x);
   border-bottom: 1px solid var(--line);
   background: var(--inset);
   color: var(--primary);
@@ -200,7 +210,7 @@
   font-family: var(--mono);
   font-size: var(--t-label-sm-size);
   line-height: var(--t-label-sm-lh);
-  letter-spacing: 0.1em;
+  letter-spacing: var(--t-label-sm-ls);
   font-weight: var(--t-label-sm-wt);
   text-transform: uppercase;
   color: var(--outline);
@@ -278,23 +288,12 @@
 
 /* ---- Chat: the model band ---------------------------------------------- */
 
-/* Pinned to the bottom of the center column (inside the sticky composer):
-   the same place as Stitch's fixed band between the two side columns. */
+/* The band stays inside the sticky composer at the bottom of the center
+   column, which is the strip between the two side columns; it is not a
+   separate fixed bar. */
 .model-banner {
   padding: var(--s4);
   border-radius: var(--radius);
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
 }
 
-
-.model-position {
-  font-size: var(--t-label-lg-size);
-  line-height: var(--t-label-lg-lh);
-  letter-spacing: var(--t-label-lg-ls);
-}
-
-.model-provider {
-  font-size: var(--t-label-sm-size);
-  line-height: var(--t-label-sm-lh);
-  letter-spacing: var(--t-label-sm-ls);
-}
