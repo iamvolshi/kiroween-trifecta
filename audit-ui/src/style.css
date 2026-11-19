@@ -46,6 +46,13 @@
   --ok: #3ddc97;
   --ok-bg: #082a1d;
   --error: #ffb4ab;
+
+  /* Engine colours: everything that belongs to an engine wears its own
+     (the engine boxes, the telemetry engine tags, the feed markers).
+     Separate from the voice accents (styles/chat.css). */
+  --engine-katie: var(--accent); /* cyan #00f0ff */
+  --engine-erie: var(--warn); /* amber #ffbd58 */
+  --engine-elle: var(--ok); /* green #3ddc97 */
   --error-bg: #2a1013;
 
   /* Kept name from the readability pass */

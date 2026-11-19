@@ -309,3 +309,60 @@
   font-size: var(--t-body-sm-size);
   line-height: var(--t-body-sm-lh);
 }
+/* ---- Engine boxes down the reply's right side ---------------------------
+   KTIE, ERIE, ELLE: lit in the engine's colour when it worked the turn,
+   faint when it sat out. A box shows that engine's detail in the terminal. */
+
+.bubble-row-reply {
+  gap: var(--s2);
+  align-items: flex-start;
+}
+
+.bubble-row-reply > .chat-reply {
+  flex: 1;
+  min-width: 0;
+  max-width: none;
+}
+
+.engine-boxes {
+  flex: none;
+  display: grid;
+  gap: 4px;
+  padding-top: 2px;
+}
+
+.engine-box {
+  --engine: var(--faint);
+  padding: 3px var(--s2);
+  border: 1px solid var(--faint);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--faint);
+  font-family: var(--mono);
+  font-size: var(--t-label-md-size);
+  line-height: var(--t-label-md-lh);
+  font-weight: 700;
+  letter-spacing: var(--t-label-md-ls);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.engine-box[data-engine='KATIE'][data-lit='true'] { --engine: var(--engine-katie); }
+.engine-box[data-engine='ERIE'][data-lit='true'] { --engine: var(--engine-erie); }
+.engine-box[data-engine='ELLE'][data-lit='true'] { --engine: var(--engine-elle); }
+
+.engine-box[data-lit='true'] {
+  border-color: var(--engine);
+  color: var(--engine);
+}
+
+.engine-box:hover {
+  background: var(--surface-2);
+}
+
+/* The box whose detail the terminal is showing. */
+.engine-box[aria-pressed='true'] {
+  border-color: var(--engine);
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--engine);
+}

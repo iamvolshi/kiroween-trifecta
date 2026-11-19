@@ -1,10 +1,12 @@
 import type { ChatTurn, Register, ReplyLink } from '../adapter/seam.ts';
 import { provenanceChannel } from '../shell/provenance-channel.ts';
 import { VOICE_LABELS } from './voices.ts';
+import { renderEngineBoxes } from './engine-boxes.ts';
 
 /**
  * One chat turn as two bubbles: the user's message (right) and the voice's
- * reply (left), in that voice's accent. The engines' work is not shown here; it lives in
+ * reply (left), in that voice's accent, with the engine boxes (KTIE, ERIE,
+ * ELLE) down the reply's right side. The engines' work is not shown here; it lives in
  * the activity feed in the right column.
  */
 
@@ -68,8 +70,12 @@ export function renderReplyText(reply: string, links: ReplyLink[] | undefined): 
   return nodes;
 }
 
-/** Render one turn. `voice` is the voice that replied (null if none was recorded). */
-export function renderChatTurn(turn: ChatTurn, voice: Register | null): HTMLElement {
+/**
+ * Render one turn. `voice` is the voice that replied (null if none was
+ * recorded); `turnIndex` is the turn's place in the log (the engine boxes
+ * name it when they ask the telemetry column for this turn's detail).
+ */
+export function renderChatTurn(turn: ChatTurn, voice: Register | null, turnIndex: number): HTMLElement {
   const name = voice ? `Frankenstein (${VOICE_LABELS[voice].name})` : 'Frankenstein';
   const root = el('div', turn.known ? 'chat-turn' : 'chat-turn not-knowing');
 
@@ -87,7 +93,7 @@ export function renderChatTurn(turn: ChatTurn, voice: Register | null): HTMLElem
   const text = el('p', 'bubble-text');
   text.append(el('span', 'sr-only', `${name} replied: `), ...renderReplyText(turn.engines.arche.reply, turn.links));
   bubble.append(who, text);
-  replyRow.appendChild(bubble);
+  replyRow.append(bubble, renderEngineBoxes(turn, turnIndex));
   root.appendChild(replyRow);
 
   return root;

@@ -11,6 +11,7 @@ import { RecordView } from '../views/record.ts';
 import { createShell, setViewLabel, type ShellSlots } from '../shell/shell.ts';
 import { RailPanel } from '../shell/rail.ts';
 import { TelemetryPanel } from '../shell/telemetry.ts';
+import { ShellLayout } from '../shell/layout.ts';
 import type { Panel } from '../shell/panel.ts';
 
 export interface View {
@@ -30,6 +31,8 @@ export class Router {
   private leftPanel: Panel;
   private rightPanel: Panel;
   private unsubscribeLog: () => void;
+  /** Panel widths (drag grips) and the terminal's window state. */
+  private layout: ShellLayout;
   /** Where the chat reads its voices and models; undefined = the connector (GET /models). */
   private models: ModelSource | undefined;
 
@@ -44,7 +47,8 @@ export class Router {
     left.mount();
     this.unsubscribeLog = this.chatLog.subscribe(() => this.leftPanel.refresh());
     // Right column: Curator + ELLE telemetry. It subscribes to the log itself.
-    this.rightPanel = new TelemetryPanel(adapter, this.chatLog);
+    this.layout = new ShellLayout(this.slots.shell, this.slots.right);
+    this.rightPanel = new TelemetryPanel(adapter, this.chatLog, this.layout);
     this.rightPanel.mount(this.slots.right);
 
     this.clickHandler = (event: MouseEvent) => {
@@ -96,6 +100,7 @@ export class Router {
     this.unsubscribeLog();
     this.leftPanel.unmount();
     this.rightPanel.unmount();
+    this.layout.destroy();
     this.container.innerHTML = '';
   }
 

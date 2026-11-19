@@ -1,6 +1,8 @@
 import { CONNECTOR_URL } from '../adapter/connector-url.ts';
 
 export interface ShellSlots {
+  /** The shell grid itself (the layout's widths and terminal state live on it). */
+  shell: HTMLElement;
   /** The icon rail (far left). */
   rail: HTMLElement;
   /** The list panel the rail swaps (Chat's is the directories column). */
@@ -75,7 +77,7 @@ export function createShell(container: HTMLElement): ShellSlots {
 
   shell.append(skip, brand, rail, left, center, right);
   container.appendChild(shell);
-  return { rail, left, center, right, view };
+  return { shell, rail, left, center, right, view };
 }
 
 /**

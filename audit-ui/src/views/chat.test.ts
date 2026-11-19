@@ -388,13 +388,13 @@ describe('talking', () => {
 
 describe('renderChatTurn', () => {
   it('a turn with no recorded voice still names the mask, never ARCHE', () => {
-    const root = renderChatTurn(turn1(), null);
+    const root = renderChatTurn(turn1(), null, 0);
     expect(root.querySelector('.chat-reply .sr-only')?.textContent).toBe('Frankenstein replied: ');
     expect(root.querySelector<HTMLElement>('.chat-reply')!.dataset.voice).toBeUndefined();
   });
 
   it('no provenance list and no engine panel in a turn', () => {
-    const root = renderChatTurn(turn1(), 'book');
+    const root = renderChatTurn(turn1(), 'book', 0);
     expect(root.querySelector('.engines')).toBeNull();
     expect(root.textContent).not.toContain('order system');
   });

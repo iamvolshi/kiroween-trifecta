@@ -7,7 +7,12 @@
 .shell {
   display: grid;
   /* rail 56px / list w-64 / 1fr / w-80, header h-14. */
-  grid-template-columns: 56px 16rem minmax(0, 1fr) 20rem;
+  /* The side widths come from the drag grips (shell/layout.ts: --left-width,
+     --right-width), defaulting to 16rem / 20rem. */
+  --lw: var(--left-width, 16rem);
+  --rw: var(--right-width, 20rem);
+  position: relative;
+  grid-template-columns: 56px var(--lw) minmax(0, 1fr) var(--rw);
   grid-template-rows: 56px minmax(0, 1fr);
   height: 100vh;
   background: var(--bg);
@@ -311,7 +316,8 @@
 
 @media (max-width: 1100px) {
   .shell {
-    grid-template-columns: 56px 11.5rem minmax(0, 1fr) 15.5rem;
+    --lw: var(--left-width, 11.5rem);
+    --rw: var(--right-width, 15.5rem);
   }
 
   .shell-left,
@@ -365,5 +371,121 @@
   .shell-center,
   .shell-right {
     overflow: visible;
+  }
+}
+
+/* ---- Explicit columns, so a hidden panel never shifts the others ------- */
+
+.shell-rail { grid-column: 1; grid-row: 2; }
+.shell-left { grid-column: 2; grid-row: 2; }
+.shell-center { grid-column: 3; grid-row: 2; }
+.shell-right { grid-column: 4; grid-row: 2; }
+
+/* ---- Drag grips (shell/layout.ts) -------------------------------------
+   The left panel's right edge and the terminal's left edge. The 56px rail
+   never moves. Placed over the column boundary, under the header. */
+
+.shell-grip {
+  position: absolute;
+  top: 56px;
+  bottom: 0;
+  z-index: 3;
+  width: 8px;
+  cursor: col-resize;
+  touch-action: none;
+}
+
+.shell-grip[data-side='left'] { left: calc(56px + var(--lw) - 4px); }
+.shell-grip[data-side='right'] { right: calc(var(--rw) - 4px); }
+
+.shell-grip::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 3px;
+  width: 2px;
+  background: transparent;
+}
+
+.shell-grip:hover::after,
+.shell-grip:focus-visible::after,
+.shell.is-resizing .shell-grip::after {
+  background: var(--accent);
+}
+
+.shell-grip:focus-visible {
+  outline: none;
+}
+
+.shell-grip[hidden] {
+  display: none;
+}
+
+/* No text selection while a drag is running. */
+.shell.is-resizing {
+  cursor: col-resize;
+  user-select: none;
+}
+
+/* ---- The terminal's window states -------------------------------------- */
+
+/* Minimized: a slim strip at the right edge; the center takes the space. */
+.shell[data-terminal='minimized'] {
+  grid-template-columns: 56px var(--lw) minmax(0, 1fr) 2.5rem;
+}
+
+.shell[data-terminal='minimized'] .shell-right {
+  padding: var(--s3) 0;
+  overflow: hidden;
+}
+
+.shell[data-terminal='minimized'] .shell-right::before,
+.shell[data-terminal='minimized'] .shell-right > .telemetry {
+  display: none;
+}
+
+/* Maximized: the terminal fills the content row; the list panel and the
+   center hide (still mounted, state kept). */
+.shell[data-terminal='maximized'] {
+  grid-template-columns: 56px 0 0 minmax(0, 1fr);
+}
+
+.shell[data-terminal='maximized'] .shell-left,
+.shell[data-terminal='maximized'] .shell-center {
+  display: none;
+}
+
+.shell[data-terminal='maximized'] .shell-right {
+  border-left: 0;
+}
+
+/* Desktop first: the stacked small-screen shell has no grips and no window states. */
+@media (max-width: 800px) {
+  .shell-rail,
+  .shell-left,
+  .shell-center,
+  .shell-right {
+    grid-column: auto;
+    grid-row: auto;
+  }
+
+  .shell-grip,
+  .window-controls {
+    display: none;
+  }
+
+  .shell[data-terminal] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .shell[data-terminal] .shell-left,
+  .shell[data-terminal] .shell-center,
+  .shell[data-terminal] .shell-right > .telemetry {
+    display: block;
+  }
+
+  .terminal-strip {
+    display: none;
   }
 }

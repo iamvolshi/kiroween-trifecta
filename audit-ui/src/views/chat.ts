@@ -5,9 +5,10 @@ import { fetchModelStatus, type ModelStatus } from '../adapter/live-models.ts';
 import { announce, renderModelBanner, type StatusState } from './model-banner.ts';
 import { ChatLog } from './chat-log.ts';
 import { renderChatTurn } from './chat-turn.ts';
+import { syncEngineBoxes } from './engine-boxes.ts';
+import { engineFocusChannel } from '../shell/engine-focus-channel.ts';
 import { renderVoicePicker } from './voice-picker.ts';
 import { offeredVoices, VOICE_LABELS } from './voices.ts';
-import { renderProofCards, type EntryLoader } from './proof-cards.ts';
 
 /** The locked composer's placeholder before a voice is picked. */
 export const AWAITING_MASK = 'INPUT // AWAITING_MASK';
@@ -59,23 +60,8 @@ export class ChatView implements View {
   /** served_by of the last reply per voice. */
   private served = new Map<Register, ServedBy>();
   private lastVoice: Register | null = null;
-  /** Live entry reads for proof cards, one per entry, kept for this view. */
-  private entryReads = new Map<string, ReturnType<EntryLoader>>();
-  private loadEntry: EntryLoader = (kid, subject, entryId) => {
-    const key = `${kid}|${subject}|${entryId}`;
-    const cached = this.entryReads.get(key);
-    if (cached) return cached;
-    const read = this.adapter.fetchChain(kid, subject).then((r) =>
-      r.ok ? { ok: true as const, data: r.data.find((e) => e.id === entryId) ?? null } : r,
-    );
-    // Keep only a found entry: a failure or a not-yet-written entry is read again next render.
-    void read.then(
-      (r) => { if (!r.ok || r.data === null) this.entryReads.delete(key); },
-      () => this.entryReads.delete(key),
-    );
-    this.entryReads.set(key, read);
-    return read;
-  };
+  /** Keeps the pressed engine box in step with the telemetry column's focus. */
+  private unsubscribeFocus: (() => void) | null = null;
   /** Counts /models reads; only the latest answer is kept. */
   private statusRead = 0;
   /** The voices from the last good /models answer: a failed re-read keeps them pickable. */
@@ -120,6 +106,9 @@ export class ChatView implements View {
       void this.onSubmit();
     };
     this.form.addEventListener('submit', this.submitHandler);
+    this.unsubscribeFocus = engineFocusChannel.subscribe(() => {
+      if (this.transcript) syncEngineBoxes(this.transcript);
+    });
 
     this.renderControls();
     this.renderTranscript();
@@ -212,11 +201,8 @@ export class ChatView implements View {
     box.replaceChildren(
       ...this.log.turns().flatMap((t, i) => {
         if (!isChatTurn(t)) return [];
-        const node = renderChatTurn(t, this.log.voiceAt(i));
-        // Proof-anchor cards, only for a reply that carries links.
-        const cards = renderProofCards(t, this.loadEntry);
-        if (cards) node.appendChild(cards);
-        return [node];
+        // The engine boxes sit beside the reply (renderChatTurn), keyed by the turn's index.
+        return [renderChatTurn(t, this.log.voiceAt(i), i)];
       }),
     );
   }
@@ -284,6 +270,8 @@ export class ChatView implements View {
       this.form.removeEventListener('submit', this.submitHandler);
     }
     this.submitHandler = null;
+    this.unsubscribeFocus?.();
+    this.unsubscribeFocus = null;
     this.form = null;
     this.input = null;
     this.sendBtn = null;

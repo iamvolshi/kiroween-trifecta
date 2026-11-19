@@ -2,7 +2,8 @@ import type { ChatTurn, Entry, Lesson } from '../adapter/seam.ts';
 
 /**
  * The work column's activity feed, as data: one item per ERIE / ELLE /
- * KATIE event in the played turns, newest first. Built only from the
+ * KATIE event in the played turns, oldest first (a terminal: the newest
+ * line is appended at the bottom). Built only from the
  * ChatLog's turns and the record entries the seam returned. ARCHE is not
  * here: the chat itself is the persona talking.
  */
@@ -70,12 +71,24 @@ function eventsOf(t: ChatTurn, entries: Entry[]): Array<Omit<FeedItem, 'id' | 'f
   return out;
 }
 
+/** One turn's events as feed items (ids `t<turn>-<n>`, the same in every view). */
+function itemsOf(t: ChatTurn, ti: number, entries: Entry[]): FeedItem[] {
+  return eventsOf(t, entries).map((ev, n) => ({ ...ev, id: `t${ti}-${n}`, from: { message: t.message, step: t.step } }));
+}
+
+/** Every turn's events, oldest first: the general feed. */
 export function feedItems(turns: ChatTurn[], entries: Entry[]): FeedItem[] {
-  const items: FeedItem[] = [];
-  turns.forEach((t, ti) => {
-    eventsOf(t, entries).forEach((ev, n) => {
-      items.push({ ...ev, id: `t${ti}-${n}`, from: { message: t.message, step: t.step } });
-    });
-  });
-  return items.reverse();
+  return turns.flatMap((t, ti) => itemsOf(t, ti, entries));
+}
+
+/**
+ * One engine's events on one turn, in the order they happened (injected,
+ * held, retrieval, record write, recorded, promoted): the engine box's
+ * detail. The words are the general feed's words. A turn the log does not
+ * hold, or an engine that did nothing, gives [].
+ */
+export function engineItems(turns: ChatTurn[], turnIndex: number, engine: Engine, entries: Entry[]): FeedItem[] {
+  const t = turns[turnIndex];
+  if (!t) return [];
+  return itemsOf(t, turnIndex, entries).filter((i) => i.engine === engine);
 }

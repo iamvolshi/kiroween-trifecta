@@ -52,7 +52,7 @@ describe('TelemetryPanel: the work column', () => {
     expect(slot.querySelector('.subject-folder')).toBeNull();
   });
 
-  it('one item per event, newest first, each with its small engine tag', async () => {
+  it('one item per event, oldest first, newest appended at the bottom, each with its engine tag', async () => {
     const log = new ChatLog();
     new TelemetryPanel(fake(ok([makeEntry({ id: 'e1', kid: 4, subject: SUBJ, evidence: 'value=x (stub)' })])), log).mount(slot);
     log.push(
@@ -66,17 +66,18 @@ describe('TelemetryPanel: the work column', () => {
     await tick();
     const items = Array.from(slot.querySelectorAll<HTMLElement>('.feed-item'));
     expect(items.map((li) => [li.dataset.feedId, li.dataset.engine])).toEqual([
-      ['t2-0', 'ERIE'],
-      ['t1-1', 'ELLE'],
-      ['t1-0', 'ELLE'],
-      ['t0-1', 'KATIE'],
       ['t0-0', 'ERIE'],
+      ['t0-1', 'KATIE'],
+      ['t1-0', 'ELLE'],
+      ['t1-1', 'ELLE'],
+      ['t2-0', 'ERIE'],
     ]);
     for (const li of items) expect(li.querySelector('.engine-tag')?.textContent).toBe(li.dataset.engine);
-    expect(items[0]!.querySelector('.feed-text')?.textContent).toBe("ERIE found nothing for 'zzz'");
-    expect(items[1]!.textContent).toContain('ELLE recorded a lesson, not learned yet: check the carrier feed');
+    expect(slot.querySelector('.activity-feed')?.getAttribute('aria-label')).toBe('Activity, oldest first');
+    expect(items[4]!.querySelector('.feed-text')?.textContent).toBe("ERIE found nothing for 'zzz'");
+    expect(items[3]!.textContent).toContain('ELLE recorded a lesson, not learned yet: check the carrier feed');
     expect(items[2]!.textContent).toContain('ELLE held back a lesson that is not learned yet');
-    const katie = items[3]!;
+    const katie = items[1]!;
     expect(katie.querySelector('.feed-text')?.textContent).toBe('KATIE recorded 1 entry for this turn.');
     const row = katie.querySelector<HTMLElement>('.katie-entry')!;
     expect(row.dataset.kid).toBe('4');
@@ -85,7 +86,7 @@ describe('TelemetryPanel: the work column', () => {
     expect(row.querySelector('a')?.getAttribute('href')).toBe(`/entry/4/${encodeURIComponent(SUBJ)}/e1`);
     expect(katie.querySelector('.katie-evidence')?.textContent).toBe('value=x (stub)');
     expect(katie.querySelector('.feed-from')?.textContent).toBe('from: "first"');
-    expect(items[4]!.querySelector('.feed-source')?.textContent).toBe('stub:src ex');
+    expect(items[0]!.querySelector('.feed-source')?.textContent).toBe('stub:src ex');
     expect(slot.textContent).not.toContain('ARCHE');
   });
 

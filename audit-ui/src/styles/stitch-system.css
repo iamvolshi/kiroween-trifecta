@@ -42,13 +42,13 @@
 
 /* ---- Right: telemetry ---------------------------------------------------- */
 
+/* The heading sits in the terminal's heading row (.telemetry-head, which
+   carries the rule under it and the window controls). */
 .telemetry-heading {
   display: flex;
   align-items: center;
   gap: var(--s2);
-  margin: 0 0 var(--s3);
-  padding-bottom: var(--s2);
-  border-bottom: 1px solid var(--line);
+  margin: 0;
   font-family: var(--mono);
   font-size: var(--t-label-sm-size);
   line-height: var(--t-label-sm-lh);
@@ -66,43 +66,6 @@
   background: var(--accent);
 }
 
-.activity-feed {
-  display: grid;
-  gap: 6px;
-  border-left: 0;
-}
-
-.feed-item {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin: 0;
-  padding: var(--s2);
-  border: 1px solid var(--line);
-  background: var(--panel);
-}
-
-.feed-item::before {
-  content: none;
-}
-
-.feed-item > .engine-tag {
-  align-self: flex-start;
-  margin: 0;
-  padding: 0 var(--s1);
-  border: 1px solid var(--line);
-  background: var(--surface);
-  font-family: var(--mono);
-  font-size: var(--t-label-sm-size);
-  line-height: var(--t-label-sm-lh);
-  letter-spacing: var(--t-label-sm-ls);
-  font-weight: 700;
-}
-
-.feed-item[data-engine='KATIE'] > .engine-tag { color: var(--accent); }
-.feed-item[data-engine='ELLE'] > .engine-tag { color: var(--ok); }
-.feed-item[data-engine='ERIE'] > .engine-tag { color: var(--muted); }
-
 .feed-text,
 .feed-source,
 .katie-entry,
@@ -116,8 +79,11 @@
 }
 
 .feed-from {
-  font-size: var(--t-body-sm-size);
-  line-height: var(--t-body-sm-lh);
+  font-family: var(--mono);
+  font-size: var(--t-telemetry-data-size);
+  line-height: var(--t-telemetry-data-lh);
+  letter-spacing: var(--t-telemetry-data-ls);
+  font-weight: var(--t-telemetry-data-wt);
   color: var(--faint);
 }
 
@@ -128,42 +94,6 @@
   border-color: var(--line);
   background: var(--surface-2);
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.35), 0 2px 4px -2px rgba(0, 0, 0, 0.35);
-}
-
-/* ---- Chat: proof-anchor cards ------------------------------------------ */
-
-.proof-card {
-  gap: var(--s1);
-  padding: var(--s2);
-  border: 1px solid var(--line);
-  background: var(--surface);
-}
-
-.proof-kid {
-  padding: 2px var(--s2);
-  background: var(--secondary-container);
-  color: var(--on-secondary-container);
-  font-family: var(--mono);
-  font-size: var(--t-label-sm-size);
-  line-height: var(--t-label-sm-lh);
-  letter-spacing: var(--t-label-sm-ls);
-  font-weight: 700;
-}
-
-.proof-reason {
-  font-family: var(--mono);
-  font-size: var(--t-telemetry-data-size);
-  line-height: var(--t-telemetry-data-lh);
-  letter-spacing: var(--t-telemetry-data-ls);
-}
-
-.proof-inspect,
-.proof-subject {
-  font-family: var(--mono);
-  font-size: var(--t-label-sm-size);
-  line-height: var(--t-label-sm-lh);
-  letter-spacing: var(--t-label-sm-ls);
-  text-transform: uppercase;
 }
 
 /* ---- Chat: the model band ---------------------------------------------- */
