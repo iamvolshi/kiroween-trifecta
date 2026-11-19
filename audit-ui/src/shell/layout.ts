@@ -157,13 +157,16 @@ export class ShellLayout {
     this.apply();
   }
 
-  /** The asked-for width fitted so the center column keeps MIN_CENTER_REM beside `otherW`. */
-  private fit(side: Side, rem: number, otherW: number): number {
-    const r = RANGES[side];
+  /** The most `side` may take beside `otherW` while the center keeps MIN_CENTER_REM. */
+  private room(otherW: number): number {
     const px = parseFloat(getComputedStyle(document.documentElement).fontSize);
     const unit = Number.isFinite(px) && px > 0 ? px : 16;
-    const room = (window.innerWidth - RAIL_PX) / unit - MIN_CENTER_REM - otherW;
-    return round(Math.max(Math.min(r.min, rem), Math.min(rem, room)));
+    return (window.innerWidth - RAIL_PX) / unit - MIN_CENTER_REM - otherW;
+  }
+
+  /** The asked-for width fitted so the center column keeps MIN_CENTER_REM beside `otherW`. */
+  private fit(side: Side, rem: number, otherW: number): number {
+    return round(Math.max(Math.min(RANGES[side].min, rem), Math.min(rem, this.room(otherW))));
   }
 
   /** Minimize, maximize or restore the terminal. The dragged widths are kept. */
@@ -235,12 +238,15 @@ export class ShellLayout {
 
   private apply(): void {
     this.shell.dataset.terminal = this.terminal;
-    // One pass: the left fits beside the right as drawn (2.5rem when minimized), then the right beside that left.
+    // One pass, terminal first: the right fits beside the least the left can draw (its
+    // floor, or its default when never resized), then the left beside the right as drawn
+    // (2.5rem when minimized). The shrink is even, and the center keeps its floor.
     const wl = this.widths.left;
     const wr = this.widths.right;
-    const rightNow = this.terminal === 'minimized' ? 2.5 : wr ?? drawnDefault('right');
+    const leftLeast = wl === null ? drawnDefault('left') : Math.min(RANGES.left.min, wl);
+    this.drawn.right = wr === null ? null : this.fit('right', wr, leftLeast);
+    const rightNow = this.terminal === 'minimized' ? 2.5 : this.drawn.right ?? drawnDefault('right');
     this.drawn.left = wl === null ? null : this.fit('left', wl, rightNow);
-    this.drawn.right = wr === null ? null : this.fit('right', wr, this.drawn.left ?? drawnDefault('left'));
     for (const side of ['left', 'right'] as const) {
       const set = this.drawn[side];
       if (set === null) this.shell.style.removeProperty(VAR[side]);
@@ -248,6 +254,11 @@ export class ShellLayout {
       const now = this.width(side);
       // Before any resize the compact default (11.5rem) can sit under the drag range's floor.
       this.grips[side].setAttribute('aria-valuemin', String(Math.min(RANGES[side].min, now)));
+      // The max the window allows beside the other panel as drawn, not the range's alone.
+      const other: Side = side === 'left' ? 'right' : 'left';
+      const otherNow = other === 'right' && this.terminal === 'minimized' ? 2.5 : this.drawn[other] ?? drawnDefault(other);
+      const max = round(Math.max(RANGES[side].min, Math.min(RANGES[side].max, this.room(otherNow))));
+      this.grips[side].setAttribute('aria-valuemax', String(Math.max(max, now)));
       this.grips[side].setAttribute('aria-valuenow', String(now));
       this.grips[side].setAttribute('aria-valuetext', `${now} rem`);
     }

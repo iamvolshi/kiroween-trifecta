@@ -127,8 +127,11 @@ export class TelemetryPanel implements Panel {
     this.unsubscribeLinks = provenanceChannel.subscribe((t) => this.onLink(t));
     this.unsubscribeFocus = engineFocusChannel.subscribe((f) => this.setFocus(f));
     // Back from minimized: a following reader goes to the live end, any other back to their place.
+    let prev = this.layout?.state() ?? 'normal';
     this.unsubscribeLayout = this.layout?.onChange((s) => {
-      if (s === 'minimized' || !this.slot) return;
+      const leaving = prev === 'minimized' && s !== 'minimized';
+      prev = s;
+      if (!leaving || !this.slot) return;
       this.slot.scrollTop = this.focus === null && this.following ? this.slot.scrollHeight : this.lastTop;
     }) ?? null;
     this.render();

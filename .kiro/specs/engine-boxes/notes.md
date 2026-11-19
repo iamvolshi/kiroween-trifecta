@@ -35,7 +35,7 @@ words. Live data only: every line comes from the turns and the record.
 - Widths are set on the shell only after a resize, so shell.css's 1100px
   compact defaults still apply until the user drags. A width never leaves
   the center column under 20rem (MIN_CENTER_REM), and is re-clamped on a
-  window resize. Home / End on a grip jump to the narrowest / widest.
+  window resize. Home / End on a grip jump to the narrowest / widest. In a narrow window the terminal fits first, beside the left panel's floor, then the left beside it; aria-valuemax says what the window allows.
 - The follow state comes from the reader's scrolls (within 48px of the
   bottom), not from a guess at render time: the feed follows growth of any
   kind while the reader is at the end. A detail view keeps the general
@@ -81,7 +81,7 @@ returned to the dragged 36rem.
 
 ## Tests
 
-416 pass (388 at base). The proof-card tests in `views/stitch-face.test.ts`
+417 pass (388 at base). The proof-card tests in `views/stitch-face.test.ts`
 are replaced by box tests (order, lit / dark rules, swap, back, toggle,
 switch, did-nothing, focus across turns). `shell/engine-terminal.test.ts`
 covers the terminal (follow / no-yank / detail no-scroll, colour tokens) and

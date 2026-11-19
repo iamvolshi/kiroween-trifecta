@@ -386,6 +386,21 @@ describe('the layout: drag grips and the terminal window', () => {
     expect(shell.style.getPropertyValue('--right-width')).toBe(`${RANGES.right.max}rem`);
   });
 
+  it('in a narrow window both wide panels shrink evenly and the max says what fits', async () => {
+    const shell = await start();
+    grip('left').dispatchEvent(new KeyboardEvent('keydown', { key: 'End', bubbles: true, cancelable: true }));
+    grip('right').dispatchEvent(new KeyboardEvent('keydown', { key: 'End', bubbles: true, cancelable: true }));
+    expect(shell.style.getPropertyValue('--left-width')).toBe('24rem');
+    expect(shell.style.getPropertyValue('--right-width')).toBe('36rem');
+    Object.defineProperty(window, 'innerWidth', { configurable: true, value: 1100 }); // 65.25rem beside the rail
+    window.dispatchEvent(new Event('resize'));
+    // The terminal fits beside the left's floor (12rem): 65.25 - 20 - 12 = 33.25; the left beside that: 12.
+    expect(shell.style.getPropertyValue('--right-width')).toBe('33.25rem');
+    expect(shell.style.getPropertyValue('--left-width')).toBe('12rem');
+    expect(grip('right').getAttribute('aria-valuemax')).toBe('33.25');
+    expect(grip('left').getAttribute('aria-valuemax')).toBe('12');
+  });
+
   it('a grip sits next to the panel it resizes, in Tab order', async () => {
     await start();
     expect(container.querySelector('.shell-left')!.nextElementSibling).toBe(grip('left'));
