@@ -88,14 +88,25 @@ export class CalendarRail {
     return this.days.map((d) => d.day);
   }
 
-  /** Move tier `tier` by `step` among the periods present, then re-render. */
-  move(tier: number, step: number): void {
+  /**
+   * Move tier `tier` by `step` among the periods present. Returns whether
+   * anything moved (false at either end), so the wheel only claims the
+   * scroll when it did something. A Tier 4 move patches the cursor on the
+   * existing strip; the strip is rebuilt only when the day changes.
+   */
+  move(tier: number, step: number): boolean {
     if (tier === 4) {
+      if (!this.day) return false;
       const next = Math.min(23, Math.max(0, (this.hourCursor ?? (step > 0 ? -1 : 24)) + step));
+      if (next === this.hourCursor) return false;
       this.hourCursor = next;
-      this.render();
-      return;
+      for (const a of this.root.querySelectorAll<HTMLElement>('.rail-hour')) {
+        if (a.dataset.hour === String(next)) a.dataset.cursor = 'true';
+        else delete a.dataset.cursor;
+      }
+      return true;
     }
+    const before = this.selectionKey();
     const days = this.all();
     if (tier === 1 && this.quarter) {
       const qs = quartersPresent(days);
@@ -129,7 +140,25 @@ export class CalendarRail {
         this.hourCursor = null;
       }
     }
+    if (this.selectionKey() === before) return false;
     this.render();
+    return true;
+  }
+
+  private selectionKey(): string {
+    return [this.quarter && quarterKey(this.quarter), this.week && weekKey(this.week), this.day && dayKey(this.day)].join('|');
+  }
+
+  /** Re-render after a pick, then put keyboard focus back on that tier's pressed tick. */
+  private pick(tier: number, apply: () => void): void {
+    apply();
+    this.render();
+    this.refocus(tier);
+  }
+
+  private refocus(tier: number): void {
+    const sel = tier === 4 ? '.rail-hour[data-cursor="true"]' : '[aria-pressed="true"]';
+    this.root.querySelector<HTMLElement>(`.rail-tier[data-tier="${tier}"] ${sel}`)?.focus();
   }
 
   private tier(n: number, head: string, ticks: HTMLElement[] | null): HTMLElement {
@@ -150,11 +179,17 @@ export class CalendarRail {
       'wheel',
       (e: WheelEvent) => {
         if (e.deltaY === 0 || ticks === null) return;
-        e.preventDefault();
-        this.move(n, e.deltaY > 0 ? 1 : -1);
+        // Claim the scroll only when the tier moved; at an end the page scrolls.
+        if (this.move(n, e.deltaY > 0 ? 1 : -1)) e.preventDefault();
       },
       { passive: false },
     );
+    // Keyboard twin of the wheel: arrow keys move the focused tier.
+    sec.addEventListener('keydown', (e: KeyboardEvent) => {
+      if (ticks === null || (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight')) return;
+      e.preventDefault();
+      if (this.move(n, e.key === 'ArrowRight' ? 1 : -1)) this.refocus(n);
+    });
     return sec;
   }
 
@@ -200,7 +235,7 @@ export class CalendarRail {
         qs.length === 0
           ? null
           : qs.map((x) =>
-              this.tick(`Q${x.q}`, `${x.year} Q${x.q}, ${plural(qCount(x))}`, qCount(x), qMax, !!q && quarterKey(x) === quarterKey(q), () => {
+              this.tick(`Q${x.q}`, `${x.year} Q${x.q}, ${plural(qCount(x))}`, qCount(x), qMax, !!q && quarterKey(x) === quarterKey(q), () => this.pick(1, () => {
                 const ws = weeksPresent(days, x);
                 const wk = ws[ws.length - 1]!;
                 const ds = daysOfWeekPresent(days, x, wk);
@@ -208,8 +243,7 @@ export class CalendarRail {
                 this.week = wk;
                 this.day = ds[ds.length - 1]!;
                 this.hourCursor = null;
-                this.render();
-              }),
+              })),
             ),
       ),
     );
@@ -226,13 +260,12 @@ export class CalendarRail {
         ws.length === 0
           ? null
           : ws.map((x) =>
-              this.tick(`W${x.week}`, `Week ${x.week} of ${x.isoYear}, ${plural(wCount(x))}`, wCount(x), wMax, !!w && weekKey(x) === weekKey(w), () => {
+              this.tick(`W${x.week}`, `Week ${x.week} of ${x.isoYear}, ${plural(wCount(x))}`, wCount(x), wMax, !!w && weekKey(x) === weekKey(w), () => this.pick(2, () => {
                 const ds = daysOfWeekPresent(days, q!, x);
                 this.week = x;
                 this.day = ds[ds.length - 1]!;
                 this.hourCursor = null;
-                this.render();
-              }),
+              })),
             ),
       ),
     );
@@ -250,16 +283,15 @@ export class CalendarRail {
         ds.length === 0
           ? null
           : ds.map((x) =>
-              this.tick(String(x.day), `${dayName(x)} ${x.year}, ${plural(dCount(x))}`, dCount(x), dMax, !!d && dayKey(x) === dayKey(d), () => {
+              this.tick(String(x.day), `${dayName(x)} ${x.year}, ${plural(dCount(x))}`, dCount(x), dMax, !!d && dayKey(x) === dayKey(d), () => this.pick(3, () => {
                 this.day = x;
                 this.hourCursor = null;
-                this.render();
-              }),
+              })),
             ),
       ),
     );
 
-    // Tier 4: the 24-hour strip of the day, built once.
+    // Tier 4: the 24-hour strip of the day. Rebuilt when the day changes; a cursor move patches it in place (see move).
     if (d) {
       const counts = hourCounts(this.entries, d);
       const max = Math.max(...counts);

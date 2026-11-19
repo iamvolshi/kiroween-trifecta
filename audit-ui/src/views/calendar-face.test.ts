@@ -183,3 +183,53 @@ describe('unreachable connector', () => {
     expect(root.querySelector('.calendar-rail')).toBeNull(); // nothing built from a failed read
   });
 });
+
+describe('rail fixes (review round 1)', () => {
+  const NOV18 = { year: 2026, month: 11, day: 18 };
+  const wheel = (target: Element, deltaY: number): WheelEvent => {
+    const e = new WheelEvent('wheel', { deltaY, bubbles: true, cancelable: true });
+    target.dispatchEvent(e);
+    return e;
+  };
+  const tierEl = (r: CalendarRail, n: number): HTMLElement => r.root.querySelector<HTMLElement>(`.rail-tier[data-tier="${n}"]`)!;
+
+  it('a Tier 4 cursor move keeps the same hour anchors (no rebuild)', () => {
+    const rail = new CalendarRail(ENTRIES, NOV18, 14);
+    document.body.appendChild(rail.root);
+    const before = rail.root.querySelector('.rail-hour[data-hour="15"]');
+    expect(rail.move(4, 1)).toBe(true);
+    const after = rail.root.querySelector('.rail-hour[data-hour="15"]');
+    expect(after).toBe(before);
+    expect(after?.getAttribute('data-cursor')).toBe('true');
+    expect(rail.root.querySelectorAll('.rail-hour[data-cursor]')).toHaveLength(1);
+    rail.root.remove();
+  });
+
+  it('the wheel claims the scroll only when the tier moved', () => {
+    const rail = new CalendarRail(ENTRIES, NOV18, 23);
+    document.body.appendChild(rail.root);
+    expect(wheel(tierEl(rail, 4), 100).defaultPrevented).toBe(false); // at hour 23 already
+    expect(wheel(tierEl(rail, 4), -100).defaultPrevented).toBe(true);
+    // Tier 1: Q4 is the newest quarter, so a forward step does nothing.
+    expect(wheel(tierEl(rail, 1), 100).defaultPrevented).toBe(false);
+    expect(rail.move(1, 1)).toBe(false);
+    rail.root.remove();
+  });
+
+  it('a pick keeps keyboard focus on the picked tick; arrow keys move a tier', () => {
+    const rail = new CalendarRail(ENTRIES, NOV18, null);
+    document.body.appendChild(rail.root);
+    const q1 = [...tierEl(rail, 1).querySelectorAll<HTMLButtonElement>('.rail-tick')].find((b) => b.textContent === 'Q1')!;
+    q1.focus();
+    q1.click();
+    const focused = document.activeElement as HTMLElement;
+    expect(focused.textContent).toBe('Q1');
+    expect(focused.getAttribute('aria-pressed')).toBe('true');
+    expect(tierEl(rail, 1).contains(focused)).toBe(true);
+    focused.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true, cancelable: true }));
+    const next = document.activeElement as HTMLElement;
+    expect(next.textContent).toBe('Q4');
+    expect(next.getAttribute('aria-pressed')).toBe('true');
+    rail.root.remove();
+  });
+});
