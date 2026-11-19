@@ -175,7 +175,7 @@ describe('LOW-4: the app runs one adapter, the live one, and its chip says so', 
 describe('LOW-6: the header view label is set from the mounted view', () => {
   const routes: Array<[string, string]> = [
     ['/actions', 'Action List'],
-    ['/chat', 'Chat'],
+    ['/chat', 'Chat / Observability'],
     ['/time-travel', 'Time Travel'],
     ['/calendar/2026-11', 'Calendar'],
     ['/record/order-1042', 'Record'],

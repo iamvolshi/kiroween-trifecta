@@ -38,10 +38,12 @@ describe('LeftPanel', () => {
       f.querySelector('a')?.getAttribute('href'),
       f.textContent,
     ]);
+    // Name, count, then the folder's 0-9 value (latest entry's authority) on the folder.
     expect(folders).toEqual([
-      ['/record/order-1042', 'order-1042 (2)'],
-      ['/record/parcel-77', 'parcel-77 (1)'],
+      ['/record/order-1042', 'order-1042 (2)5'],
+      ['/record/parcel-77', 'parcel-77 (1)5'],
     ]);
+    expect(slot.querySelector('.folder-head-value')?.getAttribute('aria-label')).toBe('authority 5 of 9');
     const back = Array.from(slot.querySelectorAll('.left-back a')).map((a) => a.getAttribute('href'));
     expect(back).toEqual(['/calendar', '/time-travel']);
   });

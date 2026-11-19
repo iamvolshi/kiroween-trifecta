@@ -50,7 +50,7 @@
 .feed-item[data-engine='ELLE']::before { background: var(--ok); }
 
 /* A provenance link in the chat points here. */
-.feed-item.is-highlighted {
+.feed-item:has(.katie-entry.is-highlighted) {
   border-color: var(--accent);
   background: var(--accent-bg);
 }

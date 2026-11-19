@@ -47,7 +47,7 @@ describe('TelemetryPanel: the work column', () => {
     new TelemetryPanel(fake(ok([])), new ChatLog()).mount(slot);
     await tick();
     expect(slot.querySelector('h2')?.textContent).toBe(WORK_HEADING);
-    expect(WORK_HEADING).toBe('What the machine is doing');
+    expect(WORK_HEADING).toBe('Telemetry — Machine state');
     expect(slot.querySelector('.empty-state')?.textContent).toMatch(/Nothing has happened yet/);
     expect(slot.querySelector('.subject-folder')).toBeNull();
   });
@@ -73,14 +73,16 @@ describe('TelemetryPanel: the work column', () => {
       ['t0-0', 'ERIE'],
     ]);
     for (const li of items) expect(li.querySelector('.engine-tag')?.textContent).toBe(li.dataset.engine);
-    expect(items[0]!.textContent).toContain('Looked, and found nothing for "zzz".');
-    expect(items[1]!.textContent).toContain('Recorded a lesson, not learned yet: check the carrier feed');
-    expect(items[2]!.textContent).toContain('Held back a lesson that is not learned yet');
+    expect(items[0]!.querySelector('.feed-text')?.textContent).toBe("ERIE found nothing for 'zzz'");
+    expect(items[1]!.textContent).toContain('ELLE recorded a lesson, not learned yet: check the carrier feed');
+    expect(items[2]!.textContent).toContain('ELLE held back a lesson that is not learned yet');
     const katie = items[3]!;
-    expect(katie.dataset.kid).toBe('4');
-    expect(katie.dataset.subject).toBe(SUBJ);
-    expect(katie.dataset.entryId).toBe('e1');
-    expect(katie.querySelector('a')?.getAttribute('href')).toBe(`/entry/4/${encodeURIComponent(SUBJ)}/e1`);
+    expect(katie.querySelector('.feed-text')?.textContent).toBe('KATIE recorded 1 entry for this turn.');
+    const row = katie.querySelector<HTMLElement>('.katie-entry')!;
+    expect(row.dataset.kid).toBe('4');
+    expect(row.dataset.subject).toBe(SUBJ);
+    expect(row.dataset.entryId).toBe('e1');
+    expect(row.querySelector('a')?.getAttribute('href')).toBe(`/entry/4/${encodeURIComponent(SUBJ)}/e1`);
     expect(katie.querySelector('.katie-evidence')?.textContent).toBe('value=x (stub)');
     expect(katie.querySelector('.feed-from')?.textContent).toBe('from: "first"');
     expect(items[4]!.querySelector('.feed-source')?.textContent).toBe('stub:src ex');
@@ -93,6 +95,17 @@ describe('TelemetryPanel: the work column', () => {
     new TelemetryPanel(fake(async () => ({ ok: false, error: 'boom' })), log).mount(slot);
     await tick();
     expect(slot.querySelector('.feed-item .katie-evidence')?.textContent).toBe('entry not visible');
+  });
+
+  it('two entries on one turn make ONE KATIE item with two rows', async () => {
+    const log = new ChatLog();
+    log.push(turn('m', 1, { katie: [{ kid: 4, subject: SUBJ, entry_id: 'e1', seated: true }, { kid: 5, subject: 'p.s', entry_id: 'e2', seated: true }] }));
+    new TelemetryPanel(fake(ok([])), log).mount(slot);
+    await tick();
+    const katie = slot.querySelectorAll('.feed-item[data-engine="KATIE"]');
+    expect(katie).toHaveLength(1);
+    expect(katie[0]!.querySelector('.feed-text')?.textContent).toBe('KATIE recorded 2 entries for this turn.');
+    expect(Array.from(katie[0]!.querySelectorAll<HTMLElement>('.katie-entry')).map((r) => r.dataset.entryId)).toEqual(['e1', 'e2']);
   });
 
   it('a provenance target highlights its KATIE item; an unknown target changes nothing', async () => {

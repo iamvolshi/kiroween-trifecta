@@ -85,9 +85,11 @@ describe('ChatView', () => {
     const { adapter } = fake(async () => ({ ok: true, data: turn1() }));
     new ChatView(adapter, new ChatLog()).mount(container);
     expect(container.querySelector('nav.main-nav')).toBeNull(); // the shell owns the nav
-    expect(container.querySelector('h1')?.textContent).toBe('Chat');
+    expect(container.querySelector('h1')?.textContent).toBe('Chat with [nothing yet]');
     const radios = Array.from(container.querySelectorAll<HTMLButtonElement>('.persona-picker [role="radio"]'));
-    expect(radios.map((b) => b.textContent)).toEqual(['Frankenstein', 'Elara', 'ARCHETRON']);
+    expect(radios.map((b) => b.dataset.value)).toEqual(['Frankenstein', 'Elara', 'ARCHETRON']);
+    expect(radios.map((b) => b.querySelector('.mask-name')?.textContent)).toEqual(['Frankenstein', 'Elara', 'ARCHETRON']);
+    expect(container.querySelector<HTMLInputElement>('#chat-message')!.placeholder).toBe('INPUT // AWAITING_MASK');
     expect(radios.every((b) => b.getAttribute('aria-checked') === 'false')).toBe(true);
     expect(container.querySelector('.persona-picker')?.getAttribute('role')).toBe('radiogroup');
     expect(container.querySelector<HTMLInputElement>('#chat-message')!.disabled).toBe(true);

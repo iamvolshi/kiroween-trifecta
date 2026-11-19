@@ -68,7 +68,7 @@ export class LeftPanel implements Panel {
     back.appendChild(el('h2', '', 'Going back'));
     const ul = el('ul', 'left-links');
     for (const [href, text] of [
-      ['/calendar', 'Calendar'],
+      ['/calendar', 'Calendar Index'],
       ['/time-travel', 'Time Travel'],
     ] as const) {
       const li = el('li', '');
@@ -128,6 +128,15 @@ export class LeftPanel implements Panel {
       head.appendChild(href ? link(href, name) : el('span', 'folder-name', name));
       const count = entries.filter((e) => groupOf(e.subject) === name).length;
       head.appendChild(el('span', 'folder-count', ` (${count})`));
+      // The folder's 0-9 value, on the folder: the authority of its latest entry.
+      const own = entries.filter((e) => groupOf(e.subject) === name).sort(compareKStart);
+      if (own.length > 0) {
+        const latest = own[own.length - 1]!.authority;
+        const badge = el('span', 'folder-head-value', String(latest));
+        badge.setAttribute('aria-label', `authority ${latest} of 9`);
+        head.appendChild(badge);
+        li.dataset.authority = String(latest);
+      }
       li.appendChild(head);
       const nested = el('div', 'group-subjects');
       for (const s of groups.get(name)!) {

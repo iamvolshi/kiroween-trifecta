@@ -7,8 +7,12 @@ import { ChatLog } from './chat-log.ts';
 import { renderChatTurn } from './chat-turn.ts';
 import { createIntro } from './intro.ts';
 import { renderPersonaPicker, renderRegisterSwitch } from './persona-picker.ts';
+import { renderMaskCards } from './mask-cards.ts';
+import { renderProofCards, type EntryLoader } from './proof-cards.ts';
 
 const PICK_FIRST = 'Choose a persona to start chatting.';
+/** The locked composer's placeholder before a mask is picked. */
+const AWAITING_MASK = 'INPUT // AWAITING_MASK';
 
 /** Where the model announcement reads from. Tests pass their own. */
 export interface ModelSource {
@@ -41,6 +45,19 @@ export class ChatView implements View {
   /** served_by of the last reply per switch position ("persona|register"). */
   private served = new Map<string, ServedBy>();
   private lastPositionKey: string | null = null;
+  /** Live entry reads for proof cards, one per entry, kept for this view. */
+  private entryReads = new Map<string, ReturnType<EntryLoader>>();
+  private loadEntry: EntryLoader = (kid, subject, entryId) => {
+    const key = `${kid}|${subject}|${entryId}`;
+    let read = this.entryReads.get(key);
+    if (!read) {
+      read = this.adapter.fetchChain(kid, subject).then((r) =>
+        r.ok ? { ok: true as const, data: r.data.find((e) => e.id === entryId) ?? null } : r,
+      );
+      this.entryReads.set(key, read);
+    }
+    return read;
+  };
   /** Counts /models reads; only the latest answer is kept. */
   private statusRead = 0;
 
@@ -135,13 +152,26 @@ export class ChatView implements View {
     const controls = this.controls;
     if (!controls) return;
     const persona = this.log.persona();
-    if (this.heading) this.heading.textContent = persona ? `Chat with ${persona}` : 'Chat';
+    if (this.heading) this.heading.textContent = persona ? `Chat with ${persona}` : 'Chat with [nothing yet]';
 
     const parts: HTMLElement[] = [
-      renderPersonaPicker(persona, (p) => {
-        this.log.setPersona(p);
-        this.renderControls('persona-picker');
-      }),
+      persona === null
+        ? // Before a pick: the three masks as cards.
+          renderMaskCards(
+            (p) => {
+              this.log.setPersona(p);
+              this.renderControls('persona-picker');
+            },
+            (r) => {
+              this.log.setPersona('Frankenstein');
+              this.log.setRegister(r);
+              this.renderControls('register-switch');
+            },
+          )
+        : renderPersonaPicker(persona, (p) => {
+            this.log.setPersona(p);
+            this.renderControls('persona-picker');
+          }),
     ];
     if (persona === 'Frankenstein') {
       parts.push(
@@ -155,7 +185,8 @@ export class ChatView implements View {
     }
     if (!persona) {
       const hint = document.createElement('p');
-      hint.className = 'prompt-state persona-required';
+      // The mask cards and the NOT KNOWN box say it on screen; this line is for screen readers.
+      hint.className = 'prompt-state persona-required sr-only';
       hint.textContent = PICK_FIRST;
       parts.push(hint);
     }
@@ -166,7 +197,7 @@ export class ChatView implements View {
     const ready = persona !== null;
     if (this.input) {
       this.input.disabled = !ready;
-      this.input.placeholder = ready ? `Message ${persona}` : PICK_FIRST;
+      this.input.placeholder = ready ? `Message ${persona}` : AWAITING_MASK;
     }
     if (this.sendBtn) this.sendBtn.disabled = !ready || this.pending;
     this.renderModel();
@@ -183,7 +214,14 @@ export class ChatView implements View {
       box.replaceChildren(p);
     } else {
       box.replaceChildren(
-        ...turns.flatMap((t, i) => (isChatTurn(t) ? [renderChatTurn(t, this.log.personaAt(i))] : [])),
+        ...turns.flatMap((t, i) => {
+          if (!isChatTurn(t)) return [];
+          const node = renderChatTurn(t, this.log.personaAt(i));
+          // Proof-anchor cards, only for a reply that carries links.
+          const cards = renderProofCards(t, this.loadEntry);
+          if (cards) node.appendChild(cards);
+          return [node];
+        }),
       );
     }
   }

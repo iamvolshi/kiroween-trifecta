@@ -28,7 +28,7 @@
 }
 
 .model-banner[data-position='movie'] {
-  --band: #ffb648;
+  --band: #ffbd58;
   --band-bg: #2b1d06;
   --band-text: #ffe3b3;
 }
@@ -41,9 +41,9 @@
 }
 
 .model-banner[data-position='book'] {
-  --band: #b49cff;
-  --band-bg: #1c1236;
-  --band-text: #e6ddff;
+  --band: #eacfff;
+  --band-bg: #22163a;
+  --band-text: #f0dbff;
 }
 
 .model-banner[data-state='unreachable'],

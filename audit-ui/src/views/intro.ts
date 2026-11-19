@@ -9,7 +9,7 @@ export const INTROS = {
     how: 'Every record entry, newest first. Each card shows authority and state, what changed, why, and when.',
   },
   chat: {
-    view: 'Chat',
+    view: 'Chat / Observability',
     question: 'Who do you want to talk to?',
     how: 'ARCHE runs the persona you choose. Pick one, then send a message. The right column shows what the engines did.',
   },

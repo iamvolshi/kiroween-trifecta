@@ -11,17 +11,12 @@ function el(tag: string, className: string, text?: string): HTMLElement {
   return e;
 }
 
-export const WORK_HEADING = 'What the machine is doing';
+export const WORK_HEADING = 'Telemetry — Machine state';
 
 function renderItem(item: FeedItem): HTMLElement {
   const li = el('li', 'feed-item');
   li.dataset.feedId = item.id;
   li.dataset.engine = item.engine;
-  if (item.entry) {
-    li.dataset.kid = String(item.entry.kid);
-    li.dataset.subject = item.entry.subject;
-    li.dataset.entryId = item.entry.entry_id;
-  }
   const tag = el('span', 'engine-tag', item.engine);
   tag.dataset.engine = item.engine;
   li.appendChild(tag);
@@ -32,16 +27,25 @@ function renderItem(item: FeedItem): HTMLElement {
     line.append(el('span', 'feed-source-name', s.source), document.createTextNode(` ${s.excerpt}`));
     li.appendChild(line);
   }
-  if (item.entry) {
-    const a = document.createElement('a');
-    a.className = 'katie-link';
-    a.setAttribute(
-      'href',
-      `/entry/${item.entry.kid}/${encodeURIComponent(item.entry.subject)}/${encodeURIComponent(item.entry.entry_id)}`,
-    );
-    a.textContent = item.entry.subject;
-    li.appendChild(a);
-    li.appendChild(el('span', 'katie-evidence', item.entry.evidence ?? 'entry not visible'));
+  if (item.entries && item.entries.length > 0) {
+    const rows = el('ul', 'katie-entries');
+    for (const entry of item.entries) {
+      // Each entry row is a provenance target (data-entry-id).
+      const row = el('li', 'katie-entry');
+      row.dataset.kid = String(entry.kid);
+      row.dataset.subject = entry.subject;
+      row.dataset.entryId = entry.entry_id;
+      const a = document.createElement('a');
+      a.className = 'katie-link';
+      a.setAttribute(
+        'href',
+        `/entry/${entry.kid}/${encodeURIComponent(entry.subject)}/${encodeURIComponent(entry.entry_id)}`,
+      );
+      a.textContent = entry.subject;
+      row.append(a, el('span', 'katie-evidence', entry.evidence ?? 'entry not visible'));
+      rows.appendChild(row);
+    }
+    li.appendChild(rows);
   }
   li.appendChild(el('span', 'feed-from', `from: "${item.from.message}"`));
   return li;
@@ -93,13 +97,13 @@ export class TelemetryPanel implements Panel {
   highlight(t: ProvenanceTarget, scroll = true): void {
     const root = this.root;
     if (!root) return;
-    const items = Array.from(root.querySelectorAll<HTMLElement>('.feed-item[data-entry-id]'));
+    const items = Array.from(root.querySelectorAll<HTMLElement>('.katie-entry[data-entry-id]'));
     const hit = items.find(
       (li) => li.dataset.entryId === t.entry_id && li.dataset.subject === t.subject && li.dataset.kid === String(t.kid),
     );
     if (!hit) return;
     this.lastTarget = t;
-    for (const li of root.querySelectorAll('.feed-item.is-highlighted')) li.classList.remove('is-highlighted');
+    for (const li of root.querySelectorAll('.katie-entry.is-highlighted')) li.classList.remove('is-highlighted');
     hit.classList.add('is-highlighted');
     if (scroll) hit.scrollIntoView?.({ block: 'nearest' });
   }

@@ -105,7 +105,7 @@ describe('provenance links (live path, stub connector)', () => {
     a.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, button: 0 }));
     expect(window.location.pathname).toBe('/chat');
     expect(document.activeElement).toBe(a);
-    const hit = Array.from(root.querySelectorAll<HTMLElement>('.shell-right .feed-item.is-highlighted'));
+    const hit = Array.from(root.querySelectorAll<HTMLElement>('.shell-right .katie-entry.is-highlighted'));
     expect(hit.map((li) => li.dataset.entryId)).toEqual(['live-1']);
     expect(root.querySelector('.shell-center .chat-view')).not.toBeNull();
   });
@@ -116,7 +116,7 @@ describe('provenance links (live path, stub connector)', () => {
     const a = root.querySelector<HTMLAnchorElement>('.provenance-link')!;
     a.focus();
     a.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true, cancelable: true }));
-    expect(root.querySelector<HTMLElement>('.feed-item.is-highlighted')?.dataset.entryId).toBe('live-1');
+    expect(root.querySelector<HTMLElement>('.katie-entry.is-highlighted')?.dataset.entryId).toBe('live-1');
     expect(window.location.pathname).toBe('/chat');
     expect(document.activeElement).toBe(a);
   });
@@ -168,7 +168,7 @@ describe('review-1 fixes', () => {
     await chatAs('Elara', 'one');
     root.querySelector<HTMLAnchorElement>('.provenance-link')!.click();
     await chatAs('Elara', 'two');
-    const hit = Array.from(root.querySelectorAll<HTMLElement>('.shell-right .feed-item.is-highlighted'));
+    const hit = Array.from(root.querySelectorAll<HTMLElement>('.shell-right .katie-entry.is-highlighted'));
     expect(hit).toHaveLength(1);
     expect(hit[0]!.dataset.entryId).toBe('live-1');
   });
