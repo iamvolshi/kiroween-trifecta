@@ -100,6 +100,13 @@ function signature(vals: Value[]): string {
   return vals.map((v) => `${v.key}>${v.href ?? ''}`).join('|');
 }
 
+/** A path as the Router matches it: no query, no hash, no trailing slash. */
+function normalPath(raw: string): string {
+  let p = raw.split(/[?#]/)[0]!;
+  if (p.length > 1 && p.endsWith('/')) p = p.slice(0, -1);
+  return p;
+}
+
 /** The fade of a value `d` steps from the center. */
 export function fadeAt(d: number): number {
   const a = Math.abs(d);
@@ -382,7 +389,7 @@ export class CalendarRail {
       else {
         // The hour already open: no second history entry, no remount.
         item.addEventListener('click', (e) => {
-          if (v.href === window.location.pathname) {
+          if (v.href === normalPath(window.location.pathname)) {
             e.preventDefault();
             e.stopPropagation();
           }

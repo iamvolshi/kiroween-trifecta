@@ -66,6 +66,9 @@ export function renderSnapshot(did: Entry[], pool: Entry[], hour: number): HTMLE
   return sec;
 }
 
+/** Fired on window when the page moves the address in place (replaceState): the Router refreshes its panels. */
+export const ADDRESS_FOLLOWED = 'hackenstein:address-followed';
+
 /** The KTIE page's header: the engine's name over what it stands for. */
 export const KTIE_NAME = 'KTIE';
 export const KTIE_EXPANSION = 'Knowledge Time Indexing Engine';
@@ -224,21 +227,25 @@ export class CalendarView implements View {
     const pool = moment === null ? null : await this.adapter.fetchBeliefPool(moment);
     if (!live()) return;
     const main = el('div', 'calendar-main');
-    if (pool === null) main.appendChild(el('p', 'error-state', 'Invalid moment.'));
-    else if (!pool.ok) main.appendChild(el('p', 'error-state', pool.error));
-    else main.append(...this.renderHour(entries, pool.data, kidMap, t, input));
+    const failed = pool === null ? 'Invalid moment.' : !pool.ok ? pool.error : null;
+    if (failed !== null) main.appendChild(el('p', 'error-state', failed));
+    else main.append(...this.renderHour(entries, (pool as { ok: true; data: Entry[] }).data, kidMap, t, input));
     folder.replaceChildren(main);
     delete folder.dataset.spinning;
     folder.removeAttribute('aria-busy');
     folder.dataset.moment = input;
     passing.hidden = true;
-    const words = `Folder: ${momentLabel(m)}`;
+    const words = failed === null ? `Folder: ${momentLabel(m)}` : `Folder: ${momentLabel(m)}, could not load`;
     caption.textContent = words;
     landed.textContent = words;
+    if (failed !== null) return; // the address stays where it was
     // The address follows the folder (no new history entry), so a reload or a
-    // shared link shows the same moment.
+    // shared link shows the same moment; the shell is told so its labels follow.
     const href = calendarHref({ level: 'hour', ...t });
-    if (window.location.pathname !== href) window.history.replaceState(window.history.state, '', href);
+    if (window.location.pathname !== href) {
+      window.history.replaceState(window.history.state, '', href);
+      window.dispatchEvent(new Event(ADDRESS_FOLLOWED));
+    }
   }
 
   /** Month of the newest entry by k_start, else the current UTC month. */

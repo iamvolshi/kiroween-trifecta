@@ -30,7 +30,9 @@ record; counts ride in labels and titles.
   2026-03-03 ? 11:00 UTC ? 0 entries"). On settle the address follows the
   folder with replaceState (no new history entry, no remount), so a reload
   or a shared link shows the same moment. Clicking the hour already open
-  does nothing (no duplicate history entry).
+  does nothing (no duplicate history entry). A settle whose read fails says
+  "could not load" in the caption and leaves the address alone. When the
+  address moves in place, the Router refreshes the left panel.
 - The passing line keeps its space when idle (hidden, not removed), so the
   folder never jumps between spinning and settled. Screen readers hear one
   short status ("Folder: ...") on settle; the folder is aria-busy while the
@@ -52,6 +54,11 @@ record; counts ride in labels and titles.
 
 - The calendar intro still says "or use the rail" (the order keeps the intro
   as it is).
+- Because the settle replaces the history entry, Back then Forward lands on
+  the settled hour, not the month or day first opened.
+- The idle passing line keeps one line of space under the drums.
+- `color-mix` (the rose band and glow) needs Chrome 111 / Safari 16.2 /
+  Firefox 113.
 - Left/Right spin the focused wheel (as the old rail did), not move focus
   between wheels; Tab moves between wheels.
 - jsdom draws no CSS: the fade and the curve are checked as the values the
@@ -74,7 +81,7 @@ the hour view with the drums above.
 
 ## Tests
 
-433 pass (419 at base). `views/calendar-face.test.ts`: header; five wheels
+434 pass (419 at base). `views/calendar-face.test.ts`: header; five wheels
 in order; centered solid / neighbours faded / far hidden; counts in labels;
 year cascade; hovered wheel only, right wheels follow; claim only on a move;
 trackpad gathering; patch vs rebuild; the hour wheel follows a day change;

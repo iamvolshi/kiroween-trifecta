@@ -5,7 +5,7 @@ import { EntryDetailView } from '../views/entry-detail.ts';
 import { NotFoundView } from '../views/not-found.ts';
 import { ChatView, type ModelSource } from '../views/chat.ts';
 import { ChatLog } from '../views/chat-log.ts';
-import { CalendarView } from '../views/calendar.ts';
+import { ADDRESS_FOLLOWED, CalendarView } from '../views/calendar.ts';
 import { parseCalendarPath } from '../util/calendar.ts';
 import { RecordView } from '../views/record.ts';
 import { createShell, setViewLabel, type ShellSlots } from '../shell/shell.ts';
@@ -27,6 +27,7 @@ export class Router {
   private chatLog = new ChatLog();
   private clickHandler: (event: MouseEvent) => void;
   private popstateHandler: () => void;
+  private addressHandler: () => void = () => {};
   private slots: ShellSlots;
   private leftPanel: Panel;
   private rightPanel: Panel;
@@ -76,6 +77,9 @@ export class Router {
 
     document.addEventListener('click', this.clickHandler);
     window.addEventListener('popstate', this.popstateHandler);
+    // A view moved the address in place (no remount): the left panel's marks follow.
+    this.addressHandler = () => this.leftPanel.refresh();
+    window.addEventListener(ADDRESS_FOLLOWED, this.addressHandler);
 
     // Mount the initial view based on the current URL
     this.resolve(window.location.pathname);
@@ -94,6 +98,7 @@ export class Router {
   destroy(): void {
     document.removeEventListener('click', this.clickHandler);
     window.removeEventListener('popstate', this.popstateHandler);
+    window.removeEventListener(ADDRESS_FOLLOWED, this.addressHandler);
     if (this.currentView) {
       this.currentView.unmount();
       this.currentView = null;

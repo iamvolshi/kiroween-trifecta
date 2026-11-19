@@ -399,6 +399,19 @@ describe('the folder under the drums', () => {
     expect(window.location.pathname).toBe('/calendar/2026-11-18/14');
   });
 
+  it('a settle whose read fails says so in the caption and leaves the address alone', async () => {
+    window.history.replaceState({}, '', '/calendar');
+    const base = stub(ENTRIES);
+    const adapter: SeamAdapter = { ...base, fetchBeliefPool: async () => ({ ok: false as const, error: 'Connector unreachable: stub' }) };
+    await mount({ level: 'month', year: 2026, month: 11 }, adapter, 20);
+    spin(root.querySelector<HTMLElement>('.drum[data-seg="hour"]')!, -100);
+    await wait(100);
+    for (let i = 0; i < 4; i++) await tick();
+    expect(root.querySelector('.ktie-folder .error-state')?.textContent).toBe('Connector unreachable: stub');
+    expect(root.querySelector('.ktie-folder-caption')?.textContent).toBe('Folder: 2026-11-18 \u00b7 15:00 UTC \u00b7 0 entries, could not load');
+    expect(window.location.pathname).toBe('/calendar');
+  });
+
   it('unmount during a pending settle: nothing lands, no error, the timer is gone', async () => {
     window.history.replaceState({}, '', '/calendar');
     await mount({ level: 'month', year: 2026, month: 11 }, stub(ENTRIES), 40);
