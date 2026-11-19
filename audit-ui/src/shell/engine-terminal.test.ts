@@ -165,9 +165,17 @@ describe('the terminal feed', () => {
     const read = (f: string): string => fs.readFileSync(`src/${f}`, 'utf8');
     const css = read('styles/telemetry.css');
     const style = read('style.css');
-    expect(style).toContain('--engine-katie: var(--accent);');
+    expect(style).toContain('--engine-katie: var(--rose);');
+    expect(style).toContain('--rose: #ff5c8a;');
     expect(style).toContain('--engine-erie: var(--warn);');
     expect(style).toContain('--engine-elle: var(--ok);');
+    // Young Frankenstein wears the creature's grey-green skin, not cyan.
+    expect(style).toContain('--skin: #8a9a7b;');
+    const chat = read('styles/chat.css');
+    expect(chat).toContain("[data-voice='young-frankenstein'] {");
+    expect(chat).toContain('--voice-accent: var(--skin);');
+    const band = read('styles/model-banner.css');
+    expect(band).toContain('--band: var(--skin);');
     for (const [e, v] of [['KATIE', 'katie'], ['ERIE', 'erie'], ['ELLE', 'elle']]) {
       expect(css).toContain(`.feed-item[data-engine='${e}']::before { background: var(--engine-${v}); }`);
       expect(css).toContain(`.feed-item[data-engine='${e}'] > .engine-tag { color: var(--engine-${v}); }`);

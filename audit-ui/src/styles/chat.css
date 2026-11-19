@@ -10,7 +10,7 @@
 
 /* ---- Voice accent ------------------------------------------------------
    One accent slot, set by the voice: Book violet, Movie amber, Young
-   Frankenstein the app's default cyan (until its accent is named). The
+   Frankenstein the creature's grey-green skin. The
    picked chip, the view and each reply read it from their data-voice. */
 
 .chat-view,
@@ -27,6 +27,11 @@
 [data-voice='movie'] {
   --voice-accent: var(--warn);
   --voice-text: var(--warn);
+}
+
+[data-voice='young-frankenstein'] {
+  --voice-accent: var(--skin);
+  --voice-text: var(--skin-text);
 }
 
 /* ---- The column -------------------------------------------------------- */

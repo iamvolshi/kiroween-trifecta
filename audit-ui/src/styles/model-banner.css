@@ -1,6 +1,6 @@
 /* The live-model announcement under the chat box (views/model-banner.ts).
    The picked voice owns the whole band: Book is violet, Movie amber, Young
-   Frankenstein the default cyan, with the voice word in a solid block and
+   Frankenstein the creature's grey-green skin, with the voice word in a solid block and
    the model name large. Switching voice changes the band at once. */
 
 .model-banner {
@@ -28,11 +28,11 @@
   --band-text: #ffe3b3;
 }
 
-/* Young Frankenstein: the app's default cyan until its accent is named. */
+/* Young Frankenstein: the creature's grey-green skin. */
 .model-banner[data-position='young-frankenstein'] {
-  --band: var(--accent);
-  --band-bg: var(--accent-bg);
-  --band-text: var(--text);
+  --band: var(--skin);
+  --band-bg: var(--skin-bg);
+  --band-text: var(--skin-text);
 }
 
 .model-banner[data-position='book'] {
