@@ -49,7 +49,8 @@
 .feed-item[data-engine='ERIE']::before { background: var(--muted); }
 .feed-item[data-engine='ELLE']::before { background: var(--ok); }
 
-/* A provenance link in the chat points here. */
+/* A provenance link in the chat points at a KATIE entry row
+   (.katie-entry.is-highlighted, styles/stitch-chat.css). */
 
 .feed-item > span,
 .feed-item > a {
