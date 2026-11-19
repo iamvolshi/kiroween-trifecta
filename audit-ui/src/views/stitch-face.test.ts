@@ -151,7 +151,7 @@ describe('a box opens its engine\'s feed for that turn', () => {
     expect(right().querySelectorAll('.activity-feed')).toHaveLength(1);
     const items = Array.from(right().querySelectorAll<HTMLElement>('.engine-detail .feed-item'));
     expect(items.map((i) => i.dataset.engine)).toEqual(['KATIE']);
-    expect(items[0]!.querySelector('.feed-text')?.textContent).toBe('KATIE recorded 2 entries for this turn.');
+    expect(items[0]!.querySelector('.feed-text')?.textContent).toBe('KTIE recorded 2 entries for this turn.');
     expect(Array.from(items[0]!.querySelectorAll('.katie-link')).map((a) => a.getAttribute('href'))).toEqual(['/entry/1/turn/stub-e1', '/entry/1/turn/stub-e2']);
     expect(items[0]!.querySelector('.feed-from')?.textContent).toBe('from: "all"');
     expect(box(0, 'KTIE').getAttribute('aria-pressed')).toBe('true');

@@ -78,7 +78,7 @@ describe('TelemetryPanel: the work column', () => {
     expect(items[3]!.textContent).toContain('ELLE recorded a lesson, not learned yet: check the carrier feed');
     expect(items[2]!.textContent).toContain('ELLE held back a lesson that is not learned yet');
     const katie = items[1]!;
-    expect(katie.querySelector('.feed-text')?.textContent).toBe('KATIE recorded 1 entry for this turn.');
+    expect(katie.querySelector('.feed-text')?.textContent).toBe('KTIE recorded 1 entry for this turn.');
     const row = katie.querySelector<HTMLElement>('.katie-entry')!;
     expect(row.dataset.kid).toBe('4');
     expect(row.dataset.subject).toBe(SUBJ);
@@ -105,7 +105,7 @@ describe('TelemetryPanel: the work column', () => {
     await tick();
     const katie = slot.querySelectorAll('.feed-item[data-engine="KATIE"]');
     expect(katie).toHaveLength(1);
-    expect(katie[0]!.querySelector('.feed-text')?.textContent).toBe('KATIE recorded 2 entries for this turn.');
+    expect(katie[0]!.querySelector('.feed-text')?.textContent).toBe('KTIE recorded 2 entries for this turn.');
     expect(Array.from(katie[0]!.querySelectorAll<HTMLElement>('.katie-entry')).map((r) => r.dataset.entryId)).toEqual(['e1', 'e2']);
   });
 

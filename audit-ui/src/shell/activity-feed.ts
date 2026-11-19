@@ -57,7 +57,7 @@ function eventsOf(t: ChatTurn, entries: Entry[]): Array<Omit<FeedItem, 'id' | 'f
     // One KATIE item per turn; each written entry is a row inside it.
     out.push({
       engine: 'KATIE',
-      text: `KATIE recorded ${written.length} ${written.length === 1 ? 'entry' : 'entries'} for this turn.`,
+      text: `KTIE recorded ${written.length} ${written.length === 1 ? 'entry' : 'entries'} for this turn.`,
       entries: written.map((u) => {
         const e = entries.find((x) => x.id === u.entry_id && x.kid === u.kid && x.subject === u.subject);
         return { kid: u.kid, subject: u.subject, entry_id: u.entry_id, evidence: e ? e.evidence : null };
