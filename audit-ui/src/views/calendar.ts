@@ -43,13 +43,15 @@ function monthTitle(year: number, month: number): string {
 /**
  * The locked hour's knowledge state: live-derived counts only. Recorded =
  * the hour's entries (the "did" table), live = the belief pool (the
- * "believed" table), and the masks named in the hour's entry reasons.
+ * "believed" table), and the masks named in the hour's entries. Live loop
+ * reasons carry no mask name ("assistant turn (reply)"); the mask's name is
+ * in the turn's evidence, so both are read.
  */
 export function renderSnapshot(did: Entry[], pool: Entry[], hour: number): HTMLElement {
   const sec = el('section', 'knowledge-state');
   sec.appendChild(el('h2', '', `Knowledge state at ${p2(hour)}:00 UTC (hour #${p2(hour)} record closure)`));
   sec.appendChild(el('p', 'knowledge-lede', 'Everything recorded and believed by the agent in this 60-minute window.'));
-  const masks = PERSONAS.filter((m) => did.some((e) => e.reason.includes(m)));
+  const masks = PERSONAS.filter((m) => did.some((e) => e.reason.includes(m) || e.evidence.includes(m)));
   const dl = el('dl', 'knowledge-stats');
   const stat = (term: string, value: string, key: string): void => {
     const box = el('div', 'knowledge-stat');
@@ -59,7 +61,7 @@ export function renderSnapshot(did: Entry[], pool: Entry[], hour: number): HTMLE
   };
   stat('Recorded this hour', String(did.length), 'recorded');
   stat('Live at this moment', String(pool.length), 'live');
-  stat('Masks named in the reasons', masks.length > 0 ? masks.join(', ') : 'None named', 'masks');
+  stat('Masks named in the hour', masks.length > 0 ? masks.join(', ') : 'None named', 'masks');
   sec.appendChild(dl);
   return sec;
 }

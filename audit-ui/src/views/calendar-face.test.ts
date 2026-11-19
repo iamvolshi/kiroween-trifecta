@@ -107,6 +107,16 @@ describe('hour view snapshot', () => {
     expect(snap.querySelector('[data-stat="masks"] dd')?.textContent).toBe('None named');
     expect(snap.querySelector('[data-stat="live"] dd')?.textContent).toBe('0');
   });
+
+  it('names the mask from the evidence when the reason carries none (live loop shape)', () => {
+    // Live loop: reason "assistant turn (reply)", mask name in evidence.
+    const snap = renderSnapshot(
+      [at('2026-11-18T14:05:00.000Z', 'x', { reason: 'assistant turn (reply)', evidence: 'Elara' })],
+      [],
+      14,
+    );
+    expect(snap.querySelector('[data-stat="masks"] dd')?.textContent).toBe('Elara');
+  });
 });
 
 describe('the rail', () => {

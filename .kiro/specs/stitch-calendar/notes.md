@@ -36,10 +36,11 @@ Base: `main` at `2a5fbd2`. Branch: `feat/stitch-calendar`.
 
 ## Known limits
 
-The masks stat reads the hour's entry REASONS, as ordered. Live loop
-reasons are "user turn (connector)" / "assistant turn (reply)": the mask's
-name is in `evidence`, not `reason`. So on live data it reads "None named"
-until reasons carry names, or the rule reads evidence instead.
+The masks stat reads the hour's entry reasons AND evidence. Live loop
+reasons carry no mask name ("user turn (connector)" / "assistant turn
+(reply)"); the mask's name is in the turn's `evidence`
+(`bot/engines/katie.py` `register_turn`, `bot/connector.py`
+`author_name=mask.name`), so the rule reads both. Verifier's fix, Nov 19.
 
 - Hover state is not carried across a route change (an hour click builds a
   new rail); the focus border returns on the next mouse move.
