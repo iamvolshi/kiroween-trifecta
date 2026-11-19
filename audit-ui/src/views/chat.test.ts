@@ -194,6 +194,64 @@ describe('picking a voice', () => {
   });
 });
 
+describe('review-1 fixes', () => {
+  it('keyboard focus stays on the chip after the re-read a switch triggers lands', async () => {
+    const { adapter } = fake(async () => ({ ok: true, data: turn1() }));
+    const log = new ChatLog();
+    await open(adapter, log);
+    pick('book');
+    const book = container.querySelector<HTMLButtonElement>('.voice-picker [data-voice="book"]')!;
+    book.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+    await tick();
+    await tick(); // the /models re-read has landed and the chips were rebuilt
+    expect(log.voice()).toBe('movie');
+    expect((document.activeElement as HTMLElement).dataset.voice).toBe('movie');
+    expect(document.activeElement?.getAttribute('aria-checked')).toBe('true');
+  });
+
+  it('one Tab stop in the picker: the picked chip, else the first', async () => {
+    const { adapter } = fake(async () => ({ ok: true, data: turn1() }));
+    await open(adapter);
+    const stops = (): string[] => Array.from(container.querySelectorAll<HTMLButtonElement>('.voice-chip')).filter((b) => b.tabIndex === 0).map((b) => b.dataset.voice!);
+    expect(stops()).toEqual(['book']);
+    pick('young-frankenstein');
+    expect(stops()).toEqual(['young-frankenstein']);
+  });
+
+  it('a picked voice the connector stops reporting locks the composer', async () => {
+    const { adapter } = fake(async () => ({ ok: true, data: turn1() }));
+    let voices = ['movie', 'book', 'young-frankenstein'];
+    const models: ModelSource = { status: () => createModelsStub({}, voices).status() };
+    await open(adapter, new ChatLog(), models);
+    pick('young-frankenstein');
+    voices = ['movie', 'book'];
+    pick('book'); // the re-read drops Young Frankenstein
+    await tick(); await tick();
+    expect(input().disabled).toBe(false); // book is still offered
+    // Remount with the voice that is gone.
+    const log = new ChatLog();
+    log.setVoice('young-frankenstein');
+    container.replaceChildren();
+    await open(adapter, log, models);
+    expect(input().disabled).toBe(true);
+    expect(input().placeholder).toBe(AWAITING_MASK);
+  });
+
+  it('a failed turn after unmount reads nothing', async () => {
+    const d = deferred<AdapterResult<ChatTurn>>();
+    let reads = 0;
+    const models: ModelSource = { status: () => { reads++; return createModelsStub().status(); } };
+    const view = await open(fake(() => d.promise).adapter, new ChatLog(), models);
+    pick('book');
+    send('hi');
+    view.unmount();
+    const before = reads;
+    d.resolve({ ok: false, error: 'boom' });
+    await tick();
+    expect(reads).toBe(before);
+  });
+});
+
 describe('talking', () => {
   it('submit renders the user bubble on the right and the reply on the left, no engine grid', async () => {
     const { adapter, calls } = fake(async () => ({ ok: true, data: turn1() }));

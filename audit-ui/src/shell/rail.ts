@@ -65,7 +65,7 @@ export class RailPanel implements Panel {
     nav.className = 'rail-nav';
     nav.setAttribute('role', 'toolbar');
     nav.setAttribute('aria-orientation', 'vertical');
-    nav.setAttribute('aria-label', 'Panels');
+    nav.setAttribute('aria-label', 'Switch panel');
     for (const item of RAIL) {
       const b = document.createElement('button');
       b.type = 'button';

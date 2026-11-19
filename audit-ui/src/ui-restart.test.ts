@@ -155,6 +155,65 @@ describe('the rail', () => {
   });
 });
 
+describe('rail review-1 fixes', () => {
+  it('a late answer for a panel that was switched away is dropped', async () => {
+    let release: (v: unknown) => void = () => {};
+    const slow = new Promise((r) => { release = r; });
+    const adapter = createRecordStub(undefined, {
+      fetchLessons: async () => { await slow; return { ok: true as const, data: [lesson('9', 'late lesson', 'promoted')] }; },
+    });
+    await start('/chat', adapter);
+    rail('lessons').click();
+    expect(list().textContent).toContain('Reading the lessons...');
+    rail('audit').click();
+    release(null);
+    for (let i = 0; i < 6; i++) await tick();
+    expect(list().dataset.panel).toBe('audit');
+    expect(list().textContent).not.toContain('late lesson');
+  });
+
+  it('the active panel is the one refreshed on a navigation; Chat refreshes again when it is back', async () => {
+    let entryReads = 0;
+    const adapter = createRecordStub(undefined, {
+      fetchAllEntries: async () => { entryReads++; return { ok: true as const, data: [makeEntry({ id: 'a', subject: 'turn' })] }; },
+    });
+    await start('/chat', adapter);
+    rail('audit').click();
+    for (let i = 0; i < 4; i++) await tick();
+    const before = entryReads;
+    router!.navigate('/actions');
+    for (let i = 0; i < 6; i++) await tick();
+    expect(entryReads).toBeGreaterThan(before);
+    expect(list().querySelector('.audit-accounts')?.textContent).toBe('turn (1)');
+    rail('chat').click();
+    for (let i = 0; i < 4; i++) await tick();
+    expect(list().querySelector('nav.main-nav a[aria-current="page"]')?.getAttribute('href')).toBe('/actions');
+  });
+
+  it('a thrown read on a panel becomes words', async () => {
+    const adapter = createRecordStub(undefined, { fetchLessons: async () => { throw new Error('socket closed'); } });
+    await start('/chat', adapter);
+    rail('lessons').click();
+    for (let i = 0; i < 4; i++) await tick();
+    expect(list().querySelector('.error-state')?.textContent).toBe('The lessons read failed: socket closed');
+  });
+
+  it('the last search is kept across a rail switch', async () => {
+    const adapter = createRecordStub(undefined, {
+      ask: async (question: string) => ({ ok: true as const, data: { question, state: 'found' as const, text: '', provenance: [{ source: 'stub source', content: 'e', excerpt: 'stub excerpt' }] } }),
+    });
+    await start('/chat', adapter);
+    rail('research').click();
+    list().querySelector<HTMLInputElement>('#research-q')!.value = 'storm';
+    list().querySelector<HTMLFormElement>('.research-form')!.requestSubmit();
+    for (let i = 0; i < 4; i++) await tick();
+    rail('lessons').click();
+    rail('research').click();
+    expect(list().querySelector<HTMLInputElement>('#research-q')!.value).toBe('storm');
+    expect(list().querySelector('.research-source')?.textContent).toBe('stub source');
+  });
+});
+
 describe('boot and the banned list', () => {
   it('the app source names neither cut mask, nor the old app name, nor the old face\'s words', () => {
     const sources = import.meta.glob(['./**/*.ts', './**/*.css', '!./**/*.test.ts', '!./test-helpers.ts'], {

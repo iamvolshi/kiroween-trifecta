@@ -1,4 +1,4 @@
-import type { Entry, Lesson, SeamAdapter } from '../adapter/seam.ts';
+import type { AdapterResult, AskResult, Entry, Lesson, SeamAdapter } from '../adapter/seam.ts';
 import type { Panel } from './panel.ts';
 import { compareKStart } from '../util/interval.ts';
 import { groupOf, renderLesson } from './subject-folders.ts';
@@ -50,6 +50,7 @@ export class AuditPanel implements Panel {
     const records = el('section', 'list-section');
     records.appendChild(el('h2', '', 'Records'));
     this.body = el('div', 'audit-records');
+    this.body.appendChild(el('p', 'prompt-state', 'Reading the record...'));
     records.appendChild(this.body);
     slot.replaceChildren(views, records);
     this.refresh();
@@ -59,14 +60,19 @@ export class AuditPanel implements Panel {
     const body = this.body;
     if (!body) return;
     const token = ++this.token;
-    void this.adapter.fetchAllEntries().then((r) => {
-      if (token !== this.token || this.body !== body) return;
-      if (!r.ok) {
-        body.replaceChildren(el('p', 'error-state', r.error));
-        return;
-      }
-      body.replaceChildren(...renderRecords(r.data));
-    });
+    void this.adapter.fetchAllEntries().then(
+      (r) => {
+        if (token !== this.token || this.body !== body) return;
+        if (!r.ok) {
+          body.replaceChildren(el('p', 'error-state', r.error));
+          return;
+        }
+        body.replaceChildren(...renderRecords(r.data));
+      },
+      (e: unknown) => {
+        if (token === this.token && this.body === body) body.replaceChildren(el('p', 'error-state', failed('record', e)));
+      },
+    );
   }
 
   unmount(): void {
@@ -103,6 +109,8 @@ function renderRecords(entries: Entry[]): HTMLElement[] {
 export class ResearchPanel implements Panel {
   private results: HTMLElement | null = null;
   private token = 0;
+  /** The last search and its answer: kept across a rail switch, shown again on return. */
+  private last: { question: string; result: AdapterResult<AskResult> } | null = null;
 
   private adapter: SeamAdapter;
 
@@ -133,30 +141,27 @@ export class ResearchPanel implements Panel {
     });
     box.append(form, this.results);
     slot.replaceChildren(box);
+    if (this.last) {
+      input.value = this.last.question;
+      renderHits(this.results, this.last.result);
+    }
   }
 
   private search(question: string): void {
     const out = this.results;
     if (!out) return;
     const token = ++this.token;
-    void this.adapter.ask(question).then((r) => {
-      if (token !== this.token || this.results !== out) return;
-      if (!r.ok) {
-        out.replaceChildren(el('p', 'error-state', r.error));
-        return;
-      }
-      if (r.data.provenance.length === 0) {
-        out.replaceChildren(el('p', 'empty-state', 'Nothing found.'));
-        return;
-      }
-      const ul = el('ul', 'research-hits');
-      for (const p of r.data.provenance) {
-        const li = el('li', 'research-hit');
-        li.append(el('span', 'research-source', p.source), el('span', 'research-excerpt', p.excerpt));
-        ul.appendChild(li);
-      }
-      out.replaceChildren(ul);
-    });
+    out.replaceChildren(el('p', 'prompt-state', 'Searching...'));
+    void this.adapter.ask(question).then(
+      (r) => {
+        if (token !== this.token || this.results !== out) return;
+        this.last = { question, result: r };
+        renderHits(out, r);
+      },
+      (e: unknown) => {
+        if (token === this.token && this.results === out) out.replaceChildren(el('p', 'error-state', failed('knowledge', e)));
+      },
+    );
   }
 
   refresh(): void {}
@@ -165,6 +170,24 @@ export class ResearchPanel implements Panel {
     this.token++;
     this.results = null;
   }
+}
+
+function renderHits(out: HTMLElement, r: AdapterResult<AskResult>): void {
+  if (!r.ok) {
+    out.replaceChildren(el('p', 'error-state', r.error));
+    return;
+  }
+  if (r.data.provenance.length === 0) {
+    out.replaceChildren(el('p', 'empty-state', 'Nothing found.'));
+    return;
+  }
+  const ul = el('ul', 'research-hits');
+  for (const p of r.data.provenance) {
+    const li = el('li', 'research-hit');
+    li.append(el('span', 'research-source', p.source), el('span', 'research-excerpt', p.excerpt));
+    ul.appendChild(li);
+  }
+  out.replaceChildren(ul);
 }
 
 /** Lessons: ELLE's lessons, live, learned ones first. */
@@ -182,6 +205,7 @@ export class LessonsPanel implements Panel {
     const box = el('section', 'list-section');
     box.appendChild(el('h2', '', 'Lessons'));
     this.body = el('div', 'lessons-list');
+    this.body.appendChild(el('p', 'prompt-state', 'Reading the lessons...'));
     box.appendChild(this.body);
     slot.replaceChildren(box);
     this.refresh();
@@ -191,26 +215,36 @@ export class LessonsPanel implements Panel {
     const body = this.body;
     if (!body) return;
     const token = ++this.token;
-    void this.adapter.fetchLessons().then((r) => {
-      if (token !== this.token || this.body !== body) return;
-      if (!r.ok) {
-        body.replaceChildren(el('p', 'error-state', r.error));
-        return;
-      }
-      if (r.data.length === 0) {
-        body.replaceChildren(el('p', 'empty-state', 'No lessons yet.'));
-        return;
-      }
-      const ul = el('ul', 'lessons-unfiled');
-      for (const l of promotedFirst(r.data)) ul.appendChild(renderLesson(l));
-      body.replaceChildren(ul);
-    });
+    void this.adapter.fetchLessons().then(
+      (r) => {
+        if (token !== this.token || this.body !== body) return;
+        if (!r.ok) {
+          body.replaceChildren(el('p', 'error-state', r.error));
+          return;
+        }
+        if (r.data.length === 0) {
+          body.replaceChildren(el('p', 'empty-state', 'No lessons yet.'));
+          return;
+        }
+        const ul = el('ul', 'lessons-unfiled');
+        for (const l of promotedFirst(r.data)) ul.appendChild(renderLesson(l));
+        body.replaceChildren(ul);
+      },
+      (e: unknown) => {
+        if (token === this.token && this.body === body) body.replaceChildren(el('p', 'error-state', failed('lessons', e)));
+      },
+    );
   }
 
   unmount(): void {
     this.token++;
     this.body = null;
   }
+}
+
+/** A thrown read, in words. */
+function failed(what: string, e: unknown): string {
+  return `The ${what} read failed: ${e instanceof Error ? e.message : String(e)}`;
 }
 
 /** Learned (promoted) lessons first; the order within each group is the connector's. */

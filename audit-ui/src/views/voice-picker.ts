@@ -4,9 +4,9 @@ import { VOICE_LABELS } from './voices.ts';
 /**
  * The voice picker: one small bordered chip per voice, in a row above the
  * composer ("[BOOK] 1818"). A radio group made of real buttons:
- * role=radiogroup, role=radio buttons with aria-checked. Each chip is a Tab
- * stop and answers Enter / Space; Left/Right and Up/Down move to the next
- * chip and pick it.
+ * role=radiogroup, role=radio buttons with aria-checked. One Tab stop (the
+ * picked chip, else the first: a roving tabindex); Enter / Space pick;
+ * Left/Right and Up/Down move to the next chip and pick it.
  */
 export function renderVoicePicker(
   voices: readonly Register[],
@@ -25,6 +25,7 @@ export function renderVoicePicker(
     b.setAttribute('role', 'radio');
     b.setAttribute('aria-checked', String(v === selected));
     b.dataset.voice = v;
+    b.tabIndex = v === selected || (!voices.includes(selected as Register) && i === 0) ? 0 : -1;
     const t = document.createElement('span');
     t.className = 'voice-tag';
     t.textContent = `[${tag}]`;

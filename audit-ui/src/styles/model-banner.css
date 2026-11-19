@@ -1,10 +1,12 @@
-
+/* The live-model announcement under the chat box (views/model-banner.ts).
+   The picked voice owns the whole band: Book is violet, Movie amber, Young
+   Frankenstein the default cyan, with the voice word in a solid block and
+   the model name large. Switching voice changes the band at once. */
 
 .model-banner {
   --band: var(--line-strong);
   --band-bg: var(--surface);
   --band-text: var(--text);
-  grid-column: 1 / -1;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   grid-template-areas:

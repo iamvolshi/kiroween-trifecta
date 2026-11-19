@@ -172,6 +172,8 @@ export class ChatView implements View {
       return;
     }
     // A failed re-read keeps the chips; the band under the composer says the connector is unreachable.
+    // A rebuild must not drop keyboard focus: a chip that had it gets it back.
+    const hadFocus = slot.contains(document.activeElement);
     slot.replaceChildren(
       renderVoicePicker(voices, voice, (v) => {
         const switched = this.log.voice() !== null && this.log.voice() !== v;
@@ -181,7 +183,7 @@ export class ChatView implements View {
         if (switched) this.loadStatus(false);
       }),
     );
-    if (focus) slot.querySelector<HTMLButtonElement>('[aria-checked="true"]')?.focus();
+    if (focus || hadFocus) slot.querySelector<HTMLButtonElement>('[tabindex="0"]')?.focus();
   }
 
   /** Accent, picker, composer and band follow the picked voice. */
@@ -192,10 +194,11 @@ export class ChatView implements View {
       else delete this.root.dataset.voice;
     }
     this.renderPicker(focus);
-    const ready = voice !== null;
+    // Ready only while the picked voice is one the connector offers (a chip shows it).
+    const ready = voice !== null && this.voices.includes(voice);
     if (this.input) {
       this.input.disabled = !ready;
-      this.input.placeholder = ready ? `Message ${VOICE_LABELS[voice].name}` : AWAITING_MASK;
+      this.input.placeholder = ready && voice ? `Message ${VOICE_LABELS[voice].name}` : AWAITING_MASK;
     }
     if (this.sendBtn) this.sendBtn.disabled = !ready || this.pending;
     this.renderModel();
@@ -256,11 +259,11 @@ export class ChatView implements View {
     // reply, so drop it and re-read the live map.
     if (!result.ok) {
       this.served.delete(voice);
-      this.loadStatus(false);
+      if (this.container !== null) this.loadStatus(false); // a gone view reads nothing
     }
     if (token !== this.requestToken || this.container !== root) return;
 
-    btn.disabled = this.log.voice() === null;
+    btn.disabled = input.disabled; // locked with the composer
     if (!result.ok) {
       this.renderModel();
       this.errorSlot?.replaceChildren(el('p', 'error-state', result.error));

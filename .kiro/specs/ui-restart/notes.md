@@ -47,9 +47,23 @@ corrected font link (Geist 100..900, JetBrains Mono 100..800, Space Grotesk
   words (the unreachable words) and the composer stays locked. A failed
   re-read after a pick keeps the chips; the band says the connector is
   unreachable.
+- Keyboard: the picker has one Tab stop (roving tabindex); a /models
+  re-read that rebuilds the chips gives focus back to the chip that had it.
+  A picked voice the connector no longer reports locks the composer.
+- Research keeps its last search across a rail switch; Audit and Lessons
+  say they are reading until the read lands. A read that throws is said in
+  words on every panel (and in the Chat list).
 - The connector still records the speaker of an HTTP turn as "Audit UI"
   (bots `CONNECTOR_SPEAKER`). That is record data, not the app name; it is
   left as it is.
+
+## Known limits
+
+- The Audit panel's view links carry no aria-current (the Chat panel's nav
+  does). The CSS accent cascade and the pinned dock are checked in the proof
+  shots, not in jsdom.
+- "Elara" still appears in one test comment (bug-hunt-fixes.test.ts): it is
+  the verifier's name in a credit line, not the mask.
 
 ## Not built
 
@@ -67,7 +81,7 @@ the Lessons, Audit and Research panels, 08 another view on the tokens.
 
 ## Tests
 
-380 pass (372 at base). The deleted face's tests (mask cards, persona
+388 pass (372 at base). The deleted face's tests (mask cards, persona
 picker, register switch, Elara / ARCHETRON routes) were replaced by tests of
 the new face: `views/chat.test.ts` (pre-pick screen, chips, unlock, accent,
 bubbles), `views/model-banner.test.ts` (band rules per voice, Young

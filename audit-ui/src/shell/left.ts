@@ -108,6 +108,11 @@ export class LeftPanel implements Panel {
         // Lessons are optional here: a failed read leaves the folders without them.
         this.render(folderBody, entries.data, lessonData);
       },
+      (e: unknown) => {
+        // A read that throws (rather than answering an error) is still said in words.
+        if (token !== this.requestToken || this.folderBody !== folderBody) return;
+        folderBody.replaceChildren(el('p', 'error-state', `The record read failed: ${e instanceof Error ? e.message : String(e)}`));
+      },
     );
   }
 
