@@ -70,10 +70,17 @@ export function renderSnapshot(did: Entry[], pool: Entry[], hour: number): HTMLE
 export const KTIE_NAME = 'KTIE';
 export const KTIE_EXPANSION = 'Knowledge Time Indexing Engine';
 
-/** "2026-11-18 ? 14:00 UTC ? 3 entries": a real moment, as the folder pane names it. */
+/** "2026-11-18 \u00b7 14:00 UTC \u00b7 3 entries": a real moment, as the folder pane names it. */
 export function momentLabel(m: Moment): string {
   const n = `${m.count} ${m.count === 1 ? 'entry' : 'entries'}`;
   return `${m.day.year}-${p2(m.day.month)}-${p2(m.day.day)} \u00b7 ${p2(m.hour)}:00 UTC \u00b7 ${n}`;
+}
+
+/** What the folder shows before any spin: the route's own content. */
+function folderCaption(t: CalendarTarget): string {
+  if (t.level === 'month') return `Folder: ${MONTH_NAMES[t.month - 1]} ${t.year} (UTC)`;
+  if (t.level === 'day') return `Folder: ${t.year}-${p2(t.month)}-${p2(t.day)} (UTC)`;
+  return `Folder: ${t.year}-${p2(t.month)}-${p2(t.day)} \u00b7 ${p2(t.hour)}:00 UTC`;
 }
 
 /**
@@ -131,10 +138,16 @@ export class CalendarView implements View {
     const t = this.target ?? this.defaultTarget(entries);
     // The folder under the drums: the record at the moment they rest on.
     const folder = el('div', 'ktie-folder');
-    folder.setAttribute('aria-live', 'polite');
+    // The line above the folder: the moment passing while the drums spin (its
+    // space is kept when idle, so the folder never jumps), and, for screen
+    // readers, a short word of where the folder landed.
     const passing = el('p', 'ktie-passing');
     passing.hidden = true;
-    passing.setAttribute('aria-hidden', 'true'); // motion only; the folder says where it landed
+    passing.setAttribute('aria-hidden', 'true'); // motion only
+    const landed = el('p', 'sr-only ktie-landed');
+    landed.setAttribute('role', 'status');
+    // What the folder shows: the route's own content, until a spin settles.
+    const caption = el('p', 'ktie-folder-caption', folderCaption(t));
     const fill = (parts: HTMLElement[]): void => {
       const main = el('div', 'calendar-main');
       main.append(...parts);
@@ -154,16 +167,17 @@ export class CalendarView implements View {
           passing.hidden = false;
           passing.textContent = momentLabel(m);
           folder.dataset.spinning = 'true';
+          folder.setAttribute('aria-busy', 'true');
         },
         onSettle: (m) => {
-          if (isCurrent()) void this.settle(folder, passing, entries, m, isCurrent);
+          if (isCurrent()) void this.settle(folder, passing, caption, landed, entries, m, isCurrent);
         },
       },
     );
     this.rail = rail;
     const show = (parts: HTMLElement[]): void => {
       fill(parts);
-      body.replaceChildren(rail.root, passing, folder);
+      body.replaceChildren(rail.root, passing, landed, caption, folder);
     };
 
     if (t.level === 'month') {
@@ -193,6 +207,8 @@ export class CalendarView implements View {
   private async settle(
     folder: HTMLElement,
     passing: HTMLElement,
+    caption: HTMLElement,
+    landed: HTMLElement,
     entries: Entry[],
     m: Moment,
     isCurrent: () => boolean,
@@ -213,8 +229,16 @@ export class CalendarView implements View {
     else main.append(...this.renderHour(entries, pool.data, kidMap, t, input));
     folder.replaceChildren(main);
     delete folder.dataset.spinning;
-    folder.dataset.moment = `${input}`;
+    folder.removeAttribute('aria-busy');
+    folder.dataset.moment = input;
     passing.hidden = true;
+    const words = `Folder: ${momentLabel(m)}`;
+    caption.textContent = words;
+    landed.textContent = words;
+    // The address follows the folder (no new history entry), so a reload or a
+    // shared link shows the same moment.
+    const href = calendarHref({ level: 'hour', ...t });
+    if (window.location.pathname !== href) window.history.replaceState(window.history.state, '', href);
   }
 
   /** Month of the newest entry by k_start, else the current UTC month. */

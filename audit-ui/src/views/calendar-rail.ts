@@ -31,7 +31,8 @@ import {
  * right re-derive from the new selection (a year move re-picks the last
  * quarter, week, day and hour in it; a quarter move the last week, day and
  * hour; and so on). A wheel claims the scroll only when it moved: at an end
- * the page scrolls. Arrow keys spin the focused wheel. Clicking a value
+ * the page scrolls. Arrow keys spin the focused wheel (Up/Down, and
+ * Left/Right as the old rail did), Home / End jump to its ends. Clicking a value
  * centers it; clicking an hour opens that hour's view (a plain link).
  *
  * Every move reports the moment it passes (`onSpin`); once the wheels have
@@ -46,11 +47,13 @@ const HEADS: Record<Segment, string> = { year: 'Years', quarter: 'Quarters', wee
 /** Values shown either side of the center; further ones are hidden. */
 export const DRUM_REACH = 3;
 /** Opacity by distance from the center: solid, then fading out. */
-export const DRUM_FADE: readonly number[] = [1, 0.5, 0.24, 0.1];
+export const DRUM_FADE: readonly number[] = [1, 0.55, 0.3, 0.14];
 /** Quiet time after the last move before the wheels count as settled. */
 export const SETTLE_MS = 420;
 /** Wheel travel (px) per step: a mouse notch is one step; a trackpad gathers small deltas. */
 const STEP_PX = 50;
+/** A gathered partial step is dropped after this much quiet (ms). */
+const GATHER_QUIET_MS = 160;
 
 const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const p2 = (n: number): string => String(n).padStart(2, '0');
@@ -119,6 +122,7 @@ export class CalendarRail {
   private drums = new Map<Segment, HTMLElement>();
   private row: HTMLElement;
   private wheelGather = new Map<Segment, number>();
+  private wheelAt = new Map<Segment, number>();
   private settleTimer: ReturnType<typeof setTimeout> | null = null;
   private opts: RailOptions;
 
@@ -129,8 +133,10 @@ export class CalendarRail {
     this.lockedHour = lockedHour;
     this.lockedDay = lockedHour !== null ? focus : null;
     this.opts = opts;
-    this.root = el('section', 'calendar-rail ktie-drums');
+    this.root = el('div', 'calendar-rail ktie-drums');
+    this.root.setAttribute('role', 'group');
     this.root.setAttribute('aria-label', 'Time tree');
+    this.root.style.setProperty('--drum-reach', String(DRUM_REACH));
     this.row = el('div', 'drum-row');
     this.root.appendChild(this.row);
     const start =
@@ -197,7 +203,7 @@ export class CalendarRail {
       if (this.year === null) return [];
       return quartersOfYearPresent(days, this.year).map((q) => {
         const n = this.countIn((d) => quarterKey(quarterOf(d)) === quarterKey(q));
-        return { key: quarterKey(q), label: `Q${q.q}`, aria: `${q.year} Q${q.q}, ${plural(n)}`, count: n };
+        return { key: quarterKey(q), label: `Q${q.q}`, aria: `Q${q.q}, ${q.year} Q${q.q}, ${plural(n)}`, count: n };
       });
     }
     if (seg === 'week') {
@@ -205,7 +211,7 @@ export class CalendarRail {
       if (!q) return [];
       return weeksPresent(days, q).map((w) => {
         const n = this.countIn((d) => quarterKey(quarterOf(d)) === quarterKey(q) && weekKey(isoWeekOf(d)) === weekKey(w));
-        return { key: weekKey(w), label: `W${w.week}`, aria: `Week ${w.week} of ${w.isoYear}, ${plural(n)}`, count: n };
+        return { key: weekKey(w), label: `W${w.week}`, aria: `W${w.week}, week ${w.week} of ${w.isoYear}, ${plural(n)}`, count: n };
       });
     }
     if (seg === 'day') {
@@ -215,7 +221,7 @@ export class CalendarRail {
         return {
           key: dayKey(d),
           label: `${dayName(d).slice(0, 3)} ${d.day}`,
-          aria: `${dayName(d)} ${d.day} ${MONTH_NAMES[d.month - 1]} ${d.year}, ${plural(n)}`,
+          aria: `${dayName(d).slice(0, 3)} ${d.day}, ${dayName(d)} ${d.day} ${MONTH_NAMES[d.month - 1]} ${d.year}, ${plural(n)}`,
           count: n,
         };
       });
@@ -346,7 +352,8 @@ export class CalendarRail {
   }
 
   private drum(seg: Segment, vals: Value[]): HTMLElement {
-    const drum = el('section', 'drum');
+    const drum = el('div', 'drum');
+    drum.setAttribute('role', 'group');
     drum.dataset.seg = seg;
     drum.dataset.keys = signature(vals);
     if (this.hovered === seg) drum.dataset.hover = 'true';
@@ -372,6 +379,15 @@ export class CalendarRail {
       item.title = v.aria;
       item.textContent = v.label;
       if (!v.href) item.addEventListener('click', () => this.pick(seg, i));
+      else {
+        // The hour already open: no second history entry, no remount.
+        item.addEventListener('click', (e) => {
+          if (v.href === window.location.pathname) {
+            e.preventDefault();
+            e.stopPropagation();
+          }
+        });
+      }
       reel.appendChild(item);
     });
     win.appendChild(reel);
@@ -381,7 +397,8 @@ export class CalendarRail {
     drum.addEventListener(
       'wheel',
       (e: WheelEvent) => {
-        if (e.deltaY === 0) return;
+        // Ctrl + wheel is the browser's zoom (and a trackpad pinch): never claimed.
+        if (e.deltaY === 0 || e.ctrlKey) return;
         const dir = e.deltaY > 0 ? 1 : -1;
         // At an end the page scrolls: the wheel claims nothing.
         if (!this.canMove(seg, dir)) {
@@ -389,10 +406,16 @@ export class CalendarRail {
           return;
         }
         e.preventDefault();
-        const px = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaMode === 2 ? e.deltaY * 400 : e.deltaY;
-        // A notch is a step; small trackpad deltas gather until they make one.
-        let gathered = Math.abs(px) >= STEP_PX ? px : (this.wheelGather.get(seg) ?? 0) + px;
+        const px = e.deltaMode === 1 ? e.deltaY * 20 : e.deltaMode === 2 ? e.deltaY * 400 : e.deltaY;
+        // A notch is a step (a line counts 20px, so a 3-line notch is one); small
+        // trackpad deltas gather until they make one.
+        // A gather goes stale after a quiet moment: an old scroll never adds to a new one.
+        const now = Date.now();
+        const prev = now - (this.wheelAt.get(seg) ?? 0) > GATHER_QUIET_MS ? 0 : this.wheelGather.get(seg) ?? 0;
+        this.wheelAt.set(seg, now);
+        let gathered = Math.abs(px) >= STEP_PX ? px : prev + px;
         if (Math.sign(gathered) !== dir) gathered = px;
+        // At most one step per event, however large the delta.
         if (Math.abs(gathered) >= STEP_PX) {
           gathered = 0;
           this.move(seg, dir);

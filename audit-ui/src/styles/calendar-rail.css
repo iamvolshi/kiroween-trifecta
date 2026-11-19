@@ -34,7 +34,7 @@
   font-weight: var(--t-headline-xl-wt);
   letter-spacing: var(--t-headline-xl-ls);
   color: var(--engine-katie);
-  text-shadow: 0 0 18px rgba(255, 92, 138, 0.35);
+  text-shadow: 0 0 18px color-mix(in srgb, var(--engine-katie) 35%, transparent);
 }
 
 .ktie-expansion {
@@ -51,16 +51,16 @@
 /* ---- The drums ---------------------------------------------------------- */
 
 .ktie-drums {
-  /* One value's height, and how many show either side of the center (DRUM_REACH). */
+  /* One value's height. --drum-reach (values either side of the center)
+     is set from DRUM_REACH in calendar-rail.ts. */
   --drum-row: 2.5rem;
-  --drum-reach: 3;
   position: relative;
   min-width: 0;
   padding: var(--s3) var(--s3) var(--s4);
   border: 1px solid var(--line);
   border-radius: var(--radius-xl);
   background:
-    radial-gradient(120% 70% at 50% 50%, rgba(255, 92, 138, 0.07), transparent 70%),
+    radial-gradient(120% 70% at 50% 50%, color-mix(in srgb, var(--engine-katie) 7%, transparent), transparent 70%),
     var(--inset);
 }
 
@@ -89,6 +89,9 @@
   text-align: center;
   text-transform: uppercase;
   color: var(--outline);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   transition: color 160ms ease-out;
 }
 
@@ -96,22 +99,22 @@
    curved like a drum and fading out at its top and bottom. */
 .drum-window {
   position: relative;
-  height: calc(var(--drum-row) * (2 * var(--drum-reach) + 1));
+  height: calc(var(--drum-row) * (2 * var(--drum-reach, 3) + 1));
   overflow: hidden;
   perspective: 520px;
-  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 18%, #000 82%, transparent);
-  mask-image: linear-gradient(to bottom, transparent, #000 18%, #000 82%, transparent);
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 9%, #000 91%, transparent);
+  mask-image: linear-gradient(to bottom, transparent, #000 9%, #000 91%, transparent);
 }
 
 /* The selection band: where the centered value sits. */
 .drum-window::before {
   content: '';
   position: absolute;
-  inset: calc(var(--drum-row) * var(--drum-reach)) 0 auto;
+  inset: calc(var(--drum-row) * var(--drum-reach, 3)) 0 auto;
   height: var(--drum-row);
-  border-top: 1px solid rgba(255, 92, 138, 0.45);
-  border-bottom: 1px solid rgba(255, 92, 138, 0.45);
-  background: rgba(255, 92, 138, 0.06);
+  border-top: 1px solid color-mix(in srgb, var(--engine-katie) 45%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--engine-katie) 45%, transparent);
+  background: color-mix(in srgb, var(--engine-katie) 6%, transparent);
   pointer-events: none;
   transition: background 160ms ease-out, border-color 160ms ease-out;
 }
@@ -119,7 +122,7 @@
 /* The wheel under the cursor: the scroll wheel spins this one. */
 .drum[data-hover='true'] .drum-window::before {
   border-color: var(--engine-katie);
-  background: rgba(255, 92, 138, 0.13);
+  background: color-mix(in srgb, var(--engine-katie) 13%, transparent);
 }
 
 .drum[data-hover='true'] .drum-head {
@@ -127,7 +130,7 @@
 }
 
 .drum-reel {
-  transform: translateY(calc((var(--drum-reach) - var(--sel, 0)) * var(--drum-row)));
+  transform: translateY(calc((var(--drum-reach, 3) - var(--sel, 0)) * var(--drum-row)));
   transform-style: preserve-3d;
   transition: transform 300ms cubic-bezier(0.18, 0.9, 0.24, 1);
 }
@@ -150,6 +153,8 @@
   letter-spacing: 0.02em;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: clip;
   text-decoration: none;
   cursor: pointer;
   /* Faded by distance from the center (--fade), tipped back like a drum (--d). */
@@ -158,16 +163,17 @@
   transition: opacity 300ms ease-out, transform 300ms cubic-bezier(0.18, 0.9, 0.24, 1), color 160ms ease-out;
 }
 
-/* Hours with nothing recorded: there, but quieter. */
+/* Hours with nothing recorded: there, but quieter (muted, not faint, so a
+   faded one still reads). */
 .drum-value[data-has='false'] {
-  color: var(--faint);
+  color: var(--muted);
 }
 
 /* The centered value: solid, KTIE's rose. */
 .drum-value[data-selected='true'] {
   color: var(--engine-katie);
   font-weight: 700;
-  text-shadow: 0 0 14px rgba(255, 92, 138, 0.5);
+  text-shadow: 0 0 14px color-mix(in srgb, var(--engine-katie) 50%, transparent);
 }
 
 .drum-value[data-far='true'] {
@@ -208,6 +214,19 @@
   font-weight: var(--t-body-sm-wt);
 }
 
+/* A narrow center column: smaller values, so five wheels still fit. */
+@container (max-width: 44rem) {
+  .drum-value {
+    font-size: var(--t-headline-sm-size);
+    line-height: var(--t-headline-sm-lh);
+  }
+
+  .ktie-drums {
+    --drum-row: 2rem;
+    padding-inline: var(--s1);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .drum-reel,
   .drum-value {
@@ -219,6 +238,7 @@
 
 /* While the drums spin: the real moments passing by, above the folder. */
 .ktie-passing {
+  min-height: var(--t-telemetry-data-lh);
   margin: 0;
   font-family: var(--mono);
   font-size: var(--t-telemetry-data-size);
@@ -233,8 +253,21 @@
   content: '\25B8  ' / '';
 }
 
+/* Idle, its line is kept (hidden, not removed) so the folder never jumps. */
 .ktie-passing[hidden] {
-  display: none;
+  display: block;
+  visibility: hidden;
+}
+
+.ktie-folder-caption {
+  margin: 0 0 var(--s2);
+  font-family: var(--mono);
+  font-size: var(--t-label-md-size);
+  line-height: var(--t-label-md-lh);
+  font-weight: var(--t-label-md-wt);
+  letter-spacing: var(--t-label-md-ls);
+  text-transform: uppercase;
+  color: var(--muted);
 }
 
 .ktie-folder {

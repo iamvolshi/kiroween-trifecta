@@ -25,8 +25,23 @@ record; counts ride in labels and titles.
   links; fixed and tested.
 - "Folder" on the month and day routes is the route's own content until
   the first spin settles; the order also names the hour view as the folder,
-  so a settled spin shows the hour view. The URL does not change on settle
-  (no history entries while browsing); clicking an hour navigates.
+  so a settled spin shows the hour view. A caption above the folder always
+  says what it holds ("Folder: November 2026 (UTC)", then "Folder:
+  2026-03-03 ? 11:00 UTC ? 0 entries"). On settle the address follows the
+  folder with replaceState (no new history entry, no remount), so a reload
+  or a shared link shows the same moment. Clicking the hour already open
+  does nothing (no duplicate history entry).
+- The passing line keeps its space when idle (hidden, not removed), so the
+  folder never jumps between spinning and settled. Screen readers hear one
+  short status ("Folder: ...") on settle; the folder is aria-busy while the
+  drums spin.
+- Wheel: Ctrl + wheel (zoom, a pinch) is never claimed; a gathered partial
+  step goes stale after 160ms; a line delta counts 20px (a 3-line notch is
+  one step); one step per event at most.
+- Every value's aria-label starts with what it shows (label in name). The
+  drums are role=group (no extra landmarks). --drum-reach is set from
+  DRUM_REACH. Faded values: 1 / 0.55 / 0.3 / 0.14; empty hours are muted,
+  not faint. A narrow center column shrinks the values.
 - The drums are KTIE's rose. The month heatmap, the day list and the
   knowledge-state panel keep their colours (the order keeps that content
   unchanged).
@@ -37,6 +52,8 @@ record; counts ride in labels and titles.
 
 - The calendar intro still says "or use the rail" (the order keeps the intro
   as it is).
+- Left/Right spin the focused wheel (as the old rail did), not move focus
+  between wheels; Tab moves between wheels.
 - jsdom draws no CSS: the fade and the curve are checked as the values the
   drums set (`--fade`, `--d`, `--sel`) and in the proof shots.
 
@@ -57,7 +74,7 @@ the hour view with the drums above.
 
 ## Tests
 
-428 pass (419 at base). `views/calendar-face.test.ts`: header; five wheels
+433 pass (419 at base). `views/calendar-face.test.ts`: header; five wheels
 in order; centered solid / neighbours faded / far hidden; counts in labels;
 year cascade; hovered wheel only, right wheels follow; claim only on a move;
 trackpad gathering; patch vs rebuild; the hour wheel follows a day change;

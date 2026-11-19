@@ -177,7 +177,7 @@ describe('the drums', () => {
     const fade = (h: number): string => hours[h]!.style.getPropertyValue('--fade');
     expect(hours[14]!.dataset.selected).toBe('true');
     expect([fade(14), fade(13), fade(15), fade(12), fade(16), fade(11), fade(17)]).toEqual(
-      ['1', '0.5', '0.5', '0.24', '0.24', '0.1', '0.1'],
+      ['1', '0.55', '0.55', '0.3', '0.3', '0.14', '0.14'],
     );
     expect(Number(fade(14))).toBe(DRUM_FADE[0]);
     expect(fade(10)).toBe('0');
@@ -187,6 +187,10 @@ describe('the drums', () => {
     expect(wheel(r, 'hour').querySelector<HTMLElement>('.drum-reel')!.style.getPropertyValue('--sel')).toBe('14');
     // One Tab stop per wheel: the centered value.
     expect(hours.filter((h) => h.tabIndex === 0)).toEqual([hours[14]]);
+    const quarters = [...wheel(r, 'quarter').querySelectorAll<HTMLButtonElement>('.drum-value')];
+    expect(quarters.map((q) => q.getAttribute('aria-pressed'))).toEqual(['false', 'true']);
+    expect(r.root.getAttribute('role')).toBe('group');
+    expect(wheel(r, 'hour').getAttribute('role')).toBe('group');
   });
 
   it('counts ride in the labels; nothing is invented', () => {
@@ -195,7 +199,12 @@ describe('the drums', () => {
     expect(h14.getAttribute('aria-label')).toBe('14:00 UTC, 3 entries');
     expect(h14.title).toBe('14:00 UTC, 3 entries');
     expect(wheel(r, 'hour').querySelector('.drum-value[data-key="3"]')?.getAttribute('data-has')).toBe('false');
-    expect(wheel(r, 'day').getAttribute('aria-label')).toBe('Days: Wednesday 18 November 2026, 4 entries');
+    expect(wheel(r, 'day').getAttribute('aria-label')).toBe('Days: Wed 18, Wednesday 18 November 2026, 4 entries');
+    // Label in name: every value's spoken label starts with what it shows.
+    for (const v of r.root.querySelectorAll<HTMLElement>('.drum-value')) {
+      expect(v.getAttribute('aria-label')!.startsWith(v.textContent!)).toBe(true);
+    }
+    expect(r.root.style.getPropertyValue('--drum-reach')).toBe('3');
     expect(wheel(r, 'year').querySelector('.drum-value')?.getAttribute('aria-label')).toBe('2026, 6 entries');
   });
 
@@ -229,6 +238,30 @@ describe('the drums', () => {
     expect(centered(r, 'hour')).toBe('22:00');
     expect(spin(wheel(r, 'quarter'), 100).defaultPrevented).toBe(false); // Q4 is the newest
     expect(r.move('quarter', 1)).toBe(false);
+    r.root.remove();
+  });
+
+  it('Ctrl + wheel (zoom, a pinch) is never claimed', () => {
+    const r = new CalendarRail(ENTRIES, NOV18, 14);
+    document.body.appendChild(r.root);
+    const e = new WheelEvent('wheel', { deltaY: -100, ctrlKey: true, bubbles: true, cancelable: true });
+    wheel(r, 'hour').dispatchEvent(e);
+    expect(e.defaultPrevented).toBe(false);
+    expect(centered(r, 'hour')).toBe('14:00');
+    r.root.remove();
+  });
+
+  it('line and page wheel deltas step too; a gather resets on a direction change', () => {
+    const r = new CalendarRail(ENTRIES, NOV18, 14);
+    document.body.appendChild(r.root);
+    wheel(r, 'hour').dispatchEvent(new WheelEvent('wheel', { deltaY: 3, deltaMode: 1, bubbles: true, cancelable: true })); // 3 lines
+    expect(centered(r, 'hour')).toBe('15:00');
+    wheel(r, 'hour').dispatchEvent(new WheelEvent('wheel', { deltaY: 1, deltaMode: 2, bubbles: true, cancelable: true })); // a page
+    expect(centered(r, 'hour')).toBe('16:00');
+    spin(wheel(r, 'hour'), 40);
+    spin(wheel(r, 'hour'), -40); // the other way: the 40 down is dropped, not netted
+    spin(wheel(r, 'hour'), -10);
+    expect(centered(r, 'hour')).toBe('15:00');
     r.root.remove();
   });
 
@@ -321,14 +354,21 @@ describe('the drums and the hour view', () => {
     expect(root.querySelector('.knowledge-state h2')?.textContent).toContain('14:00 UTC');
     // The hour view, with the drums above it.
     const order = [...root.querySelector('.calendar-view')!.children].map((c) => c.className);
-    expect(order).toEqual(['calendar-rail ktie-drums', 'ktie-passing', 'ktie-folder']);
+    expect(order).toEqual(['calendar-rail ktie-drums', 'ktie-passing', 'sr-only ktie-landed', 'ktie-folder-caption', 'ktie-folder']);
+    // The hour already open: clicking it again adds no history entry and keeps the view.
+    const before = window.history.length;
+    const viewEl = root.querySelector('.calendar-view');
+    root.querySelector<HTMLAnchorElement>('.drum[data-seg="hour"] a.drum-value[data-key="14"]')!.click();
+    for (let i = 0; i < 4; i++) await tick();
+    expect(window.history.length).toBe(before);
+    expect(root.querySelector('.calendar-view')).toBe(viewEl);
     router.destroy();
   });
 });
 
 describe('the folder under the drums', () => {
   it('holds while the drums spin, then lands on the settled moment', async () => {
-    await mount({ level: 'month', year: 2026, month: 11 }, stub(ENTRIES), 30);
+    await mount({ level: 'month', year: 2026, month: 11 }, stub(ENTRIES), 200);
     const folder = root.querySelector<HTMLElement>('.ktie-folder')!;
     const passing = root.querySelector<HTMLElement>('.ktie-passing')!;
     expect(folder.querySelector('.calendar-grid')).not.toBeNull(); // the route's own content first
@@ -340,16 +380,51 @@ describe('the folder under the drums', () => {
     expect(folder.dataset.spinning).toBe('true');
     expect(passing.hidden).toBe(false);
     expect(passing.textContent).toBe('2026-11-18 \u00b7 14:00 UTC \u00b7 3 entries');
-    await wait(10);
+    expect(folder.getAttribute('aria-busy')).toBe('true');
+    expect(root.querySelector('.ktie-folder-caption')?.textContent).toBe('Folder: November 2026 (UTC)');
+    await wait(20);
     expect(folder.querySelector('.calendar-grid')).not.toBeNull(); // not settled yet
-    await wait(60);
+    await wait(320);
     for (let i = 0; i < 4; i++) await tick();
     expect(folder.querySelector('.calendar-grid')).toBeNull();
     expect(folder.querySelector('.knowledge-state h2')?.textContent).toContain('14:00 UTC');
     expect(folder.querySelector('.hour-did')).not.toBeNull();
     expect(folder.querySelector('.hour-believed')).not.toBeNull();
     expect(folder.dataset.spinning).toBeUndefined();
+    expect(folder.hasAttribute('aria-busy')).toBe(false);
     expect(passing.hidden).toBe(true);
+    // The caption and the address follow the folder; no new history entry.
+    expect(root.querySelector('.ktie-folder-caption')?.textContent).toBe('Folder: 2026-11-18 \u00b7 14:00 UTC \u00b7 3 entries');
+    expect(root.querySelector('.ktie-landed')?.textContent).toBe('Folder: 2026-11-18 \u00b7 14:00 UTC \u00b7 3 entries');
+    expect(window.location.pathname).toBe('/calendar/2026-11-18/14');
+  });
+
+  it('unmount during a pending settle: nothing lands, no error, the timer is gone', async () => {
+    window.history.replaceState({}, '', '/calendar');
+    await mount({ level: 'month', year: 2026, month: 11 }, stub(ENTRIES), 40);
+    spin(root.querySelector<HTMLElement>('.drum[data-seg="hour"]')!, -100);
+    view!.unmount();
+    view = null;
+    await wait(120);
+    expect(root.innerHTML).toBe('');
+    expect(window.location.pathname).toBe('/calendar'); // the settle never ran
+  });
+
+  it('destroy() clears the settle timer', async () => {
+    const settled: Moment[] = [];
+    const r = new CalendarRail(ENTRIES, NOV18, 14, { onSettle: (m) => settled.push(m), settleMs: 20 });
+    r.move('hour', 1);
+    r.destroy();
+    await wait(80);
+    expect(settled).toEqual([]);
+  });
+
+  it('an hour route on a day with no entries: drums on the newest day of the month, no hour marked current', async () => {
+    await mount({ level: 'hour', year: 2026, month: 11, day: 20, hour: 5 });
+    expect(readout(root)).toEqual(['2026', 'Q4', 'W47', 'Wed 18', '16:00']);
+    expect(root.querySelector('.drum-value[aria-current]')).toBeNull();
+    expect(root.querySelector('.ktie-folder-caption')?.textContent).toBe('Folder: 2026-11-20 \u00b7 05:00 UTC');
+    expect(root.querySelector('.knowledge-state h2')?.textContent).toContain('05:00 UTC');
   });
 
   it('every passing line names a real moment from the record', async () => {
@@ -373,15 +448,15 @@ describe('the folder under the drums', () => {
     const slow = new Promise<void>((res) => { release = res; });
     const base = stub(ENTRIES);
     const adapter: SeamAdapter = { ...base, fetchKidMap: async () => { await slow; return base.fetchKidMap(); } };
-    await mount({ level: 'month', year: 2026, month: 11 }, adapter, 5);
+    await mount({ level: 'month', year: 2026, month: 11 }, adapter, 20);
     const hourWheel = root.querySelector<HTMLElement>('.drum[data-seg="hour"]')!;
     spin(hourWheel, -100);
-    await wait(20); // settled: the load starts and waits on the kid map
+    await wait(80); // settled: the load starts and waits on the kid map
     spin(hourWheel, -100); // spinning again before it lands (now 14:00)
     release();
     for (let i = 0; i < 10; i++) await Promise.resolve(); // the stale load finishes, timers not yet
     expect(root.querySelector('.ktie-folder .calendar-grid')).not.toBeNull(); // dropped: the old folder, untouched
-    await wait(40);
+    await wait(120);
     for (let i = 0; i < 4; i++) await tick();
     // The newer moment lands, never the stale 15:00 one.
     expect(root.querySelector('.ktie-folder .knowledge-state h2')?.textContent).toContain('14:00 UTC');
