@@ -18,14 +18,15 @@ Base: `main` at `2a5fbd2`. Branch: `feat/stitch-calendar`.
 | Month grid | the day dot is now a heatmap cell: `data-heat` 1-4 = the day's live count over the month's busiest day (`daysWithEntries`); the count shows in the cell; empty days unmarked |
 | Day view | the 24 hours as rows; `(n)` only where n > 0 |
 | Hour view | NEW knowledge-state panel above the two tables: "Knowledge state at HH:00 UTC (hour #HH record closure)", the order's line, and three live counts: recorded this hour (= the "did" table), live at this moment (= the "believed" table), masks named in the hour's entry reasons |
-| The rail (`views/calendar-rail.ts`, `util/rail.ts`) | beside the calendar: Tier 1 quarters, Tier 2 ISO weeks of the quarter, Tier 3 days of the week, Tier 4 the 24-hour strip (built once). Only periods present in the loaded entries; a tier with nothing says NOT KNOWN. Tick height follows the live count. Hover darkens and lifts a tick; the hovered tier gets the cyan focus border; the wheel moves the hovered tier only; clicking an hour tick opens the same `/calendar/YYYY-MM-DD/HH` as the day list |
+| The rail (`views/calendar-rail.ts`, `util/rail.ts`) | beside the calendar: Tier 1 quarters, Tier 2 ISO weeks of the quarter, Tier 3 days of the week, Tier 4 the 24-hour strip (rebuilt when the day changes; a cursor move patches it in place). Only periods present in the loaded entries; a tier with nothing says NOT KNOWN. Tick height follows the live count. Hover darkens and lifts a tick; the hovered tier gets the cyan focus border; the wheel moves the hovered tier only, and lets the page scroll when the tier is at an end; arrow keys move the focused tier; a pick keeps keyboard focus on the picked tick; clicking an hour tick opens the same `/calendar/YYYY-MM-DD/HH` as the day list |
 | Left column | Going back: Calendar Index and Time Travel |
 | Intro | "Shaded days have record entries; the darker, the more. Open a day, then an hour, or use the rail." |
 
 ## Decisions
 
-- `--faint` is `#878d99`, not the mockup's `#6b7280`: that grey is under
-  4.5:1 on `#111318`.
+- `--faint` is `#9097a3`, not the mockup's `#6b7280`: that grey is under
+  4.5:1 on `#111318`. `#9097a3` holds 4.5:1 up to `--surface-2` (about 4.9:1).
+- The model band's amber reads `--warn`, so it matches the new palette.
 - The type scale keeps the app's 11px minimum for labels, except the rail's
   tick labels (9px, as in the mockup), which repeat the tick's aria-label.
 - Tier heads use the mockup's shape with live words: "entries", not
@@ -33,12 +34,23 @@ Base: `main` at `2a5fbd2`. Branch: `feat/stitch-calendar`.
 - The rail stacks under the calendar when the center column is under 48rem
   (container query on `.shell-center`).
 
-## Known limit
+## Known limits
 
 The masks stat reads the hour's entry REASONS, as ordered. Live loop
 reasons are "user turn (connector)" / "assistant turn (reply)": the mask's
 name is in `evidence`, not `reason`. So on live data it reads "None named"
 until reasons carry names, or the rule reads evidence instead.
+
+- Hover state is not carried across a route change (an hour click builds a
+  new rail); the focus border returns on the next mouse move.
+- If the view's day or month has no entries, the rail opens on the newest
+  period that has some.
+- "Not known" on an empty tier is drawn by the shared CSS `::before`, as on
+  every other empty state; the DOM text is "Nothing in the record for this
+  tier."
+- Empty-hour ticks are faint 2px bars, as in the mockup; still clickable.
+- `.shell-center` is a size container on every view (for the rail's
+  container query). No view has fixed-position children today.
 
 ## Not built (mockup inventions)
 
@@ -56,5 +68,5 @@ stale Elara unconfigured state; voice.
 
 ## Tests
 
-332 pass (321 at base): 11 new in `views/calendar-face.test.ts`; the month
+335 pass (321 at base): 14 new in `views/calendar-face.test.ts`; the month
 test in `views/calendar.test.ts` now checks the heatmap.
