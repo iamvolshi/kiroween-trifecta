@@ -27,9 +27,10 @@ unchanged and every view still reads live data only.
 ## Font link: one deviation from the order
 
 The ordered link asked for `wght@100..900` on all three families. Google Fonts
-answers 400 Bad Request for that URL, so no family loads at all. Space Grotesk
-only has 300–700 and JetBrains Mono only 100–800. The link uses each family's
-real range:
+answers 200 but serves only Geist from it: Space Grotesk and JetBrains Mono
+are silently dropped, so the look's two key families never load. Space
+Grotesk only has 300–700 and JetBrains Mono only 100–800. The link uses each
+family's real range (verified against the live css2 response, Nov 19):
 
 `family=Geist:wght@100..900&family=JetBrains+Mono:wght@100..800&family=Space+Grotesk:wght@300..700&display=swap`
 
