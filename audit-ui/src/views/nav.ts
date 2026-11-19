@@ -12,9 +12,9 @@ export function createNav(currentPath: string | null = null): HTMLElement {
   nav.className = 'main-nav';
 
   const links: Array<[string, string]> = [
+    ['/chat', 'Chat'],
     ['/actions', 'Action List'],
     ['/time-travel', 'Time Travel'],
-    ['/chat', 'Chat'],
     ['/calendar', 'Calendar'],
   ];
 

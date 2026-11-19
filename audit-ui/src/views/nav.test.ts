@@ -42,7 +42,7 @@ describe('createNav', () => {
   it('links all four destinations and nothing else', () => {
     const nav = createNav();
     const hrefs = Array.from(nav.querySelectorAll('a')).map((a) => a.getAttribute('href'));
-    expect(hrefs).toEqual(['/actions', '/time-travel', '/chat', '/calendar']);
+    expect(hrefs).toEqual(['/chat', '/actions', '/time-travel', '/calendar']);
     expect(nav.querySelectorAll(':scope > :not(a)')).toHaveLength(0);
   });
 

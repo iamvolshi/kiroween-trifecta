@@ -95,7 +95,7 @@ describe('Router shell', () => {
       expect(container.querySelectorAll('nav')).toHaveLength(1);
       expect(container.querySelector('.shell-left nav')).not.toBeNull();
       const hrefs = Array.from(container.querySelectorAll('nav a')).map((a) => a.getAttribute('href'));
-      expect(hrefs).toEqual(['/actions', '/time-travel', '/chat', '/calendar']);
+      expect(hrefs).toEqual(['/chat', '/actions', '/time-travel', '/calendar']);
       expect(container.querySelectorAll('nav > :not(a)')).toHaveLength(0);
     });
   }
