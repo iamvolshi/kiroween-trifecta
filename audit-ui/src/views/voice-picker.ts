@@ -2,21 +2,28 @@ import type { Register } from '../adapter/seam.ts';
 import { VOICE_LABELS } from './voices.ts';
 
 /**
- * The voice picker: one small bordered chip per voice, in a row above the
- * composer ("[BOOK] 1818"). A radio group made of real buttons:
- * role=radiogroup, role=radio buttons with aria-checked. One Tab stop (the
- * picked chip, else the first: a roving tabindex); Enter / Space pick;
- * Left/Right and Up/Down move to the next chip and pick it.
+ * The voice picker: a "Pick your Frankenstein" label over one small bordered
+ * chip per voice, in a row above the composer ("[BOOK] 1818"). A radio group
+ * made of real buttons: role=radiogroup (labelled by the caption),
+ * role=radio buttons with aria-checked. One Tab stop (the picked chip, else
+ * the first: a roving tabindex); Enter / Space pick; Left/Right and Up/Down
+ * move to the next chip and pick it.
  */
 export function renderVoicePicker(
   voices: readonly Register[],
   selected: Register | null,
   onChoose: (v: Register) => void,
 ): HTMLDivElement {
+  const wrap = document.createElement('div');
+  wrap.className = 'voice-picker-wrap';
+  const label = document.createElement('p');
+  label.className = 'voice-picker-label';
+  label.id = 'voice-picker-label';
+  label.textContent = 'Pick your Frankenstein';
   const group = document.createElement('div');
   group.className = 'voice-picker';
   group.setAttribute('role', 'radiogroup');
-  group.setAttribute('aria-label', 'Voice');
+  group.setAttribute('aria-labelledby', 'voice-picker-label');
   voices.forEach((v, i) => {
     const { tag, year } = VOICE_LABELS[v];
     const b = document.createElement('button');
@@ -43,5 +50,6 @@ export function renderVoicePicker(
     });
     group.appendChild(b);
   });
-  return group;
+  wrap.append(label, group);
+  return wrap;
 }

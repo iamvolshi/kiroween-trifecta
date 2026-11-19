@@ -156,6 +156,17 @@
   margin: 0;
 }
 
+.voice-picker-label {
+  margin: 0 0 var(--s1);
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: var(--t-label-md-size);
+  line-height: var(--t-label-md-lh);
+  font-weight: var(--t-label-md-wt);
+  letter-spacing: var(--t-label-md-ls);
+  text-transform: uppercase;
+}
+
 .voice-picker {
   display: flex;
   flex-wrap: wrap;
