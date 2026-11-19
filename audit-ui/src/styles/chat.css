@@ -360,9 +360,10 @@
   background: var(--surface-2);
 }
 
-/* The box whose detail the terminal is showing. */
+/* The box whose detail the terminal is showing: solid in the colour it
+   wears (its engine colour when lit, faint grey when dark), black letters. */
 .engine-box[aria-pressed='true'] {
   border-color: var(--engine);
-  background: var(--surface-2);
-  box-shadow: inset 0 0 0 1px var(--engine);
+  background: var(--engine);
+  color: #000;
 }
