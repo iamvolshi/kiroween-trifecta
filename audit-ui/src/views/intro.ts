@@ -8,11 +8,6 @@ export const INTROS = {
     question: 'What did the agent do?',
     how: 'Every record entry, newest first. Each card shows authority and state, what changed, why, and when.',
   },
-  chat: {
-    view: 'Chat / Observability',
-    question: 'Who do you want to talk to?',
-    how: 'ARCHE runs the persona you choose. Pick one, then send a message. The right column shows what the engines did.',
-  },
   timeTravel: {
     view: 'Time Travel',
     question: 'What did it believe at that moment?',

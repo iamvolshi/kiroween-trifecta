@@ -36,7 +36,7 @@ function notInContract(what: string): { ok: false; error: string } {
 /** The fetch the adapter uses; tests pass a double. */
 export type FetchLike = (url: string, init?: RequestInit) => Promise<Response>;
 
-/** The JSON body of POST /chat. `register` only for Frankenstein. */
+/** The JSON body of POST /chat: the mask and its voice (register). */
 export function chatBody(message: string, options?: ChatOptions): Record<string, string> {
   const body: Record<string, string> = { message };
   if (options) {

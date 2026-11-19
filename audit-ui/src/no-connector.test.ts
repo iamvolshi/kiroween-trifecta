@@ -3,6 +3,8 @@
  * every view says the connector is unreachable, in words. No crash, no empty
  * shell pretending to be data. The adapter here is the REAL live adapter.
  */
+import { fetchModelStatus } from './adapter/live-models.ts';
+import type { ModelSource } from './views/chat.ts';
 import { describe, it, expect, afterEach } from 'vitest';
 import { Router } from './router/router.ts';
 import { createLiveAdapter, NO_ADDRESS_ERROR, type FetchLike } from './adapter/live.ts';
@@ -17,11 +19,11 @@ afterEach(() => {
   container.remove();
 });
 
-async function open(path: string, fetchImpl?: FetchLike, base = ''): Promise<void> {
+async function open(path: string, fetchImpl?: FetchLike, base = '', models?: ModelSource): Promise<void> {
   window.history.replaceState({}, '', path);
   container = document.createElement('div');
   document.body.appendChild(container);
-  router = new Router(createLiveAdapter(base, fetchImpl), container);
+  router = new Router(createLiveAdapter(base, fetchImpl), container, models);
   for (let i = 0; i < 8; i++) await tick();
 }
 
@@ -54,18 +56,15 @@ describe('no connector address: every view says so', () => {
     });
   }
 
-  it('/chat: the banner under the chat box says the connector is unreachable', async () => {
+  it('/chat: no voices can load, so the picker slot says the connector is unreachable', async () => {
     await open('/chat');
-    // Nothing in the banner slot until a mask is picked.
-    expect(container.querySelector('.chat-form .model-banner')).toBeNull();
-    container.querySelector<HTMLButtonElement>('.persona-picker [data-value="Elara"]')!.click();
-    const banner = container.querySelector<HTMLElement>('.chat-form .model-banner')!;
-    expect(banner.dataset.state).toBe('unreachable');
-    expect(banner.textContent).toContain(NO_ADDRESS_ERROR);
-    container.querySelector<HTMLInputElement>('#chat-message')!.value = 'hello';
-    container.querySelector<HTMLFormElement>('.chat-form')!.requestSubmit();
-    for (let i = 0; i < 6; i++) await tick();
-    expect(container.querySelector('.chat-error')?.textContent).toContain(NO_ADDRESS_ERROR);
+    // No voice can be picked: nothing under the chat box, the composer stays locked.
+    expect(container.querySelector('.model-banner')).toBeNull();
+    expect(container.querySelector('.voice-picker')).toBeNull();
+    expect(container.querySelector('.voice-slot .error-state')?.textContent).toBe(NO_ADDRESS_ERROR);
+    const input = container.querySelector<HTMLInputElement>('#chat-message')!;
+    expect(input.disabled).toBe(true);
+    expect(container.querySelector<HTMLButtonElement>('.chat-send')!.disabled).toBe(true);
     expect(container.querySelectorAll('.chat-turn')).toHaveLength(0);
   });
 });
@@ -82,10 +81,11 @@ describe('connector down (address set, nothing answers): every view says so', ()
     });
   }
 
-  it('/chat banner shows "Connector unreachable"', async () => {
-    await open('/chat', down, 'http://127.0.0.1:9');
-    // The banner reads the build-time address, which tests leave unset.
-    container.querySelector<HTMLButtonElement>('.persona-picker [data-value="ARCHETRON"]')!.click();
-    expect(container.querySelector('.model-banner')?.getAttribute('data-state')).toBe('unreachable');
+  it('/chat picker slot shows "Connector unreachable"', async () => {
+    const models: ModelSource = { status: () => fetchModelStatus('http://127.0.0.1:9', down) };
+    await open('/chat', down, 'http://127.0.0.1:9', models);
+    expect(container.querySelector('.voice-slot .error-state')?.textContent).toBe('Connector unreachable: Failed to fetch');
+    expect(container.querySelector('.voice-picker')).toBeNull();
+    expect(container.querySelector('.model-banner')).toBeNull();
   });
 });

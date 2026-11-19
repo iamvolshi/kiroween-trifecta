@@ -1,6 +1,9 @@
 import { CONNECTOR_URL } from '../adapter/connector-url.ts';
 
 export interface ShellSlots {
+  /** The icon rail (far left). */
+  rail: HTMLElement;
+  /** The list panel the rail swaps (Chat's is the directories column). */
   left: HTMLElement;
   center: HTMLElement;
   right: HTMLElement;
@@ -9,9 +12,9 @@ export interface ShellSlots {
 }
 
 /**
- * Builds the three-column shell once: directories (left), the routed View
- * (center), telemetry (right). The Router mounts the panels into the side
- * columns.
+ * Builds the shell once: the icon rail, the list panel (left), the routed
+ * View (center), telemetry (right). The Router mounts the panels into the
+ * side columns.
  */
 export function createShell(container: HTMLElement): ShellSlots {
   container.innerHTML = '';
@@ -30,7 +33,7 @@ export function createShell(container: HTMLElement): ShellSlots {
   brand.className = 'shell-brand';
   const mark = document.createElement('span');
   mark.className = 'brand-mark';
-  mark.textContent = 'Audit UI';
+  mark.textContent = 'Hackenstein';
   const tag = document.createElement('span');
   tag.className = 'brand-tag';
   tag.textContent = 'What did the agent do, and what did it believe when it did it?';
@@ -46,6 +49,10 @@ export function createShell(container: HTMLElement): ShellSlots {
   view.setAttribute('aria-hidden', 'true');
   view.hidden = true;
   brand.append(mark, tag, seam, view);
+
+  const rail = document.createElement('aside');
+  rail.className = 'shell-rail';
+  rail.setAttribute('aria-label', 'Panels');
 
   const left = document.createElement('aside');
   left.className = 'shell-left';
@@ -66,18 +73,18 @@ export function createShell(container: HTMLElement): ShellSlots {
     center.focus();
   });
 
-  shell.append(skip, brand, left, center, right);
+  shell.append(skip, brand, rail, left, center, right);
   container.appendChild(shell);
-  return { left, center, right, view };
+  return { rail, left, center, right, view };
 }
 
 /**
  * Sets the header's "View: <name>" from the view mounted in the center
- * (its intro's data-view). A view without an intro hides the label rather
- * than showing a bare "View:".
+ * (the first data-view in it: an intro's, or the chat view's own). A view
+ * without one hides the label rather than showing a bare "View:".
  */
 export function setViewLabel(slots: ShellSlots): void {
-  const name = slots.center.querySelector<HTMLElement>('.view-intro')?.dataset.view ?? '';
+  const name = slots.center.querySelector<HTMLElement>('[data-view]')?.dataset.view ?? '';
   slots.view.textContent = name ? `View: ${name}` : '';
   slots.view.hidden = name === '';
 }

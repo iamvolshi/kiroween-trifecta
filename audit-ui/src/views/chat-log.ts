@@ -1,31 +1,31 @@
 import type { ChatTurn, Persona, Register } from '../adapter/seam.ts';
 
 /**
- * Append-only transcript of chat turns, plus the conversation's chosen
- * persona and Frankenstein register. Survives view remounts (the Router
- * owns one), so leaving the chat and coming back keeps both.
+ * Append-only transcript of chat turns, plus the conversation's picked
+ * voice. Survives view remounts (the Router owns one), so leaving the chat
+ * and coming back keeps both. The mask is always Frankenstein; the voice is
+ * one of its registers.
  */
 export class ChatLog {
   private items: ChatTurn[] = [];
-  /** Persona that replied to each turn, by index (null = not recorded). */
-  private speakers: Array<Persona | null> = [];
+  /** The voice that replied to each turn, by index (null = not recorded). */
+  private speakers: Array<Register | null> = [];
   private listeners = new Set<() => void>();
-  private chosen: Persona | null = null;
-  private voice: Register = 'movie';
+  private picked: Register | null = null;
 
   /** A copy; callers cannot mutate the log. */
   turns(): ChatTurn[] {
     return [...this.items];
   }
 
-  /** The persona that replied to turn `i`, or null when none was recorded. */
-  personaAt(i: number): Persona | null {
+  /** The voice that replied to turn `i`, or null when none was recorded. */
+  voiceAt(i: number): Register | null {
     return this.speakers[i] ?? null;
   }
 
-  push(t: ChatTurn, persona: Persona | null = null): void {
+  push(t: ChatTurn, voice: Register | null = null): void {
     this.items.push(t);
-    this.speakers.push(persona);
+    this.speakers.push(voice);
     for (const fn of [...this.listeners]) fn();
   }
 
@@ -37,21 +37,17 @@ export class ChatLog {
     };
   }
 
-  /** The active persona; null until the user picks one (no default). */
+  /** The mask, once a voice is picked; null before (no default). */
   persona(): Persona | null {
-    return this.chosen;
+    return this.picked === null ? null : 'Frankenstein';
   }
 
-  setPersona(p: Persona): void {
-    this.chosen = p;
+  /** The picked voice; null until the user picks one (no default). */
+  voice(): Register | null {
+    return this.picked;
   }
 
-  /** Frankenstein's register; Movie by default (flagged call for Darren). */
-  register(): Register {
-    return this.voice;
-  }
-
-  setRegister(r: Register): void {
-    this.voice = r;
+  setVoice(r: Register): void {
+    this.picked = r;
   }
 }

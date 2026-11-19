@@ -1,5 +1,5 @@
 // The connector's model status (GET /models): which provider + model each
-// register position points at, read from the loop's own config. No provider
+// voice (register) points at, read from the loop's own config. No provider
 // or model name is written in this app:
 // every name shown comes from here or from a turn's served_by.
 import type { AdapterResult, ServedBy } from './seam';
@@ -10,21 +10,16 @@ import { NO_ADDRESS_ERROR, type FetchLike } from './live';
 export type ModelRoute = ServedBy | { error: string };
 
 export interface ModelStatus {
-  /** "entity": one shared entity behind every mask. */
+  /** "entity": one shared entity behind the mask. */
   persona: string;
   /** The loop's own route; reported only, no connector turn runs on it. */
   default: ModelRoute;
-  /** Frankenstein's two register positions. */
-  registers: { movie: ModelRoute; book: ModelRoute };
-  /** Registers whose voice the register mask's cartridge carries. */
+  /** Each voice the connector routes (book, movie, young-frankenstein) -> its route. */
+  registers: Record<string, ModelRoute>;
+  /** The voices the mask's cartridge carries, in the connector's order. */
   register_voices: string[];
-  // `personas` and `persona_routes` are optional on purpose: a connector
-  // from before the shared entity still validates, and the banner then says
-  // in words that it reports no route for Elara or ARCHETRON.
-  /** The masks the connector serves, by name. */
+  /** The masks the connector serves, by name (optional: older connectors omit it). */
   personas?: string[];
-  /** Each mask without registers (Elara, ARCHETRON) -> its route. */
-  persona_routes?: Record<string, ModelRoute>;
 }
 
 function isRoute(v: unknown): v is ModelRoute {
@@ -39,13 +34,10 @@ export function isModelStatus(v: unknown): v is ModelStatus {
     typeof s === 'object' && s !== null &&
     typeof s.persona === 'string' &&
     isRoute(s.default) &&
-    typeof s.registers === 'object' && s.registers !== null &&
-    isRoute(s.registers.movie) && isRoute(s.registers.book) &&
-    Array.isArray(s.register_voices) &&
-    (s.personas === undefined || (Array.isArray(s.personas) && s.personas.every((p) => typeof p === 'string'))) &&
-    (s.persona_routes === undefined ||
-      (typeof s.persona_routes === 'object' && s.persona_routes !== null && !Array.isArray(s.persona_routes) &&
-        Object.values(s.persona_routes).every(isRoute)))
+    typeof s.registers === 'object' && s.registers !== null && !Array.isArray(s.registers) &&
+    Object.values(s.registers).every(isRoute) &&
+    Array.isArray(s.register_voices) && s.register_voices.every((r) => typeof r === 'string') &&
+    (s.personas === undefined || (Array.isArray(s.personas) && s.personas.every((p) => typeof p === 'string')))
   );
 }
 

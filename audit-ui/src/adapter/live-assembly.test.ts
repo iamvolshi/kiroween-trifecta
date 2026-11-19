@@ -7,7 +7,7 @@ describe('live adapter without a base URL', () => {
     const a = createLiveAdapter('');
     const results = await Promise.all([
       a.ask('q'),
-      a.chat('m', { persona: 'Elara' }),
+      a.chat('m', { persona: 'Frankenstein', register: 'book' }),
       a.update({ kid: 1, subject: 's', value: 'v', reason: 'r', authority: 1 }),
       a.fetchLessons(),
       a.fetchRecord('acct'),
@@ -58,11 +58,11 @@ describe('live adapter against the connector contract', () => {
     expect(JSON.parse(String(s.calls[0]!.init?.body))).toEqual({ message: 'hello', persona: 'Frankenstein', register: 'book' });
   });
 
-  it('a register is never sent for a persona other than Frankenstein', async () => {
+  it('a call without options sends the message only', async () => {
     const s = stubFetch(TURN);
     const a = createLiveAdapter('http://connector.test', s.fetch);
-    await a.chat('hello', { persona: 'Elara', register: 'book' });
-    expect(JSON.parse(String(s.calls[0]!.init?.body))).toEqual({ message: 'hello', persona: 'Elara' });
+    await a.chat('hello');
+    expect(JSON.parse(String(s.calls[0]!.init?.body))).toEqual({ message: 'hello' });
   });
 
   it('GET /record/{account}, GET /lessons and POST /ask hit the contract paths', async () => {
@@ -85,7 +85,7 @@ describe('live adapter against the connector contract', () => {
     const down = createLiveAdapter('http://connector.test', async () => {
       throw new Error('refused');
     });
-    expect(await down.chat('x', { persona: 'Elara' })).toEqual({ ok: false, error: 'Connector unreachable: refused' });
+    expect(await down.chat('x', { persona: 'Frankenstein', register: 'movie' })).toEqual({ ok: false, error: 'Connector unreachable: refused' });
   });
 
   it('update is outside the contract and says so instead of guessing an endpoint', async () => {

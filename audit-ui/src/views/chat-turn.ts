@@ -1,9 +1,10 @@
-import type { ChatTurn, Persona, ReplyLink } from '../adapter/seam.ts';
+import type { ChatTurn, Register, ReplyLink } from '../adapter/seam.ts';
 import { provenanceChannel } from '../shell/provenance-channel.ts';
+import { VOICE_LABELS } from './voices.ts';
 
 /**
- * One chat turn as two bubbles: the user's message (right) and the active
- * persona's reply (left). The engines' work is not shown here; it lives in
+ * One chat turn as two bubbles: the user's message (right) and the voice's
+ * reply (left), in that voice's accent. The engines' work is not shown here; it lives in
  * the activity feed in the right column.
  */
 
@@ -67,9 +68,9 @@ export function renderReplyText(reply: string, links: ReplyLink[] | undefined): 
   return nodes;
 }
 
-/** Render one turn. `persona` is who replied (null if none was recorded). */
-export function renderChatTurn(turn: ChatTurn, persona: Persona | null): HTMLElement {
-  const name = persona ?? 'The persona';
+/** Render one turn. `voice` is the voice that replied (null if none was recorded). */
+export function renderChatTurn(turn: ChatTurn, voice: Register | null): HTMLElement {
+  const name = voice ? `Frankenstein (${VOICE_LABELS[voice].name})` : 'Frankenstein';
   const root = el('div', turn.known ? 'chat-turn' : 'chat-turn not-knowing');
 
   const userRow = el('div', 'bubble-row bubble-row-user');
@@ -80,7 +81,7 @@ export function renderChatTurn(turn: ChatTurn, persona: Persona | null): HTMLEle
 
   const replyRow = el('div', 'bubble-row bubble-row-reply');
   const bubble = el('div', 'bubble chat-reply');
-  bubble.dataset.persona = name;
+  if (voice) bubble.dataset.voice = voice;
   const who = el('p', 'bubble-name', name);
   who.setAttribute('aria-hidden', 'true');
   const text = el('p', 'bubble-text');

@@ -1,11 +1,4 @@
-/* The live-model announcement under the chat box (views/model-banner.ts).
-   The switch position owns the whole band: Movie is amber, Book is violet,
-   with the position word in a solid block and the model name large. Flipping
-   the switch changes the band's colour, the block and the name at once. */
 
-.chat-form .model-slot {
-  grid-column: 1 / -1;
-}
 
 .model-banner {
   --band: var(--line-strong);
@@ -33,8 +26,8 @@
   --band-text: #ffe3b3;
 }
 
-/* Elara and ARCHETRON: the mask's own route, in the signal cyan. */
-.model-banner[data-position='mask'] {
+/* Young Frankenstein: the app's default cyan until its accent is named. */
+.model-banner[data-position='young-frankenstein'] {
   --band: var(--accent);
   --band-bg: var(--accent-bg);
   --band-text: var(--text);

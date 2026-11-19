@@ -48,11 +48,12 @@ describe('boot', () => {
     expect(app!.querySelector('.not-found')).not.toBeNull();
   });
 
-  it('redirects exactly "/" to /actions without a NotFound flash or new history entry', () => {
+  it('redirects exactly "/" to /chat (boot is the chat) without a NotFound flash or new history entry', () => {
     const { before } = bootAt('/');
-    expect(window.location.pathname).toBe('/actions');
+    expect(window.location.pathname).toBe('/chat');
     expect(window.history.length).toBe(before);
     expect(app!.querySelector('.not-found')).toBeNull();
-    expect(app!.querySelector('h1')?.textContent).toBe('Action List');
+    expect(app!.querySelector('.chat-view')).not.toBeNull();
+    expect(app!.querySelector('h1')?.textContent).toBe('Chat');
   });
 });

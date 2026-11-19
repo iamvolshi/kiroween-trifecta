@@ -19,7 +19,7 @@ const at = (iso: string, id: string, extra: Partial<Entry> = {}): Entry =>
 const ENTRIES: Entry[] = [
   at('2026-03-03T08:00:00.000Z', 'm1'),
   at('2026-11-18T14:05:00.000Z', 'n1', { reason: 'user turn (connector)' }),
-  at('2026-11-18T14:06:00.000Z', 'n2', { reason: 'Elara reply turn' }),
+  at('2026-11-18T14:06:00.000Z', 'n2', { reason: 'Frankenstein reply turn' }),
   at('2026-11-18T14:40:00.000Z', 'n3'),
   at('2026-11-18T16:00:00.000Z', 'n4'),
   at('2026-11-17T09:00:00.000Z', 'n5'),
@@ -96,7 +96,7 @@ describe('hour view snapshot', () => {
     expect(stat('live')).toBe(String(poolRows));
     expect(didRows).toBe(entriesInHour(ENTRIES, 2026, 11, 18, 14).length);
     expect(poolRows).toBe(2); // m1 + n5: written before 14:00
-    expect(stat('masks')).toBe('Elara'); // named in a reason of the hour
+    expect(stat('masks')).toBe('Frankenstein'); // named in a reason of the hour
     // The snapshot sits above the two tables.
     const order = [...root.querySelectorAll('.knowledge-state, .hour-did, .hour-believed')].map((s) => s.className);
     expect(order).toEqual(['knowledge-state', 'hour-did', 'hour-believed']);
@@ -111,11 +111,11 @@ describe('hour view snapshot', () => {
   it('names the mask from the evidence when the reason carries none (live loop shape)', () => {
     // Live loop: reason "assistant turn (reply)", mask name in evidence.
     const snap = renderSnapshot(
-      [at('2026-11-18T14:05:00.000Z', 'x', { reason: 'assistant turn (reply)', evidence: 'Elara' })],
+      [at('2026-11-18T14:05:00.000Z', 'x', { reason: 'assistant turn (reply)', evidence: 'Frankenstein' })],
       [],
       14,
     );
-    expect(snap.querySelector('[data-stat="masks"] dd')?.textContent).toBe('Elara');
+    expect(snap.querySelector('[data-stat="masks"] dd')?.textContent).toBe('Frankenstein');
   });
 });
 

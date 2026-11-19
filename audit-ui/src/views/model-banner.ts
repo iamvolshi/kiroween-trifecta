@@ -3,8 +3,9 @@
 // and each reply's served_by after it. When the two disagree, served_by wins.
 // No provider or model name is written here; every name is the connector's.
 // With no connector address, or no answer, it says the connector is unreachable.
-import type { Persona, Register, ServedBy } from '../adapter/seam.ts';
+import type { Register, ServedBy } from '../adapter/seam.ts';
 import type { ModelRoute, ModelStatus } from '../adapter/live-models.ts';
+import { VOICE_LABELS } from './voices.ts';
 
 export type StatusState =
   | { state: 'loading' }
@@ -12,9 +13,7 @@ export type StatusState =
   | { state: 'error'; error: string };
 
 export interface BannerInput {
-  /** The picked mask. null: nothing is announced (no band at all). */
-  persona: Persona | null;
-  /** The switch position (Frankenstein), or null for a mask without the switch. */
+  /** The picked voice. null: nothing is announced (no band at all). */
   register: Register | null;
   status: StatusState;
   /** served_by of the last reply on this position, if any. */
@@ -23,8 +22,8 @@ export interface BannerInput {
 
 export interface Announcement {
   state: 'loading' | 'live' | 'unconfigured' | 'unreachable';
-  /** 'book' | 'movie' | 'mask': drives the colour band. */
-  position: Register | 'mask';
+  /** The voice: drives the band's accent. */
+  position: Register;
   label: string;
   model: string;
   provider: string;
@@ -32,26 +31,23 @@ export interface Announcement {
   note: string;
 }
 
-const POSITION_LABEL: Record<Register, string> = { book: 'BOOK', movie: 'MOVIE' };
-
 function same(a: ServedBy, b: ServedBy): boolean {
   return a.provider === b.provider && a.model === b.model;
 }
 
-/** The route of the picked mask: Frankenstein's register position, else the mask's own route. */
-function routeFor(status: ModelStatus, persona: Persona, register: Register | null): ModelRoute {
-  if (register !== null) return status.registers[register];
-  return status.persona_routes?.[persona] ?? { error: `The connector reports no route for ${persona}.` };
+/** The route of the picked voice, or the words saying the connector reports none. */
+function routeFor(status: ModelStatus, register: Register): ModelRoute {
+  return status.registers[register] ?? { error: `The connector reports no route for ${VOICE_LABELS[register].name}.` };
 }
 
-/** What to announce, or null before a mask is picked. Pure: the same input always gives the same words. */
+/** What to announce, or null before a voice is picked. Pure: the same input always gives the same words. */
 export function announce(input: BannerInput): Announcement | null {
-  if (input.persona === null) return null;
-  const position: Register | 'mask' = input.register ?? 'mask';
-  const label = input.register !== null ? POSITION_LABEL[input.register] : input.persona.toUpperCase();
+  if (input.register === null) return null;
+  const position = input.register;
+  const label = VOICE_LABELS[position].tag;
   const base = { position, label, model: '', provider: '', source: '', note: '' };
   const route: ModelRoute | null =
-    input.status.state === 'ok' ? routeFor(input.status.data, input.persona, input.register) : null;
+    input.status.state === 'ok' ? routeFor(input.status.data, position) : null;
   if (input.served) {
     const note =
       route && 'provider' in route && !same(route, input.served)

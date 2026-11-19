@@ -14,7 +14,7 @@ import { EntryDetailView } from './views/entry-detail.ts';
 import { CalendarView } from './views/calendar.ts';
 import { Router } from './router/router.ts';
 import { createShell } from './shell/shell.ts';
-import { createRecordStub, createFailingStub } from './test-helpers.ts';
+import { createModelsStub, createRecordStub, createFailingStub } from './test-helpers.ts';
 import { NO_ADDRESS_ERROR } from './adapter/live.ts';
 import type { ChatTurn } from './adapter/seam.ts';
 import { makeEntry, tick } from './test-helpers.ts';
@@ -42,10 +42,11 @@ describe('MED-1: a throwing chat adapter does not leave Send disabled', () => {
         throw new Error('network down');
       },
     };
-    new ChatView(throwing, new ChatLog()).mount(root);
-    root.querySelector<HTMLButtonElement>('.persona-picker [data-value="Elara"]')!.click();
+    new ChatView(throwing, new ChatLog(), createModelsStub()).mount(root);
+    await settle();
+    root.querySelector<HTMLButtonElement>('.voice-picker [data-voice="book"]')!.click();
     const input = root.querySelector<HTMLInputElement>('#chat-message')!;
-    const send = root.querySelector<HTMLButtonElement>('.chat-form button')!;
+    const send = root.querySelector<HTMLButtonElement>('.chat-send')!;
     input.value = 'When will my order arrive?';
     root.querySelector('form')!.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
     expect(send.disabled).toBe(true);
@@ -89,14 +90,15 @@ describe('MED-2: card fields, chat lines and the no-match box carry real text la
         lessons_in_prompt: { subjects: [], injected: [], held: [] }, katie: [],
       },
     };
-    const view = new ChatView(createRecordStub(undefined, { chat: async () => ({ ok: true, data: turn }) }), log);
+    const view = new ChatView(createRecordStub(undefined, { chat: async () => ({ ok: true, data: turn }) }), log, createModelsStub());
     view.mount(root);
-    root.querySelector<HTMLButtonElement>('.persona-picker [data-value="ARCHETRON"]')!.click();
+    await settle();
+    root.querySelector<HTMLButtonElement>('.voice-picker [data-voice="young-frankenstein"]')!.click();
     root.querySelector<HTMLInputElement>('#chat-message')!.value = 'hi';
     root.querySelector('form')!.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
     await settle();
     expect(root.querySelector('.chat-user .sr-only')?.textContent).toBe('You said: ');
-    expect(root.querySelector('.chat-reply .sr-only')?.textContent).toBe('ARCHETRON replied: ');
+    expect(root.querySelector('.chat-reply .sr-only')?.textContent).toBe('Frankenstein (Young Frankenstein) replied: ');
   });
 
   it('the filters no-match box starts with a spoken "No match" label', async () => {
@@ -153,8 +155,8 @@ describe('LOW-1: Entry Detail always has its heading and question', () => {
 });
 
 describe('LOW-3: the tab title and favicon are ours', () => {
-  it('index.html title is "Audit UI" and the favicon is not the Vite logo', () => {
-    expect(indexHtml).toContain('<title>Audit UI</title>');
+  it('index.html title is "Hackenstein" and the favicon is not the Vite logo', () => {
+    expect(indexHtml).toContain('<title>Hackenstein</title>');
     expect(faviconSvg).not.toContain('#863bff');
   });
 });

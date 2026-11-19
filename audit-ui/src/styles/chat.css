@@ -1,10 +1,35 @@
 /*
- * Chat view: a normal chat. Persona picker (and Frankenstein's Book / Movie
- * switch) on top, then the transcript as bubbles: your messages on the
- * right, the persona's replies on the left. The composer is pinned at the
- * bottom of the column. The engines' work is not shown here (see the work
- * column on the right).
+ * Chat view: a standard chat-app column, centered in the pane (max 768px).
+ * Bubbles: your messages on the right, the voice's replies on the left.
+ * The voice picker and the composer are pinned at the bottom; the model
+ * band sits under the composer once a voice is picked. The engines' work
+ * is not shown here (see the telemetry column on the right). The shape took
+ * cues from a reference mockup (a three-column chat app); the code is
+ * written fresh.
  */
+
+/* ---- Voice accent ------------------------------------------------------
+   One accent slot, set by the voice: Book violet, Movie amber, Young
+   Frankenstein the app's default cyan (until its accent is named). The
+   picked chip, the view and each reply read it from their data-voice. */
+
+.chat-view,
+[data-voice] {
+  --voice-accent: var(--accent);
+  --voice-text: var(--primary);
+}
+
+[data-voice='book'] {
+  --voice-accent: var(--tertiary-container);
+  --voice-text: var(--tertiary-fixed);
+}
+
+[data-voice='movie'] {
+  --voice-accent: var(--warn);
+  --voice-text: var(--warn);
+}
+
+/* ---- The column -------------------------------------------------------- */
 
 .chat-view {
   display: flex;
@@ -12,69 +37,13 @@
   min-height: 100%;
 }
 
-/* ---- Persona picker + register switch -------------------------------- */
-
-.chat-controls {
+.chat-column {
+  flex: 1;
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--s2) var(--s4);
-  margin: 0 0 var(--s3);
-}
-
-.persona-picker,
-.register-switch {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--s1);
-}
-
-.radio-caption {
-  margin-right: var(--s1);
-  font-family: var(--mono);
-  font-size: var(--t-label-md-size);
-  line-height: var(--t-label-md-lh);
-  font-weight: 700;
-  letter-spacing: var(--t-label-md-ls);
-  text-transform: uppercase;
-  color: var(--faint);
-}
-
-.radio-option {
-  padding: var(--s1) var(--s3);
-  border: 1px solid var(--line-strong);
-  background: var(--surface);
-  color: var(--muted);
-  letter-spacing: 0.04em;
-  text-transform: none;
-  font-family: var(--sans);
-  font-size: var(--t-body-md-size);
-  line-height: var(--t-body-md-lh);
-  font-weight: 600;
-}
-
-.radio-option:hover {
-  border-color: var(--accent);
-  background: var(--surface-2);
-  color: var(--text);
-}
-
-.radio-option[aria-checked='true'] {
-  border-color: var(--accent);
-  background: var(--accent-bg);
-  color: var(--text);
-}
-
-.radio-option[aria-checked='true']::before {
-  content: '\25CF  ';
-  content: '\25CF  ' / '';
-  color: var(--accent);
-}
-
-.chat-controls .persona-required {
-  flex-basis: 100%;
-  margin: 0;
+  flex-direction: column;
+  width: 100%;
+  max-width: 768px;
+  margin: 0 auto;
 }
 
 .chat-transcript {
@@ -84,7 +53,7 @@
   gap: var(--s3);
 }
 
-/* ---- Bubbles ---------------------------------------------------------- */
+/* ---- Bubbles ------------------------------------------------------------ */
 
 .chat-turn {
   display: flex;
@@ -105,22 +74,21 @@
 }
 
 .bubble {
-  max-width: min(42rem, 78%);
+  max-width: 80%;
   margin: 0;
   padding: var(--s2) var(--s3);
   border: 1px solid var(--line);
-  border-radius: var(--radius);
-  line-height: var(--t-body-md-lh);
+  border-radius: var(--radius-lg);
   overflow-wrap: break-word;
 }
 
 .bubble.chat-user {
-  border-color: var(--accent);
-  background: var(--accent-bg);
+  background: var(--surface-2);
   color: var(--text);
 }
 
 .bubble.chat-reply {
+  border-left: 2px solid var(--voice-accent);
   background: var(--surface);
   color: var(--text);
 }
@@ -133,7 +101,7 @@
   font-weight: 700;
   letter-spacing: var(--t-label-md-ls);
   text-transform: uppercase;
-  color: var(--accent);
+  color: var(--voice-text);
 }
 
 .bubble-text {
@@ -147,6 +115,7 @@
 .chat-turn.not-knowing .bubble.chat-reply {
   border-style: dashed;
   border-color: var(--line-strong);
+  border-left-color: var(--voice-accent);
   background: var(--inset);
 }
 
@@ -166,37 +135,166 @@
   text-decoration-style: solid;
 }
 
-/* ---- Composer, pinned at the bottom ----------------------------------- */
+/* ---- The dock: picker, composer, band, pinned at the bottom ------------ */
 
-.chat-form {
+.chat-dock {
   position: sticky;
   /* Stick over the column's bottom padding, so nothing shows beneath it. */
   bottom: calc(-1 * var(--s5));
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
   gap: var(--s2);
-  align-items: center;
   margin: var(--s3) 0 calc(-1 * var(--s5));
   padding: var(--s3) 0 var(--s4);
-  border-top: 1px solid var(--line);
   background: var(--bg);
 }
 
-.chat-form input {
-  width: 100%;
-  padding: var(--s3);
-  font-family: var(--sans);
-  font-size: var(--t-body-md-size);
-  line-height: var(--t-body-md-lh);
-  font-weight: var(--t-body-md-wt);
+.voice-slot:empty {
+  display: none;
 }
 
-.chat-form input:disabled {
-  border-style: dashed;
+.voice-slot .error-state {
+  margin: 0;
+}
+
+.voice-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2);
+}
+
+.voice-chip {
+  padding: 2px var(--s2);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: var(--t-label-md-size);
+  line-height: var(--t-label-md-lh);
+  font-weight: var(--t-label-md-wt);
+  letter-spacing: var(--t-label-md-ls);
+  text-transform: uppercase;
+}
+
+.voice-chip:hover {
+  border-color: var(--text);
+  color: var(--text);
+}
+
+.voice-chip[aria-checked='true'] {
+  border-color: var(--voice-accent);
+  color: var(--voice-accent);
+}
+
+/* The composer: one rounded box, the send button inside it on the right. */
+.chat-composer {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  padding: var(--s1) var(--s1) var(--s1) var(--s3);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-xl);
+  background: var(--surface);
+}
+
+.chat-composer:focus-within {
+  border-color: var(--voice-accent);
+  box-shadow: 0 0 0 1px var(--voice-accent);
+}
+
+.chat-composer input {
+  flex: 1;
+  min-width: 0;
+  padding: var(--s2) 0;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: var(--t-telemetry-data-size);
+  line-height: var(--t-telemetry-data-lh);
+  letter-spacing: var(--t-telemetry-data-ls);
+  font-weight: var(--t-telemetry-data-wt);
+}
+
+/* The box shows focus (focus-within); the bare input needs no ring of its own. */
+.chat-composer input:focus-visible {
+  outline: none;
+}
+
+.chat-composer input:disabled {
   color: var(--faint);
   cursor: not-allowed;
 }
 
-.chat-form button {
-  padding: var(--s3) var(--s5);
+.chat-composer input::placeholder {
+  color: var(--faint);
+}
+
+.chat-send {
+  padding: var(--s2) var(--s4);
+  border: 1px solid var(--voice-accent);
+  border-radius: var(--radius-lg);
+  background: transparent;
+  color: var(--voice-accent);
+}
+
+.chat-send:disabled {
+  border-color: var(--line);
+  color: var(--faint);
+  cursor: not-allowed;
+}
+
+/* ---- The list panels the rail swaps in (Audit, Research, Lessons) ------ */
+
+.list-section + .list-section {
+  margin-top: var(--s4);
+}
+
+.list-meta {
+  margin: 0 0 var(--s2);
+  font-size: var(--t-body-sm-size);
+  line-height: var(--t-body-sm-lh);
+  color: var(--muted);
+}
+
+.research-form {
+  display: flex;
+  gap: var(--s1);
+  margin-bottom: var(--s3);
+}
+
+.research-form input {
+  flex: 1;
+  min-width: 0;
+}
+
+.research-hits {
+  display: grid;
+  gap: var(--s2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.research-hit {
+  display: grid;
+  gap: 2px;
+  padding: var(--s2);
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.research-source {
+  font-family: var(--mono);
+  font-size: var(--t-label-sm-size);
+  line-height: var(--t-label-sm-lh);
+  letter-spacing: var(--t-label-sm-ls);
+  font-weight: var(--t-label-sm-wt);
+  text-transform: uppercase;
+  color: var(--outline);
+}
+
+.research-excerpt {
+  font-size: var(--t-body-sm-size);
+  line-height: var(--t-body-sm-lh);
 }

@@ -5,7 +5,8 @@
  */
 import { describe, it, expect, afterEach } from 'vitest';
 import { Router } from './router/router.ts';
-import { createRecordStub, tick } from './test-helpers.ts';
+import { createModelsStub, createRecordStub, tick } from './test-helpers.ts';
+import type { ModelSource } from './views/chat.ts';
 import type { ChatTurn } from './adapter/seam.ts';
 
 let container: HTMLElement;
@@ -21,11 +22,11 @@ function stubTurn(message: string): ChatTurn {
   };
 }
 
-function start(path: string): void {
+function start(path: string, models?: ModelSource): void {
   window.history.replaceState({}, '', path);
   container = document.createElement('div');
   document.body.appendChild(container);
-  router = new Router(createRecordStub(undefined, { chat: async (m) => ({ ok: true, data: stubTurn(m) }) }), container);
+  router = new Router(createRecordStub(undefined, { chat: async (m) => ({ ok: true, data: stubTurn(m) }) }), container, models);
 }
 
 afterEach(() => {
@@ -71,10 +72,11 @@ describe('the shell nav links all four destinations on every route', () => {
   });
 
   it('the chat transcript survives navigating away and back', async () => {
-    start('/chat');
-    container.querySelector<HTMLButtonElement>('.persona-picker [data-value="Elara"]')!.click();
+    start('/chat', createModelsStub());
+    await settle();
+    container.querySelector<HTMLButtonElement>('.voice-picker [data-voice="book"]')!.click();
     container.querySelector<HTMLInputElement>('#chat-message')!.value = 'hello';
-    container.querySelector<HTMLFormElement>('.chat-form')!.requestSubmit();
+    container.querySelector<HTMLFormElement>('.chat-composer')!.requestSubmit();
     await settle();
     router!.navigate('/actions');
     router!.navigate('/chat');

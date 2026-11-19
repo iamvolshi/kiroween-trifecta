@@ -18,6 +18,7 @@ const indexHtml = read('../index.html');
 const styleCss = read('./style.css');
 const shellCss = read('./styles/shell.css');
 const systemCss = read('./styles/stitch-system.css');
+const chatCss = read('./styles/chat.css');
 const mainTs = read('./main.ts');
 const CSS_FILES = ['./style.css', ...['calendar', 'chat', 'folders', 'model-banner', 'record-card', 'shell', 'stitch-chat', 'stitch-system', 'telemetry'].map((f) => `./styles/${f}.css`)];
 
@@ -138,9 +139,9 @@ describe('load order', () => {
 });
 
 describe('the shell', () => {
-  it('is 16rem / 1fr / 20rem with a 56px header', () => {
+  it('is rail 56px / list 16rem / 1fr / 20rem with a 56px header', () => {
     const shell = rule(shellCss, '.shell');
-    expect(shell).toContain('grid-template-columns: 16rem minmax(0, 1fr) 20rem;');
+    expect(shell).toContain('grid-template-columns: 56px 16rem minmax(0, 1fr) 20rem;');
     expect(shell).toContain('grid-template-rows: 56px minmax(0, 1fr);');
     expect(rule(shellCss, '.shell-brand')).toContain('height: 56px;');
   });
@@ -152,8 +153,10 @@ describe('the shell', () => {
 });
 
 describe('which role key elements use', () => {
-  it('the mask name is headline-lg, the feed text telemetry-data, section headings label-sm', () => {
-    expect(usesRole(rule(systemCss, '.mask-name'), 'headline-lg')).toBe(true);
+  it('voice chips label-md, the composer telemetry-data, the feed text telemetry-data, section headings label-sm', () => {
+    expect(usesRole(rule(chatCss, '.voice-chip'), 'label-md')).toBe(true);
+    expect(usesRole(rule(chatCss, '.chat-composer input'), 'telemetry-data')).toBe(true);
+    expect(rule(chatCss, '.chat-column')).toContain('max-width: 768px;');
     expect(usesRole(rule(systemCss, '.feed-text'), 'telemetry-data')).toBe(true);
     expect(usesRole(rule(styleCss, 'h2'), 'label-sm')).toBe(true);
     expect(usesRole(rule(shellCss, '.shell-left::before'), 'label-sm')).toBe(true);
@@ -168,8 +171,10 @@ describe('which role key elements use', () => {
     const view = new ChatView(createLiveAdapter(''), new ChatLog(), models);
     view.mount(slot);
     await tick();
-    expect(slot.querySelectorAll('.mask-card .mask-name')).toHaveLength(3);
-    expect(slot.querySelector('.mask-card .mask-grounding')?.textContent).toBe('Grounding position');
+    // Unreachable: no chips, the words in the picker slot; the composer box is there.
+    expect(slot.querySelector('.voice-slot .error-state')?.textContent).toBe(NO_ADDRESS_ERROR);
+    expect(slot.querySelector('.chat-column .chat-composer input')).not.toBeNull();
+    expect(slot.querySelector('.mask-card, .mask-name')).toBeNull();
     view.unmount();
     slot.remove();
   });

@@ -104,14 +104,19 @@ export interface EngineActivity {
   katie: UpdateResult[];             // KATIE recorded (empty = did not act)
 }
 
-/** The faces ARCHE can run. The app sends the NAME; the loop owns the voices. */
-export type Persona = 'Frankenstein' | 'Elara' | 'ARCHETRON';
-export const PERSONAS: readonly Persona[] = ['Frankenstein', 'Elara', 'ARCHETRON'];
+/** The mask ARCHE runs: Frankenstein, in three voices. The app sends the NAME; the loop owns the voices. */
+export type Persona = 'Frankenstein';
+export const PERSONAS: readonly Persona[] = ['Frankenstein'];
 
-/** Frankenstein's register (Mansplainer engine): the novel's creature or the film's. */
-export type Register = 'book' | 'movie';
+/** Frankenstein's voice (register): the novel's creature, the film's, or Young Frankenstein's. */
+export type Register = 'book' | 'movie' | 'young-frankenstein';
+export const REGISTERS: readonly Register[] = ['book', 'movie', 'young-frankenstein'];
 
-/** Sent with every chat call. `register` only when persona is Frankenstein. */
+export function isRegister(v: unknown): v is Register {
+  return typeof v === 'string' && (REGISTERS as readonly string[]).includes(v);
+}
+
+/** Sent with every chat call: the mask and the picked voice. */
 export interface ChatOptions {
   persona: Persona;
   register?: Register;

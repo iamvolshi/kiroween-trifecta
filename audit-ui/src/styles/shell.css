@@ -1,12 +1,13 @@
 /*
- * Shell: header strip, three full-height columns, left directories,
- * record view. Tokens come from style.css.
+ * Shell: header strip, then the icon rail, the list panel, the center and
+ * the telemetry column, full height. Tokens come from style.css. The shape
+ * (rail + list + chat + detail) took cues from a reference mockup.
  */
 
 .shell {
   display: grid;
-  /* w-64 / 1fr / w-80, header h-14 (cues from a reference mockup). */
-  grid-template-columns: 16rem minmax(0, 1fr) 20rem;
+  /* rail 56px / list w-64 / 1fr / w-80, header h-14. */
+  grid-template-columns: 56px 16rem minmax(0, 1fr) 20rem;
   grid-template-rows: 56px minmax(0, 1fr);
   height: 100vh;
   background: var(--bg);
@@ -91,6 +92,53 @@
   .brand-tag {
     display: none;
   }
+}
+
+/* ---- Rail ------------------------------------------------------------ */
+
+.shell-rail {
+  min-height: 0;
+  padding: var(--s3) 0;
+  border-right: 1px solid var(--line);
+  background: var(--inset);
+}
+
+.rail-nav {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s2);
+}
+
+.rail-button {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--radius-lg);
+  background: transparent;
+  color: var(--muted);
+}
+
+.rail-button svg {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.rail-button:hover {
+  background: var(--surface);
+  color: var(--text);
+}
+
+.rail-button[aria-pressed='true'] {
+  border-color: var(--line-strong);
+  background: var(--surface-2);
+  color: var(--accent);
 }
 
 /* ---- Columns --------------------------------------------------------- */
@@ -263,7 +311,7 @@
 
 @media (max-width: 1100px) {
   .shell {
-    grid-template-columns: 11.5rem minmax(0, 1fr) 15.5rem;
+    grid-template-columns: 56px 11.5rem minmax(0, 1fr) 15.5rem;
   }
 
   .shell-left,
@@ -301,6 +349,16 @@
   .shell-right {
     border: 0;
     border-bottom: 1px solid var(--line);
+  }
+
+  .shell-rail {
+    padding: var(--s1) var(--s3);
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .rail-nav {
+    flex-direction: row;
   }
 
   .shell-left,

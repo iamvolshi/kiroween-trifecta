@@ -3,13 +3,13 @@ import { ActionListView } from '../views/action-list.ts';
 import { TimeTravelView } from '../views/time-travel.ts';
 import { EntryDetailView } from '../views/entry-detail.ts';
 import { NotFoundView } from '../views/not-found.ts';
-import { ChatView } from '../views/chat.ts';
+import { ChatView, type ModelSource } from '../views/chat.ts';
 import { ChatLog } from '../views/chat-log.ts';
 import { CalendarView } from '../views/calendar.ts';
 import { parseCalendarPath } from '../util/calendar.ts';
 import { RecordView } from '../views/record.ts';
 import { createShell, setViewLabel, type ShellSlots } from '../shell/shell.ts';
-import { LeftPanel } from '../shell/left.ts';
+import { RailPanel } from '../shell/rail.ts';
 import { TelemetryPanel } from '../shell/telemetry.ts';
 import type { Panel } from '../shell/panel.ts';
 
@@ -30,14 +30,18 @@ export class Router {
   private leftPanel: Panel;
   private rightPanel: Panel;
   private unsubscribeLog: () => void;
+  /** Where the chat reads its voices and models; undefined = the connector (GET /models). */
+  private models: ModelSource | undefined;
 
-  constructor(adapter: SeamAdapter, container: HTMLElement) {
+  constructor(adapter: SeamAdapter, container: HTMLElement, models?: ModelSource) {
     this.adapter = adapter;
+    this.models = models;
     this.container = container;
     this.slots = createShell(container);
-    const left = new LeftPanel(adapter);
+    // The rail and the list panel it swaps (Chat's list is the directories column).
+    const left = new RailPanel(adapter, this.slots.rail, this.slots.left);
     this.leftPanel = left;
-    left.mount(this.slots.left);
+    left.mount();
     this.unsubscribeLog = this.chatLog.subscribe(() => this.leftPanel.refresh());
     // Right column: Curator + ELLE telemetry. It subscribes to the log itself.
     this.rightPanel = new TelemetryPanel(adapter, this.chatLog);
@@ -119,7 +123,7 @@ export class Router {
     }
 
     if (path === '/chat') {
-      return new ChatView(this.adapter, this.chatLog);
+      return new ChatView(this.adapter, this.chatLog, this.models);
     }
 
     if (path === '/calendar' || path.startsWith('/calendar/')) {

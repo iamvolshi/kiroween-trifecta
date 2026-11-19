@@ -8,7 +8,7 @@ import { Router } from './router/router.ts';
 import { createLiveAdapter, type FetchLike } from './adapter/live.ts';
 import { validLinks } from './views/chat-turn.ts';
 import type { ChatTurn } from './adapter/seam.ts';
-import { tick } from './test-helpers.ts';
+import { createModelsStub, tick } from './test-helpers.ts';
 
 const SUBJ = 'order-1042.delivery_date';
 const REPLY = 'Your order is due on 2026-11-19, after the delay.';
@@ -67,37 +67,37 @@ function start(adapter = createLiveAdapter('http://connector.test', stubConnecto
   window.history.replaceState({}, '', '/chat');
   root = document.createElement('div');
   document.body.appendChild(root);
-  router = new Router(adapter, root);
+  router = new Router(adapter, root, createModelsStub());
 }
 
-async function chatAs(persona: string, message: string): Promise<void> {
-  root.querySelector<HTMLButtonElement>(`.persona-picker [data-value="${persona}"]`)!.click();
+async function chatAs(voice: string, message: string): Promise<void> {
+  await settle(); // the voices arrive from /models
+  root.querySelector<HTMLButtonElement>(`.voice-picker [data-voice="${voice}"]`)!.click();
   root.querySelector<HTMLInputElement>('#chat-message')!.value = message;
-  root.querySelector('.chat-form')!.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+  root.querySelector('.chat-composer')!.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
   await settle();
 }
 
 describe('provenance links (live path, stub connector)', () => {
-  it('the live adapter sends persona + register with the chat call', async () => {
+  it('the live adapter sends the mask + the picked voice with the chat call', async () => {
     const c = stubConnector();
     start(createLiveAdapter('http://connector.test', c.fetch));
-    await chatAs('Frankenstein', 'hello');
-    root.querySelector<HTMLButtonElement>('.register-switch [data-value="book"]')!.click();
-    await chatAs('Frankenstein', 'again');
-    await chatAs('ARCHETRON', 'third');
+    await chatAs('movie', 'hello');
+    await chatAs('book', 'again');
+    await chatAs('young-frankenstein', 'third');
     expect(c.bodies).toEqual([
       { message: 'hello', persona: 'Frankenstein', register: 'movie' },
       { message: 'again', persona: 'Frankenstein', register: 'book' },
-      { message: 'third', persona: 'ARCHETRON' },
+      { message: 'third', persona: 'Frankenstein', register: 'young-frankenstein' },
     ]);
   });
 
   it('spans render as links on the words; activating one highlights the feed item, keeps focus, keeps the route', async () => {
     start();
-    await chatAs('Elara', 'when?');
+    await chatAs('book', 'when?');
     const links = Array.from(root.querySelectorAll<HTMLAnchorElement>('.chat-reply .provenance-link'));
     expect(links.map((a) => a.textContent)).toEqual(['2026-11-19']);
-    expect(root.querySelector('.chat-reply .bubble-text')?.textContent).toBe(`Elara replied: ${REPLY}`);
+    expect(root.querySelector('.chat-reply .bubble-text')?.textContent).toBe(`Frankenstein (Book) replied: ${REPLY}`);
     expect(root.querySelector('.chat-reply')?.textContent).not.toMatch(/provenance:/i);
 
     const a = links[0]!;
@@ -112,7 +112,7 @@ describe('provenance links (live path, stub connector)', () => {
 
   it('Space on a focused link does the same; no route change', async () => {
     start();
-    await chatAs('Elara', 'when?');
+    await chatAs('book', 'when?');
     const a = root.querySelector<HTMLAnchorElement>('.provenance-link')!;
     a.focus();
     a.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true, cancelable: true }));
@@ -123,7 +123,7 @@ describe('provenance links (live path, stub connector)', () => {
 
   it('a link whose feed item is not rendered breaks nothing', async () => {
     start();
-    await chatAs('Elara', 'when?');
+    await chatAs('book', 'when?');
     root.querySelector('.shell-right .activity-feed')!.replaceChildren();
     const a = root.querySelector<HTMLAnchorElement>('.provenance-link')!;
     expect(() => a.click()).not.toThrow();
@@ -156,18 +156,18 @@ describe('review-1 fixes', () => {
       return new Response('[]', { status: 200 });
     };
     start(createLiveAdapter('http://connector.test', fetch));
-    await chatAs('Elara', 'first');
+    await chatAs('book', 'first');
     expect(root.querySelector('.chat-error .error-state')?.textContent).toMatch(/not a ChatTurn/);
-    expect(root.querySelector<HTMLButtonElement>('.chat-form button')!.disabled).toBe(false);
-    await chatAs('Elara', 'second');
+    expect(root.querySelector<HTMLButtonElement>('.chat-send')!.disabled).toBe(false);
+    await chatAs('book', 'second');
     expect(root.querySelectorAll('.chat-turn')).toHaveLength(1);
   });
 
   it('a highlight survives the feed re-rendering after the next turn', async () => {
     start();
-    await chatAs('Elara', 'one');
+    await chatAs('book', 'one');
     root.querySelector<HTMLAnchorElement>('.provenance-link')!.click();
-    await chatAs('Elara', 'two');
+    await chatAs('book', 'two');
     const hit = Array.from(root.querySelectorAll<HTMLElement>('.shell-right .katie-entry.is-highlighted'));
     expect(hit).toHaveLength(1);
     expect(hit[0]!.dataset.entryId).toBe('live-1');

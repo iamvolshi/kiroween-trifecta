@@ -90,13 +90,11 @@ describe('live record reads: errors in words', () => {
     }
   });
 
-  it('a refused persona on /chat shows the booted persona the connector named', async () => {
-    const s = routed({ '/chat': { status: 409, body: { error: "persona 'Elara' is not booted: this connector serves 'ARCHETRON'", booted_persona: 'ARCHETRON' } } });
-    const r = await createLiveAdapter(BASE, s.fetch).chat('hi', { persona: 'Elara' });
-    expect(r).toEqual({
-      ok: false,
-      error: "Connector answered HTTP 409 for /chat: persona 'Elara' is not booted: this connector serves 'ARCHETRON'",
-    });
+  it('a refused voice on /chat shows the connector\'s own words', async () => {
+    const error = 'Young Frankenstein is not configured: YOUNG_FRANKENSTEIN_PROVIDER not set (Young Frankenstein has no default)';
+    const s = routed({ '/chat': { status: 503, body: { error, register: 'young-frankenstein' } } });
+    const r = await createLiveAdapter(BASE, s.fetch).chat('hi', { persona: 'Frankenstein', register: 'young-frankenstein' });
+    expect(r).toEqual({ ok: false, error: `Connector answered HTTP 503 for /chat: ${error}` });
   });
 
   it('an unreachable connector is a typed error on every read', async () => {
@@ -195,17 +193,17 @@ describe('left column on the live adapter', () => {
 });
 
 describe('/chat options unchanged by this round', () => {
-  it('the body is still { message, persona } and the register only for Frankenstein', async () => {
+  it('the body is { message, persona, register } for each voice, { message } with no options', async () => {
     const bodies: unknown[] = [];
     const a = createLiveAdapter(BASE, async (_url, init) => {
       bodies.push(JSON.parse(String(init?.body)));
       return new Response('{}', { status: 200 });
     });
-    await a.chat('one', { persona: 'ARCHETRON', register: 'movie' });
+    await a.chat('one', { persona: 'Frankenstein', register: 'young-frankenstein' });
     await a.chat('two', { persona: 'Frankenstein', register: 'movie' });
     await a.chat('three');
     expect(bodies).toEqual([
-      { message: 'one', persona: 'ARCHETRON' },
+      { message: 'one', persona: 'Frankenstein', register: 'young-frankenstein' },
       { message: 'two', persona: 'Frankenstein', register: 'movie' },
       { message: 'three' },
     ]);

@@ -121,132 +121,7 @@
   color: var(--faint);
 }
 
-/* ---- Chat: the view bar ------------------------------------------------ */
-
-.chat-view > h1 {
-  position: sticky;
-  top: calc(-1 * var(--pad-top));
-  z-index: 2;
-  display: flex;
-  align-items: center;
-  gap: var(--s2);
-  margin: calc(-1 * var(--pad-top)) calc(-1 * var(--pad-x)) var(--s3);
-  padding: var(--s3) var(--pad-x);
-  border-bottom: 1px solid var(--line);
-  background: var(--inset);
-  color: var(--primary);
-}
-
-/* The pinging dot beside the view title. */
-.chat-view > h1::before {
-  content: '';
-  flex: none;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--accent);
-  box-shadow: 0 0 0 0 rgba(0, 240, 255, 0.6);
-  animation: view-ping 1.6s ease-out infinite;
-}
-
-@keyframes view-ping {
-  0% { box-shadow: 0 0 0 0 rgba(0, 240, 255, 0.6); }
-  80%, 100% { box-shadow: 0 0 0 7px rgba(0, 240, 255, 0); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .chat-view > h1::before { animation: none; }
-}
-
-/* Under 800px the page scrolls, not the column: stick to the top edge. */
-@media (max-width: 800px) {
-  .chat-view > h1 { top: 0; }
-}
-
-/* ---- Chat: mask cards -------------------------------------------------- */
-
-.mask-card {
-  padding: var(--s3);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--panel);
-}
-
-.mask-code {
-  align-self: flex-start;
-  padding: 0 var(--s1);
-  background: var(--secondary);
-  color: var(--on-secondary);
-  font-family: var(--mono);
-  font-size: var(--t-label-sm-size);
-  line-height: var(--t-label-sm-lh);
-  letter-spacing: var(--t-label-sm-ls);
-  font-weight: 700;
-}
-
-.mask-name {
-  font-family: var(--display);
-  font-size: var(--t-headline-lg-size);
-  line-height: var(--t-headline-lg-lh);
-  letter-spacing: var(--t-headline-lg-ls);
-  font-weight: var(--t-headline-lg-wt);
-  text-transform: uppercase;
-}
-
-.mask-voice {
-  font-size: var(--t-body-sm-size);
-  line-height: var(--t-body-sm-lh);
-  color: var(--muted);
-}
-
-/* The grounding box under Frankenstein's card. */
-.mask-positions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--s1) var(--s2);
-  margin-top: var(--s3);
-  padding: var(--s2) var(--s1) var(--s1);
-  background: var(--inset);
-}
-
-.mask-grounding {
-  flex-basis: 100%;
-  font-family: var(--mono);
-  font-size: var(--t-label-sm-size);
-  line-height: var(--t-label-sm-lh);
-  letter-spacing: var(--t-label-sm-ls);
-  font-weight: var(--t-label-sm-wt);
-  text-transform: uppercase;
-  color: var(--outline);
-}
-
-.mask-position {
-  font-family: var(--mono);
-  font-size: var(--t-label-sm-size);
-  line-height: var(--t-label-sm-lh);
-  letter-spacing: var(--t-label-sm-ls);
-  font-weight: 700;
-}
-
-.mask-position[data-register='book'] {
-  border-color: var(--tertiary-container);
-  color: var(--tertiary-fixed);
-}
-
-.mask-position[data-register='movie'] {
-  border-color: var(--secondary);
-  color: var(--secondary);
-}
-
-/* ---- Chat: composer and bubbles ---------------------------------------- */
-
-.chat-form input {
-  font-family: var(--mono);
-  font-size: var(--t-telemetry-data-size);
-  line-height: var(--t-telemetry-data-lh);
-  letter-spacing: var(--t-telemetry-data-ls);
-}
+/* ---- Chat: bubbles ------------------------------------------------------ */
 
 .bubble.chat-user {
   padding: var(--s3);
@@ -293,9 +168,8 @@
 
 /* ---- Chat: the model band ---------------------------------------------- */
 
-/* The band stays inside the sticky composer at the bottom of the center
-   column, which is the strip between the two side columns; it is not a
-   separate fixed bar. */
+/* The band sits under the composer at the bottom of the centered chat
+   column, once a voice is picked; it is not a separate fixed bar. */
 .model-banner {
   padding: var(--s4);
   border-radius: var(--radius);

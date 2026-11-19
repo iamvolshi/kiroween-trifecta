@@ -143,3 +143,29 @@ export function createFailingStub(error = 'stub failure'): SeamAdapter {
     fetchRecord: async () => err,
   };
 }
+
+/**
+ * A /models test double for the chat: the three voices, each on a stub
+ * route (no real provider or model id). `overrides` replaces routes, e.g.
+ * { 'young-frankenstein': { error: '...' } } for an unconfigured voice.
+ */
+export function createModelsStub(
+  overrides: Record<string, { provider: string; model: string } | { error: string }> = {},
+  voices: string[] = ['movie', 'book', 'young-frankenstein'],
+): { status: () => Promise<{ ok: true; data: import('./adapter/live-models.ts').ModelStatus }> } {
+  const registers: Record<string, { provider: string; model: string } | { error: string }> = {};
+  for (const v of voices) registers[v] = { provider: `stub-provider-${v}`, model: `stub-model-${v}` };
+  Object.assign(registers, overrides);
+  return {
+    status: async () => ({
+      ok: true,
+      data: {
+        persona: 'entity',
+        personas: ['Frankenstein'],
+        default: { provider: 'stub-provider', model: 'stub-model' },
+        registers,
+        register_voices: voices,
+      },
+    }),
+  };
+}
