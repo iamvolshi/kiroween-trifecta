@@ -7,9 +7,16 @@ import { AuditPanel, LessonsPanel, ResearchPanel } from './rail-panels.ts';
  * The icon rail on the far left and the list panel beside it. The rail's
  * icons are the engines by category, never by name: Chat (the left column
  * as it was), Audit (the record views), Research (the knowledge), Lessons.
- * Tapping an icon swaps the list panel only; the center and right columns
- * do not move.
+ * Tapping an icon swaps the list panel. Audit also takes the center to
+ * the KTIE page (/calendar), through the Router, unless it is already
+ * there; Chat, Research and Lessons leave the center and right columns as
+ * they are.
  */
+
+/** Is `path` the KTIE page (the calendar, at any level)? */
+export function onKtiePage(path: string): boolean {
+  return path === '/calendar' || path.startsWith('/calendar/');
+}
 export type RailKey = 'chat' | 'audit' | 'research' | 'lessons';
 
 /** The list column's caption per panel (Chat keeps the column's own name). */
@@ -47,9 +54,13 @@ export class RailPanel implements Panel {
   private rail: HTMLElement;
   private list: HTMLElement;
 
-  constructor(adapter: SeamAdapter, rail: HTMLElement, list: HTMLElement) {
+  /** The Router's navigate: Audit's way to the KTIE page. None: panel only. */
+  private navigate: ((path: string) => void) | null;
+
+  constructor(adapter: SeamAdapter, rail: HTMLElement, list: HTMLElement, navigate: ((path: string) => void) | null = null) {
     this.rail = rail;
     this.list = list;
+    this.navigate = navigate;
     this.panels = {
       chat: new LeftPanel(adapter),
       audit: new AuditPanel(adapter),
@@ -60,7 +71,8 @@ export class RailPanel implements Panel {
 
   /** `slot` is ignored: the rail owns its two columns (rail and list). */
   mount(_slot?: HTMLElement): void {
-    // A toolbar, not a nav: it swaps the list panel, it does not change the route.
+    // A toolbar, not a nav: it swaps the list panel. Only Audit also changes
+    // the route (to the KTIE page), through the Router.
     const nav = document.createElement('div');
     nav.className = 'rail-nav';
     nav.setAttribute('role', 'toolbar');
@@ -75,7 +87,10 @@ export class RailPanel implements Panel {
       b.title = item.label;
       b.setAttribute('aria-pressed', String(item.key === this.active));
       b.appendChild(icon(item.icon));
-      b.addEventListener('click', () => this.show(item.key));
+      b.addEventListener('click', () => {
+        this.show(item.key);
+        if (item.key === 'audit' && this.navigate && !onKtiePage(window.location.pathname)) this.navigate('/calendar');
+      });
       nav.appendChild(b);
     }
     this.rail.replaceChildren(nav);

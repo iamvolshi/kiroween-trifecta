@@ -46,7 +46,7 @@ async function mount(adapter: SeamAdapter, target: ConstructorParameters<typeof 
 describe('CalendarView', () => {
   it('month: heat only on days with entries, day links', async () => {
     const { root } = await mount(fakeAdapter(E), { level: 'month', year: 2026, month: 11 });
-    expect(root.querySelector('h1')?.textContent).toBe('Calendar');
+    expect(root.querySelector('h1')?.textContent).toBe('KTIE');
     expect(root.querySelector('.calendar-title')?.textContent).toBe('November 2026 (UTC)');
     const marked = [...root.querySelectorAll<HTMLElement>('.calendar-grid td')].filter((td) => td.dataset.heat);
     expect(marked).toHaveLength(1);

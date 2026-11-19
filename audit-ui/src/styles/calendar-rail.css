@@ -1,12 +1,12 @@
-/* Calendar face: the calendar beside its tiered rail, and the locked hour's
-   knowledge-state panel. Visual direction took cues from a reference mockup
-   (Stitch, Nov 18); the code is written fresh. The rail is the founder's
-   design: quarters, weeks, days and hours tiered like a directory tree. */
+/* The KTIE page: its header, the time tree as drums across the top, and the
+   folder underneath (the record at the moment the drums rest on). The drums
+   are KTIE's: everything that belongs to KTIE wears its rose
+   (--engine-katie). */
 
+/* Single column: the drums on top, the folder under them. */
 .calendar-view {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 15rem;
-  gap: var(--s4);
+  gap: var(--s3);
   align-items: start;
 }
 
@@ -15,167 +15,231 @@
   overflow-x: auto;
 }
 
-/* Stack the rail under the calendar when the column is narrow. */
+/* The center column is a size container (kept for any container query). */
 .shell-center {
   container-type: inline-size;
 }
 
-@container (max-width: 48rem) {
-  .calendar-view {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
+/* ---- The header: KTIE over what it stands for ---------------------------- */
 
-/* ---- The rail ---------------------------------------------------------- */
-
-.calendar-rail {
-  display: grid;
-  min-width: 0;
-  gap: var(--s2);
-  position: sticky;
-  top: 0;
-}
-
-.rail-tier {
-  position: relative;
-  min-width: 0;
-  padding: var(--s2) var(--s2) var(--s2) var(--s3);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
-  background: var(--panel);
-}
-
-/* The tree: each lower tier hangs one step in from the one above. */
-.rail-tier[data-tier='2'] { margin-left: var(--s2); }
-.rail-tier[data-tier='3'] { margin-left: var(--s4); }
-.rail-tier[data-tier='4'] { margin-left: var(--s5); }
-
-.rail-tier::before {
-  content: '';
-  position: absolute;
-  left: calc(-1 * var(--s2));
-  top: -9px;
-  width: 6px;
-  height: calc(var(--s3) + 10px);
-  border-left: 1px solid var(--line-strong);
-  border-bottom: 1px solid var(--line-strong);
-}
-
-.rail-tier[data-tier='1']::before {
-  content: none;
-}
-
-/* The tier the cursor is over (the wheel moves this tier). */
-.rail-tier[data-hover='true'] {
-  border-color: rgba(0, 240, 255, 0.4);
-}
-
-.rail-tier-head {
+.ktie-head {
   margin: 0 0 var(--s2);
+}
+
+.ktie-head .ktie-name {
+  margin: 0;
+  font-family: var(--display);
+  font-size: var(--t-headline-xl-size);
+  line-height: var(--t-headline-xl-lh);
+  font-weight: var(--t-headline-xl-wt);
+  letter-spacing: var(--t-headline-xl-ls);
+  color: var(--engine-katie);
+  text-shadow: 0 0 18px rgba(255, 92, 138, 0.35);
+}
+
+.ktie-expansion {
+  margin: 2px 0 0;
   font-family: var(--mono);
   font-size: var(--t-label-md-size);
   line-height: var(--t-label-md-lh);
-  font-weight: 700;
+  font-weight: var(--t-label-md-wt);
   letter-spacing: var(--t-label-md-ls);
   text-transform: uppercase;
   color: var(--muted);
-  overflow-wrap: anywhere;
 }
 
-.rail-tier .empty-state {
-  margin: 0;
-  font-size: var(--t-body-md-size);
-  line-height: var(--t-body-md-lh);
-  font-weight: var(--t-body-md-wt);
-}
+/* ---- The drums ---------------------------------------------------------- */
 
-.rail-ticks {
-  display: flex;
+.ktie-drums {
+  /* One value's height, and how many show either side of the center (DRUM_REACH). */
+  --drum-row: 2.5rem;
+  --drum-reach: 3;
+  position: relative;
   min-width: 0;
-  align-items: flex-end;
-  gap: 3px;
-  min-height: 2.25rem;
+  padding: var(--s3) var(--s3) var(--s4);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-xl);
+  background:
+    radial-gradient(120% 70% at 50% 50%, rgba(255, 92, 138, 0.07), transparent 70%),
+    var(--inset);
 }
 
-.rail-tick {
-  display: flex;
-  flex: 1 1 0;
-  flex-direction: column;
-  justify-content: flex-end;
-  align-items: center;
+.drum-row {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   min-width: 0;
-  height: 2.25rem;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: var(--faint);
-  text-decoration: none;
-  cursor: pointer;
-  transition: transform 120ms ease-out;
 }
 
-/* The tick line itself; its height follows the live count (data-level). */
-.rail-tick::before {
-  content: '';
-  width: 2px;
-  height: 6px;
-  background: var(--line-strong);
+.drum {
+  min-width: 0;
+  padding: 0 var(--s1);
 }
 
-.rail-tick[data-level='1']::before { height: 10px; background: rgba(0, 240, 255, 0.45); }
-.rail-tick[data-level='2']::before { height: 14px; background: rgba(0, 240, 255, 0.6); }
-.rail-tick[data-level='3']::before { height: 18px; background: rgba(0, 240, 255, 0.8); }
-.rail-tick[data-level='4']::before { height: 22px; background: var(--accent); }
+.drum + .drum {
+  border-left: 1px solid var(--line);
+}
 
-.rail-tick-label {
-  margin-top: 2px;
+.drum-head {
+  margin: 0 0 var(--s2);
   font-family: var(--mono);
   font-size: var(--t-label-sm-size);
   line-height: var(--t-label-sm-lh);
+  font-weight: 600;
   letter-spacing: var(--t-label-sm-ls);
+  text-align: center;
+  text-transform: uppercase;
+  color: var(--outline);
+  transition: color 160ms ease-out;
 }
 
-.rail-hour .rail-tick-label {
-  display: none;
+/* The wheel's window: the center row plus DRUM_REACH rows either side,
+   curved like a drum and fading out at its top and bottom. */
+.drum-window {
+  position: relative;
+  height: calc(var(--drum-row) * (2 * var(--drum-reach) + 1));
+  overflow: hidden;
+  perspective: 520px;
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 18%, #000 82%, transparent);
+  mask-image: linear-gradient(to bottom, transparent, #000 18%, #000 82%, transparent);
 }
 
-/* Where the cursor sits, the tick darkens and lifts. */
-.rail-tick:hover,
-.rail-tick:focus-visible,
-.rail-tick[data-cursor='true'] {
-  transform: translateY(-3px);
+/* The selection band: where the centered value sits. */
+.drum-window::before {
+  content: '';
+  position: absolute;
+  inset: calc(var(--drum-row) * var(--drum-reach)) 0 auto;
+  height: var(--drum-row);
+  border-top: 1px solid rgba(255, 92, 138, 0.45);
+  border-bottom: 1px solid rgba(255, 92, 138, 0.45);
+  background: rgba(255, 92, 138, 0.06);
+  pointer-events: none;
+  transition: background 160ms ease-out, border-color 160ms ease-out;
+}
+
+/* The wheel under the cursor: the scroll wheel spins this one. */
+.drum[data-hover='true'] .drum-window::before {
+  border-color: var(--engine-katie);
+  background: rgba(255, 92, 138, 0.13);
+}
+
+.drum[data-hover='true'] .drum-head {
+  color: var(--engine-katie);
+}
+
+.drum-reel {
+  transform: translateY(calc((var(--drum-reach) - var(--sel, 0)) * var(--drum-row)));
+  transform-style: preserve-3d;
+  transition: transform 300ms cubic-bezier(0.18, 0.9, 0.24, 1);
+}
+
+.drum-value {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: var(--drum-row);
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius);
+  background: none;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: var(--t-headline-lg-size);
+  line-height: var(--t-headline-lg-lh);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  text-decoration: none;
+  cursor: pointer;
+  /* Faded by distance from the center (--fade), tipped back like a drum (--d). */
+  opacity: var(--fade, 1);
+  transform: rotateX(calc(var(--d, 0) * -17deg));
+  transition: opacity 300ms ease-out, transform 300ms cubic-bezier(0.18, 0.9, 0.24, 1), color 160ms ease-out;
+}
+
+/* Hours with nothing recorded: there, but quieter. */
+.drum-value[data-has='false'] {
+  color: var(--faint);
+}
+
+/* The centered value: solid, KTIE's rose. */
+.drum-value[data-selected='true'] {
+  color: var(--engine-katie);
+  font-weight: 700;
+  text-shadow: 0 0 14px rgba(255, 92, 138, 0.5);
+}
+
+.drum-value[data-far='true'] {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.drum-value:hover {
   color: var(--text);
 }
 
-.rail-tick:hover::before,
-.rail-tick:focus-visible::before,
-.rail-tick[data-cursor='true']::before {
-  width: 3px;
-  background: var(--text);
+.drum-value[data-selected='true']:hover {
+  color: var(--engine-katie);
 }
 
-.rail-tick:hover .rail-tick-label,
-.rail-tick:focus-visible .rail-tick-label,
-.rail-tick[data-cursor='true'] .rail-tick-label,
-.rail-tick[aria-current='true'] .rail-tick-label {
-  display: block;
+.drum-value:focus-visible {
+  outline: 2px solid var(--engine-katie);
+  outline-offset: -3px;
 }
 
-.rail-tick[aria-pressed='true'],
-.rail-tick[aria-current='true'] {
-  color: var(--accent);
+/* A wheel with nothing in the record says so, in the middle of its window. */
+.drum[data-empty='true'] .drum-window {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-mask-image: none;
+  mask-image: none;
 }
 
-.rail-tick[aria-pressed='true']::before,
-.rail-tick[aria-current='true']::before {
-  width: 3px;
-  box-shadow: 0 0 0 1px var(--accent);
+.drum[data-empty='true'] .drum-window::before {
+  content: none;
+}
+
+.drum .empty-state {
+  margin: 0;
+  font-size: var(--t-body-sm-size);
+  line-height: var(--t-body-sm-lh);
+  font-weight: var(--t-body-sm-wt);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .rail-tick { transition: none; }
+  .drum-reel,
+  .drum-value {
+    transition: none;
+  }
 }
 
+/* ---- The folder pane ----------------------------------------------------- */
+
+/* While the drums spin: the real moments passing by, above the folder. */
+.ktie-passing {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: var(--t-telemetry-data-size);
+  line-height: var(--t-telemetry-data-lh);
+  font-weight: var(--t-telemetry-data-wt);
+  letter-spacing: var(--t-telemetry-data-ls);
+  color: var(--engine-katie);
+}
+
+.ktie-passing::before {
+  content: '\25B8  ';
+  content: '\25B8  ' / '';
+}
+
+.ktie-passing[hidden] {
+  display: none;
+}
+
+.ktie-folder {
+  min-width: 0;
+}
 /* ---- Knowledge state of the locked hour -------------------------------- */
 
 .knowledge-state {

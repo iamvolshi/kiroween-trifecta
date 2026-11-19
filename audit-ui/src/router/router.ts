@@ -42,7 +42,8 @@ export class Router {
     this.container = container;
     this.slots = createShell(container);
     // The rail and the list panel it swaps (Chat's list is the directories column).
-    const left = new RailPanel(adapter, this.slots.rail, this.slots.left);
+    // Audit's icon goes to the KTIE page through this Router (navigate), like a plain link.
+    const left = new RailPanel(adapter, this.slots.rail, this.slots.left, (path) => this.navigate(path));
     this.leftPanel = left;
     left.mount();
     this.unsubscribeLog = this.chatLog.subscribe(() => this.leftPanel.refresh());

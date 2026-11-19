@@ -11,21 +11,50 @@ import {
   isoWeekOf,
   quarterKey,
   quarterOf,
-  quartersPresent,
+  quartersOfYearPresent,
   weekKey,
   weeksPresent,
+  yearsPresent,
 } from '../util/rail.ts';
 
 /**
- * The calendar rail: quarters, weeks, days and a 24-hour strip, tiered like
- * a directory tree, each tier a row of small ticks. Built ONLY from the
- * loaded entries: a tier with nothing in the record says so (NOT KNOWN).
- * The wheel moves the tier the cursor is over; clicking an hour locks it
- * and opens the same hour view as the day's hour list.
+ * KTIE's time tree as drums: a row of spinning wheels, one per segment
+ * (Years, Quarters, Weeks, Days, Hours), like the Apple date picker or the
+ * segments of a clock readout. The centered value is the selection, solid;
+ * the values above and below fade with their distance from the center.
+ *
+ * Built ONLY from the loaded entries: a wheel holds only the periods present
+ * in the record (all 24 hours of the picked day, each with its live count),
+ * and a wheel with nothing says so in words. Counts ride in the labels.
+ *
+ * Hover a wheel and the scroll wheel spins that wheel; the wheels to its
+ * right re-derive from the new selection (a year move re-picks the last
+ * quarter, week, day and hour in it; a quarter move the last week, day and
+ * hour; and so on). A wheel claims the scroll only when it moved: at an end
+ * the page scrolls. Arrow keys spin the focused wheel. Clicking a value
+ * centers it; clicking an hour opens that hour's view (a plain link).
+ *
+ * Every move reports the moment it passes (`onSpin`); once the wheels have
+ * been still for `settleMs`, the moment they rest on is reported
+ * (`onSettle`). The view swaps the folder underneath only then.
  */
+
+export type Segment = 'year' | 'quarter' | 'week' | 'day' | 'hour';
+export const SEGMENTS: readonly Segment[] = ['year', 'quarter', 'week', 'day', 'hour'];
+const HEADS: Record<Segment, string> = { year: 'Years', quarter: 'Quarters', week: 'Weeks', day: 'Days', hour: 'Hours (UTC)' };
+
+/** Values shown either side of the center; further ones are hidden. */
+export const DRUM_REACH = 3;
+/** Opacity by distance from the center: solid, then fading out. */
+export const DRUM_FADE: readonly number[] = [1, 0.5, 0.24, 0.1];
+/** Quiet time after the last move before the wheels count as settled. */
+export const SETTLE_MS = 420;
+/** Wheel travel (px) per step: a mouse notch is one step; a trackpad gathers small deltas. */
+const STEP_PX = 50;
 
 const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const p2 = (n: number): string => String(n).padStart(2, '0');
+const plural = (n: number): string => `${n} ${n === 1 ? 'entry' : 'entries'}`;
 
 function el<K extends keyof HTMLElementTagNameMap>(tag: K, className: string, text?: string): HTMLElementTagNameMap[K] {
   const e = document.createElement(tag);
@@ -34,43 +63,98 @@ function el<K extends keyof HTMLElementTagNameMap>(tag: K, className: string, te
   return e;
 }
 
-const plural = (n: number): string => `${n} ${n === 1 ? 'entry' : 'entries'}`;
+/** The moment the wheels point at: a day and an hour of it, with that hour's live count. */
+export interface Moment {
+  day: Day;
+  hour: number;
+  count: number;
+}
 
-/** 1-4 by share of the tier's largest count; 0 for none. */
-function level(n: number, max: number): number {
-  return n <= 0 || max <= 0 ? 0 : Math.max(1, Math.ceil((n / max) * 4));
+export interface RailOptions {
+  onSpin?: (m: Moment) => void;
+  onSettle?: (m: Moment) => void;
+  settleMs?: number;
+}
+
+/** One value on a wheel. */
+interface Value {
+  key: string;
+  label: string;
+  aria: string;
+  count: number;
+  /** Hours only: the hour view. */
+  href?: string;
+}
+
+const dayName = (d: Day): string => WEEKDAYS[new Date(Date.UTC(d.year, d.month - 1, d.day)).getUTCDay()]!;
+
+/**
+ * What a wheel's values are: their keys, and their links (the hour wheel's
+ * 24 keys are the same every day; its links name the day). Same signature:
+ * the wheel is patched in place and spins; else it is rebuilt.
+ */
+function signature(vals: Value[]): string {
+  return vals.map((v) => `${v.key}>${v.href ?? ''}`).join('|');
+}
+
+/** The fade of a value `d` steps from the center. */
+export function fadeAt(d: number): number {
+  const a = Math.abs(d);
+  return a < DRUM_FADE.length ? DRUM_FADE[a]! : 0;
 }
 
 export class CalendarRail {
   readonly root: HTMLElement;
   private days: Array<{ day: Day; count: number }>;
   private entries: Entry[];
+  private year: number | null = null;
   private quarter: Quarter | null = null;
   private week: Week | null = null;
   private day: Day | null = null;
-  /** The hour the wheel points at in Tier 4 (not locked until clicked). */
-  private hourCursor: number | null;
+  private hour: number | null = null;
   private lockedHour: number | null;
-  private hovered: number | null = null;
   /** The day the locked hour belongs to (the hour view's day). */
   private lockedDay: Day | null;
+  private hovered: Segment | null = null;
+  private drums = new Map<Segment, HTMLElement>();
+  private row: HTMLElement;
+  private wheelGather = new Map<Segment, number>();
+  private settleTimer: ReturnType<typeof setTimeout> | null = null;
+  private opts: RailOptions;
 
   /** `focus`: the day the view is on (if any); `lockedHour`: the hour view's hour on that day. */
-  constructor(entries: Entry[], focus: Day | null, lockedHour: number | null) {
+  constructor(entries: Entry[], focus: Day | null, lockedHour: number | null, opts: RailOptions = {}) {
     this.entries = entries;
     this.days = daysPresent(entries);
     this.lockedHour = lockedHour;
     this.lockedDay = lockedHour !== null ? focus : null;
-    this.hourCursor = lockedHour;
-    this.root = el('section', 'calendar-rail');
-    this.root.setAttribute('aria-label', 'Calendar rail');
+    this.opts = opts;
+    this.root = el('section', 'calendar-rail ktie-drums');
+    this.root.setAttribute('aria-label', 'Time tree');
+    this.row = el('div', 'drum-row');
+    this.root.appendChild(this.row);
     const start =
       (focus && this.days.find((d) => dayKey(d.day) === dayKey(focus))?.day) ??
       (focus && this.newestIn((d) => d.year === focus.year && d.month === focus.month)) ??
       this.days[this.days.length - 1]?.day ??
       null;
-    if (start) this.selectDay(start);
+    if (start) {
+      this.selectDay(start);
+      this.hour = lockedHour !== null && focus && dayKey(start) === dayKey(focus) ? lockedHour : this.lastHourOf(start);
+    }
     this.render();
+  }
+
+  /** The moment the wheels point at, or null with nothing in the record. */
+  moment(): Moment | null {
+    if (!this.day || this.hour === null) return null;
+    return { day: this.day, hour: this.hour, count: hourCounts(this.entries, this.day)[this.hour] ?? 0 };
+  }
+
+  /** Stop the settle timer (the view is going away). */
+  destroy(): void {
+    if (this.settleTimer !== null) clearTimeout(this.settleTimer);
+    this.settleTimer = null;
   }
 
   private newestIn(test: (d: Day) => boolean): Day | null {
@@ -78,255 +162,285 @@ export class CalendarRail {
     return hit[hit.length - 1]?.day ?? null;
   }
 
-  private selectDay(d: Day): void {
-    this.day = d;
-    this.quarter = quarterOf(d);
-    this.week = isoWeekOf(d);
-  }
-
   private all(): Day[] {
     return this.days.map((d) => d.day);
   }
 
-  /**
-   * Move tier `tier` by `step` among the periods present. Returns whether
-   * anything moved (false at either end), so the wheel only claims the
-   * scroll when it did something. A Tier 4 move patches the cursor on the
-   * existing strip; the strip is rebuilt only when the day changes.
-   */
-  move(tier: number, step: number): boolean {
-    if (tier === 4) {
-      if (!this.day) return false;
-      const next = Math.min(23, Math.max(0, (this.hourCursor ?? (step > 0 ? -1 : 24)) + step));
-      if (next === this.hourCursor) return false;
-      this.hourCursor = next;
-      for (const a of this.root.querySelectorAll<HTMLElement>('.rail-hour')) {
-        if (a.dataset.hour === String(next)) a.dataset.cursor = 'true';
-        else delete a.dataset.cursor;
-      }
-      return true;
-    }
-    const before = this.selectionKey();
-    const days = this.all();
-    if (tier === 1 && this.quarter) {
-      const qs = quartersPresent(days);
-      const i = qs.findIndex((q) => quarterKey(q) === quarterKey(this.quarter!));
-      const q = qs[Math.min(qs.length - 1, Math.max(0, i + step))]!;
-      if (quarterKey(q) !== quarterKey(this.quarter)) {
-        const ws = weeksPresent(days, q);
-        const w = ws[ws.length - 1]!;
-        const ds = daysOfWeekPresent(days, q, w);
-        this.quarter = q;
-        this.week = w;
-        this.day = ds[ds.length - 1]!;
-        this.hourCursor = null;
-      }
-    } else if (tier === 2 && this.quarter && this.week) {
-      const ws = weeksPresent(days, this.quarter);
-      const i = ws.findIndex((w) => weekKey(w) === weekKey(this.week!));
-      const w = ws[Math.min(ws.length - 1, Math.max(0, i + step))]!;
-      if (weekKey(w) !== weekKey(this.week)) {
-        const ds = daysOfWeekPresent(days, this.quarter, w);
-        this.week = w;
-        this.day = ds[ds.length - 1]!;
-        this.hourCursor = null;
-      }
-    } else if (tier === 3 && this.quarter && this.week && this.day) {
-      const ds = daysOfWeekPresent(days, this.quarter, this.week);
-      const i = ds.findIndex((d) => dayKey(d) === dayKey(this.day!));
-      const d = ds[Math.min(ds.length - 1, Math.max(0, i + step))]!;
-      if (dayKey(d) !== dayKey(this.day)) {
-        this.day = d;
-        this.hourCursor = null;
-      }
-    }
-    if (this.selectionKey() === before) return false;
-    this.render();
-    return true;
+  private selectDay(d: Day): void {
+    this.day = d;
+    this.year = d.year;
+    this.quarter = quarterOf(d);
+    this.week = isoWeekOf(d);
   }
 
-  private selectionKey(): string {
-    return [this.quarter && quarterKey(this.quarter), this.week && weekKey(this.week), this.day && dayKey(this.day)].join('|');
-  }
-
-  /** Re-render after a pick, then put keyboard focus back on that tier's pressed tick. */
-  private pick(tier: number, apply: () => void): void {
-    apply();
-    this.render();
-    this.refocus(tier);
-  }
-
-  private refocus(tier: number): void {
-    const sel = tier === 4 ? '.rail-hour[data-cursor="true"]' : '[aria-pressed="true"]';
-    this.root.querySelector<HTMLElement>(`.rail-tier[data-tier="${tier}"] ${sel}`)?.focus();
-  }
-
-  private tier(n: number, head: string, ticks: HTMLElement[] | null): HTMLElement {
-    const sec = el('section', 'rail-tier');
-    sec.dataset.tier = String(n);
-    if (this.hovered === n) sec.dataset.hover = 'true';
-    sec.appendChild(el('h3', 'rail-tier-head', head));
-    if (ticks === null) {
-      sec.appendChild(el('p', 'empty-state', 'Nothing in the record for this tier.'));
-    } else {
-      const row = el('div', 'rail-ticks');
-      row.append(...ticks);
-      sec.appendChild(row);
-    }
-    sec.addEventListener('mouseenter', () => this.setHover(n));
-    sec.addEventListener('mouseleave', () => this.setHover(null));
-    sec.addEventListener(
-      'wheel',
-      (e: WheelEvent) => {
-        if (e.deltaY === 0 || ticks === null) return;
-        // Claim the scroll only when the tier moved; at an end the page scrolls.
-        if (this.move(n, e.deltaY > 0 ? 1 : -1)) e.preventDefault();
-      },
-      { passive: false },
-    );
-    // Keyboard twin of the wheel: arrow keys move the focused tier.
-    sec.addEventListener('keydown', (e: KeyboardEvent) => {
-      if (ticks === null || (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight')) return;
-      // Leave modified arrows to the browser (Alt+Left/Right is history).
-      if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
-      e.preventDefault();
-      // Tier 4 steps from the hour that has focus, not a stale cursor.
-      const focusedHour = n === 4 ? (e.target as HTMLElement).closest<HTMLElement>('.rail-hour')?.dataset.hour : undefined;
-      if (focusedHour !== undefined) this.hourCursor = Number(focusedHour);
-      if (this.move(n, e.key === 'ArrowRight' ? 1 : -1)) this.refocus(n);
-    });
-    return sec;
-  }
-
-  private setHover(n: number | null): void {
-    this.hovered = n;
-    for (const t of this.root.querySelectorAll<HTMLElement>('.rail-tier')) {
-      if (t.dataset.tier === String(n)) t.dataset.hover = 'true';
-      else delete t.dataset.hover;
-    }
-  }
-
-  private tick(label: string, aria: string, count: number, max: number, selected: boolean, onPick: () => void): HTMLButtonElement {
-    const b = el('button', 'rail-tick');
-    b.type = 'button';
-    b.dataset.level = String(level(count, max));
-    b.setAttribute('aria-pressed', String(selected));
-    b.setAttribute('aria-label', aria);
-    b.title = aria;
-    b.appendChild(el('span', 'rail-tick-label', label));
-    b.addEventListener('click', onPick);
-    return b;
+  /** The last hour of `d` that holds an entry (every present day has one). */
+  private lastHourOf(d: Day): number {
+    const counts = hourCounts(this.entries, d);
+    for (let h = 23; h >= 0; h--) if (counts[h]! > 0) return h;
+    return 0;
   }
 
   private countIn(test: (d: Day) => boolean): number {
     return this.days.filter((d) => test(d.day)).reduce((s, d) => s + d.count, 0);
   }
 
-  render(): void {
+  /** The values on one wheel, from the selection to its left. */
+  private values(seg: Segment): Value[] {
     const days = this.all();
-    const tiers: HTMLElement[] = [];
-    const q = this.quarter;
-    const w = this.week;
-    const d = this.day;
-
-    // Tier 1: quarters present.
-    const qs = quartersPresent(days);
-    const qCount = (x: Quarter): number => this.countIn((y) => quarterKey(quarterOf(y)) === quarterKey(x));
-    const qMax = Math.max(0, ...qs.map(qCount));
-    tiers.push(
-      this.tier(
-        1,
-        q ? `Tier 1: Quarters (${q.year}) \u2014 Q${q.q}` : 'Tier 1: Quarters',
-        qs.length === 0
-          ? null
-          : qs.map((x) =>
-              this.tick(`Q${x.q}`, `${x.year} Q${x.q}, ${plural(qCount(x))}`, qCount(x), qMax, !!q && quarterKey(x) === quarterKey(q), () => this.pick(1, () => {
-                const ws = weeksPresent(days, x);
-                const wk = ws[ws.length - 1]!;
-                const ds = daysOfWeekPresent(days, x, wk);
-                this.quarter = x;
-                this.week = wk;
-                this.day = ds[ds.length - 1]!;
-                this.hourCursor = null;
-              })),
-            ),
-      ),
-    );
-
-    // Tier 2: weeks present in the quarter.
-    const ws = q ? weeksPresent(days, q) : [];
-    const wCount = (x: Week): number =>
-      this.countIn((y) => !!q && quarterKey(quarterOf(y)) === quarterKey(q) && weekKey(isoWeekOf(y)) === weekKey(x));
-    const wMax = Math.max(0, ...ws.map(wCount));
-    tiers.push(
-      this.tier(
-        2,
-        q && w ? `Tier 2: Weeks of Q${q.q} \u2014 Week ${w.week}` : 'Tier 2: Weeks',
-        ws.length === 0
-          ? null
-          : ws.map((x) =>
-              this.tick(`W${x.week}`, `Week ${x.week} of ${x.isoYear}, ${plural(wCount(x))}`, wCount(x), wMax, !!w && weekKey(x) === weekKey(w), () => this.pick(2, () => {
-                const ds = daysOfWeekPresent(days, q!, x);
-                this.week = x;
-                this.day = ds[ds.length - 1]!;
-                this.hourCursor = null;
-              })),
-            ),
-      ),
-    );
-
-    // Tier 3: days present in the week.
-    const ds = q && w ? daysOfWeekPresent(days, q, w) : [];
-    const dCount = (x: Day): number => this.days.find((y) => dayKey(y.day) === dayKey(x))?.count ?? 0;
-    const dMax = Math.max(0, ...ds.map(dCount));
-    const dayName = (x: Day): string =>
-      `${WEEKDAYS[new Date(Date.UTC(x.year, x.month - 1, x.day)).getUTCDay()]} ${x.day} ${MONTH_NAMES[x.month - 1]}`;
-    tiers.push(
-      this.tier(
-        3,
-        w && d ? `Tier 3: Days (W${w.week}) \u2014 ${dayName(d)}` : 'Tier 3: Days',
-        ds.length === 0
-          ? null
-          : ds.map((x) =>
-              this.tick(String(x.day), `${dayName(x)} ${x.year}, ${plural(dCount(x))}`, dCount(x), dMax, !!d && dayKey(x) === dayKey(d), () => this.pick(3, () => {
-                this.day = x;
-                this.hourCursor = null;
-              })),
-            ),
-      ),
-    );
-
-    // Tier 4: the 24-hour strip of the day. Rebuilt when the day changes; a cursor move patches it in place (see move).
-    if (d) {
-      const counts = hourCounts(this.entries, d);
-      const max = Math.max(...counts);
-      const total = counts.reduce((s, n) => s + n, 0);
-      const locked = this.lockedHour !== null && this.isLockedDay(d) ? this.lockedHour : null;
-      const strip = counts.map((n, h) => {
-        const a = el('a', 'rail-tick rail-hour');
-        a.setAttribute('href', calendarHref({ level: 'hour', year: d.year, month: d.month, day: d.day, hour: h }));
-        a.dataset.hour = String(h);
-        a.dataset.level = String(level(n, max));
-        const aria = `${p2(h)}:00 UTC, ${plural(n)}`;
-        a.setAttribute('aria-label', aria);
-        a.title = aria;
-        if (h === locked) a.setAttribute('aria-current', 'true');
-        if (h === this.hourCursor) a.dataset.cursor = 'true';
-        a.appendChild(el('span', 'rail-tick-label', p2(h)));
-        return a;
+    if (seg === 'year') {
+      return yearsPresent(days).map((y) => {
+        const n = this.countIn((d) => d.year === y);
+        return { key: String(y), label: String(y), aria: `${y}, ${plural(n)}`, count: n };
       });
-      const head =
-        locked !== null
-          ? `Tier 4: 24-hour strip (${MONTH_NAMES[d.month - 1]!.slice(0, 3)} ${d.day}) \u2014 Active \u2014 ${p2(locked)}:00 UTC (${plural(counts[locked]!)})`
-          : `Tier 4: 24-hour strip (${MONTH_NAMES[d.month - 1]!.slice(0, 3)} ${d.day}) \u2014 ${plural(total)}`;
-      tiers.push(this.tier(4, head, strip));
-    } else {
-      tiers.push(this.tier(4, 'Tier 4: 24-hour strip', null));
     }
-    this.root.replaceChildren(...tiers);
+    if (seg === 'quarter') {
+      if (this.year === null) return [];
+      return quartersOfYearPresent(days, this.year).map((q) => {
+        const n = this.countIn((d) => quarterKey(quarterOf(d)) === quarterKey(q));
+        return { key: quarterKey(q), label: `Q${q.q}`, aria: `${q.year} Q${q.q}, ${plural(n)}`, count: n };
+      });
+    }
+    if (seg === 'week') {
+      const q = this.quarter;
+      if (!q) return [];
+      return weeksPresent(days, q).map((w) => {
+        const n = this.countIn((d) => quarterKey(quarterOf(d)) === quarterKey(q) && weekKey(isoWeekOf(d)) === weekKey(w));
+        return { key: weekKey(w), label: `W${w.week}`, aria: `Week ${w.week} of ${w.isoYear}, ${plural(n)}`, count: n };
+      });
+    }
+    if (seg === 'day') {
+      if (!this.quarter || !this.week) return [];
+      return daysOfWeekPresent(days, this.quarter, this.week).map((d) => {
+        const n = this.days.find((x) => dayKey(x.day) === dayKey(d))?.count ?? 0;
+        return {
+          key: dayKey(d),
+          label: `${dayName(d).slice(0, 3)} ${d.day}`,
+          aria: `${dayName(d)} ${d.day} ${MONTH_NAMES[d.month - 1]} ${d.year}, ${plural(n)}`,
+          count: n,
+        };
+      });
+    }
+    const d = this.day;
+    if (!d) return [];
+    return hourCounts(this.entries, d).map((n, h) => ({
+      key: String(h),
+      label: `${p2(h)}:00`,
+      aria: `${p2(h)}:00 UTC, ${plural(n)}`,
+      count: n,
+      href: calendarHref({ level: 'hour', year: d.year, month: d.month, day: d.day, hour: h }),
+    }));
   }
 
-  private isLockedDay(d: Day): boolean {
-    return this.lockedDay !== null && dayKey(this.lockedDay) === dayKey(d);
+  /** The selected value's key on a wheel. */
+  private selectedKey(seg: Segment): string | null {
+    if (seg === 'year') return this.year === null ? null : String(this.year);
+    if (seg === 'quarter') return this.quarter && quarterKey(this.quarter);
+    if (seg === 'week') return this.week && weekKey(this.week);
+    if (seg === 'day') return this.day && dayKey(this.day);
+    return this.hour === null ? null : String(this.hour);
+  }
+
+  /** Set one wheel's value by its index, and re-pick every wheel to its right (the last of each). */
+  private setIndex(seg: Segment, i: number): void {
+    const days = this.all();
+    if (seg === 'hour') {
+      this.hour = i;
+      return;
+    }
+    if (seg === 'year') {
+      const y = yearsPresent(days)[i]!;
+      this.year = y;
+      const qs = quartersOfYearPresent(days, y);
+      this.quarter = qs[qs.length - 1]!;
+    } else if (seg === 'quarter') {
+      this.quarter = quartersOfYearPresent(days, this.year!)[i]!;
+    }
+    if (seg === 'year' || seg === 'quarter') {
+      const ws = weeksPresent(days, this.quarter!);
+      this.week = ws[ws.length - 1]!;
+    } else if (seg === 'week') {
+      this.week = weeksPresent(days, this.quarter!)[i]!;
+    }
+    if (seg === 'day') {
+      this.day = daysOfWeekPresent(days, this.quarter!, this.week!)[i]!;
+    } else {
+      const ds = daysOfWeekPresent(days, this.quarter!, this.week!);
+      this.day = ds[ds.length - 1]!;
+    }
+    this.hour = this.lastHourOf(this.day);
+  }
+
+  /**
+   * Spin wheel `seg` by `step` among its values. Returns whether it moved
+   * (false at either end), so the scroll wheel only claims the scroll when
+   * the wheel did something.
+   */
+  move(seg: Segment, step: number): boolean {
+    const vals = this.values(seg);
+    const cur = vals.findIndex((v) => v.key === this.selectedKey(seg));
+    if (cur < 0) return false;
+    const next = Math.min(vals.length - 1, Math.max(0, cur + step));
+    if (next === cur) return false;
+    this.setIndex(seg, next);
+    this.render();
+    this.spun();
+    return true;
+  }
+
+  /** Center a value on a wheel (a click). */
+  private pick(seg: Segment, i: number): void {
+    const vals = this.values(seg);
+    if (vals[i]?.key === this.selectedKey(seg)) return;
+    this.setIndex(seg, i);
+    this.render();
+    this.refocus(seg);
+    this.spun();
+  }
+
+  /** A move happened: report the passing moment, and (re)start the settle wait. */
+  private spun(): void {
+    const m = this.moment();
+    if (m) this.opts.onSpin?.(m);
+    if (this.settleTimer !== null) clearTimeout(this.settleTimer);
+    this.settleTimer = setTimeout(() => {
+      this.settleTimer = null;
+      const at = this.moment();
+      if (at) this.opts.onSettle?.(at);
+    }, this.opts.settleMs ?? SETTLE_MS);
+  }
+
+  /** Can wheel `seg` move one step in `dir` (+1 / -1)? */
+  private canMove(seg: Segment, dir: number): boolean {
+    const vals = this.values(seg);
+    const cur = vals.findIndex((v) => v.key === this.selectedKey(seg));
+    return cur >= 0 && cur + dir >= 0 && cur + dir < vals.length;
+  }
+
+  private refocus(seg: Segment): void {
+    this.drums.get(seg)?.querySelector<HTMLElement>('.drum-value[data-selected="true"]')?.focus();
+  }
+
+  private setHover(seg: Segment | null): void {
+    this.hovered = seg;
+    for (const [s, drum] of this.drums) {
+      if (s === seg) drum.dataset.hover = 'true';
+      else delete drum.dataset.hover;
+    }
+  }
+
+  /** Build (or patch in place, so it spins) every wheel from the selection. */
+  render(): void {
+    for (const seg of SEGMENTS) {
+      const vals = this.values(seg);
+      const old = this.drums.get(seg);
+      const keys = signature(vals);
+      if (old && old.dataset.keys === keys && keys !== '') {
+        this.patch(old, seg, vals);
+        continue;
+      }
+      const fresh = this.drum(seg, vals);
+      if (old) old.replaceWith(fresh);
+      else this.row.appendChild(fresh);
+      this.drums.set(seg, fresh);
+    }
+  }
+
+  private drum(seg: Segment, vals: Value[]): HTMLElement {
+    const drum = el('section', 'drum');
+    drum.dataset.seg = seg;
+    drum.dataset.keys = signature(vals);
+    if (this.hovered === seg) drum.dataset.hover = 'true';
+    drum.appendChild(el('h3', 'drum-head', HEADS[seg]));
+    const win = el('div', 'drum-window');
+    drum.appendChild(win);
+    if (vals.length === 0) {
+      drum.dataset.empty = 'true';
+      win.appendChild(el('p', 'empty-state', 'Nothing in the record for this wheel.'));
+      drum.setAttribute('aria-label', `${HEADS[seg]}: nothing in the record`);
+      return drum;
+    }
+    const reel = el('div', 'drum-reel');
+    reel.setAttribute('role', 'group');
+    vals.forEach((v, i) => {
+      const item = v.href ? el('a', 'drum-value') : el('button', 'drum-value');
+      if (v.href) item.setAttribute('href', v.href);
+      else (item as HTMLButtonElement).type = 'button';
+      item.dataset.key = v.key;
+      item.dataset.index = String(i);
+      item.dataset.has = String(v.count > 0);
+      item.setAttribute('aria-label', v.aria);
+      item.title = v.aria;
+      item.textContent = v.label;
+      if (!v.href) item.addEventListener('click', () => this.pick(seg, i));
+      reel.appendChild(item);
+    });
+    win.appendChild(reel);
+
+    drum.addEventListener('mouseenter', () => this.setHover(seg));
+    drum.addEventListener('mouseleave', () => this.setHover(null));
+    drum.addEventListener(
+      'wheel',
+      (e: WheelEvent) => {
+        if (e.deltaY === 0) return;
+        const dir = e.deltaY > 0 ? 1 : -1;
+        // At an end the page scrolls: the wheel claims nothing.
+        if (!this.canMove(seg, dir)) {
+          this.wheelGather.set(seg, 0);
+          return;
+        }
+        e.preventDefault();
+        const px = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaMode === 2 ? e.deltaY * 400 : e.deltaY;
+        // A notch is a step; small trackpad deltas gather until they make one.
+        let gathered = Math.abs(px) >= STEP_PX ? px : (this.wheelGather.get(seg) ?? 0) + px;
+        if (Math.sign(gathered) !== dir) gathered = px;
+        if (Math.abs(gathered) >= STEP_PX) {
+          gathered = 0;
+          this.move(seg, dir);
+        }
+        this.wheelGather.set(seg, gathered);
+      },
+      { passive: false },
+    );
+    // Keyboard twin: arrows spin the focused wheel, Home / End jump to its ends.
+    drum.addEventListener('keydown', (e: KeyboardEvent) => {
+      if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+      const step =
+        e.key === 'ArrowDown' || e.key === 'ArrowRight' ? 1
+        : e.key === 'ArrowUp' || e.key === 'ArrowLeft' ? -1
+        : e.key === 'Home' ? -Infinity
+        : e.key === 'End' ? Infinity
+        : 0;
+      if (step === 0) return;
+      e.preventDefault();
+      const n = this.values(seg).length;
+      if (this.move(seg, Math.max(-n, Math.min(n, step)))) this.refocus(seg);
+    });
+    this.patch(drum, seg, vals);
+    return drum;
+  }
+
+  /** Center the selection and fade the rest by distance; a CSS transition makes it spin. */
+  private patch(drum: HTMLElement, seg: Segment, vals: Value[]): void {
+    const sel = Math.max(0, vals.findIndex((v) => v.key === this.selectedKey(seg)));
+    const reel = drum.querySelector<HTMLElement>('.drum-reel');
+    if (!reel) return;
+    reel.style.setProperty('--sel', String(sel));
+    const v = vals[sel]!;
+    drum.setAttribute('aria-label', `${HEADS[seg]}: ${v.aria}`);
+    const lockedOn = seg === 'hour' && this.lockedHour !== null && this.lockedDay !== null && this.day !== null && dayKey(this.lockedDay) === dayKey(this.day);
+    for (const item of reel.querySelectorAll<HTMLElement>('.drum-value')) {
+      const i = Number(item.dataset.index);
+      const d = i - sel;
+      item.style.setProperty('--d', String(d));
+      item.style.setProperty('--fade', String(fadeAt(d)));
+      item.dataset.selected = String(d === 0);
+      if (Math.abs(d) > DRUM_REACH) item.dataset.far = 'true';
+      else delete item.dataset.far;
+      // One Tab stop per wheel: its centered value.
+      item.tabIndex = d === 0 ? 0 : -1;
+      if (item.tagName === 'BUTTON') item.setAttribute('aria-pressed', String(d === 0));
+      if (lockedOn && i === this.lockedHour) item.setAttribute('aria-current', 'true');
+      else item.removeAttribute('aria-current');
+    }
   }
 }

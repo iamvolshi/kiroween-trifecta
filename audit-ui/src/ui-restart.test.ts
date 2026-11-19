@@ -69,13 +69,13 @@ describe('the rail', () => {
     expect(Array.from(list().querySelectorAll('.left-back a')).map((a) => a.textContent)).toEqual(['Calendar Index', 'Time Travel']);
   });
 
-  it('tapping an icon swaps the list panel; the center and the right column do not move', async () => {
+  it('tapping Chat, Research or Lessons swaps the list panel only; Audit also goes to the KTIE page', async () => {
     await start('/chat');
     const center = container.querySelector('.shell-center')!;
     const right = container.querySelector('.shell-right')!;
     const view = center.firstElementChild;
     const feed = right.innerHTML;
-    for (const [key, caption] of [['audit', 'Audit'], ['research', 'Research'], ['lessons', 'Lessons'], ['chat', 'Directories']] as const) {
+    for (const [key, caption] of [['research', 'Research'], ['lessons', 'Lessons'], ['chat', 'Directories']] as const) {
       rail(key).click();
       for (let i = 0; i < 4; i++) await tick();
       expect(list().dataset.panel).toBe(key);
@@ -85,6 +85,33 @@ describe('the rail', () => {
       expect(right.innerHTML).toBe(feed);
       expect(window.location.pathname).toBe('/chat');
     }
+  });
+
+  it('tapping Audit takes the center to the KTIE page and swaps the list panel', async () => {
+    await start('/chat');
+    const right = container.querySelector('.shell-right')!;
+    const feed = right.innerHTML;
+    rail('audit').click();
+    for (let i = 0; i < 6; i++) await tick();
+    expect(window.location.pathname).toBe('/calendar');
+    expect(list().dataset.panel).toBe('audit');
+    expect(rail('audit').getAttribute('aria-pressed')).toBe('true');
+    expect(container.querySelector('.shell-center .ktie-head h1')?.textContent).toBe('KTIE');
+    expect(container.querySelector('.shell-center .ktie-drums')).not.toBeNull();
+    expect(right.innerHTML).toBe(feed); // the telemetry column does not move
+  });
+
+  it('tapping Audit while already on the KTIE page only swaps the list panel: no remount', async () => {
+    await start('/calendar/2026-11-16');
+    const center = container.querySelector('.shell-center')!;
+    const view = center.firstElementChild;
+    const before = window.history.length;
+    rail('audit').click();
+    for (let i = 0; i < 4; i++) await tick();
+    expect(window.location.pathname).toBe('/calendar/2026-11-16');
+    expect(window.history.length).toBe(before);
+    expect(center.firstElementChild).toBe(view);
+    expect(list().dataset.panel).toBe('audit');
   });
 
   it('Audit lists the record views and each account with its live entry count', async () => {

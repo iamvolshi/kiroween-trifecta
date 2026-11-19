@@ -1,0 +1,69 @@
+# The KATIE page: KTIE header + the time tree as drums
+
+Base: `main` at `ecdf1f6`. Branch: `feat/katie-page`. App only. Live data
+only: every value on the drums and in the folder comes from the loaded
+record; counts ride in labels and titles.
+
+## What changed
+
+| Part | Change |
+|---|---|
+| Header | The Calendar view's top is `KTIE` (h1, KTIE rose, headline-xl) over `Knowledge Time Indexing Engine` (label-md, muted). The intro, the shell's "View: Calendar" label and the left lists' "Calendar" labels are unchanged. |
+| Drums | `views/calendar-rail.ts` is now a row of five vertical wheels: Years, Quarters, Weeks, Days, Hours (UTC). The centered value is solid and rose; the three either side fade (1, 0.5, 0.24, 0.1) and tip back like a drum (`rotateX`); further ones hide. A rose selection band runs through every window. |
+| Years | New root wheel (`yearsPresent`, and `quartersOfYearPresent` for the Quarters wheel). A year pick takes its last quarter, week, day and hour. |
+| Behaviour | Hover a wheel and the scroll wheel spins it; the wheels to its right re-derive (last of each; the hour is the day's last hour holding an entry). The wheel claims the scroll only when it moved. Small trackpad deltas gather into one step (50px); a mouse notch is one step. Arrows spin the focused wheel (Up/Down and Left/Right), Home/End jump to its ends. Clicking a value centers it; an hour value is a link to the hour view. One Tab stop per wheel (the centered value). |
+| Settle | Every move reports the moment it passes; 420ms after the last move the drums count as settled. While they spin, the old folder stays put and a rose line names the real moment passing (`2026-03-03 · 11:00 UTC · 0 entries`). Once settled, the folder becomes the hour view for that moment (snapshot + did + believed, the existing `renderHour`). A newer spin drops an older folder load. |
+| Layout | One column: header, intro, drums, the passing line, the folder. The folder starts as the route's own content (month grid / day hours / hour view). |
+| Audit | Tapping Audit swaps the list panel and, unless the center is already on the KTIE page (`/calendar` at any level), navigates to `/calendar` through the Router. Chat, Research, Lessons: panel only. |
+
+## Decisions
+
+- The spun wheel is patched in place (its reel slides by a CSS transition,
+  so it turns); a wheel whose values change (a right-hand wheel after a
+  cascade, or the hour wheel on a new day: same 24 keys, new links) is
+  rebuilt. Found by the proof run: the hour wheel had kept the old day's
+  links; fixed and tested.
+- "Folder" on the month and day routes is the route's own content until
+  the first spin settles; the order also names the hour view as the folder,
+  so a settled spin shows the hour view. The URL does not change on settle
+  (no history entries while browsing); clicking an hour navigates.
+- The drums are KTIE's rose. The month heatmap, the day list and the
+  knowledge-state panel keep their colours (the order keeps that content
+  unchanged).
+- The "scrolling folders" are a single line naming the moment passing, from
+  the record; no folder content is drawn while spinning.
+
+## Known limits
+
+- The calendar intro still says "or use the rail" (the order keeps the intro
+  as it is).
+- jsdom draws no CSS: the fade and the curve are checked as the values the
+  drums set (`--fade`, `--d`, `--sel`) and in the proof shots.
+
+## Not built
+
+No chat, ERIE or ELLE page change; no seam or connector change; no new
+dependency or event type; no KATIE display string; README and disclosure
+untouched.
+
+## Proof
+
+`docs/katie-page-proof/` (a scratch stub connector with a seeded two-year
+stub record; real CDP mouse moves and wheel notches): 01 Audit lands on the
+drums, 02 the header, 03-06 each wheel hovered and spun (years, quarters,
+weeks, days), 07 hours spinning with the folder holding, 08 the deep
+selection settled, 09 the folder under the settled drums, 10 an hour clicked:
+the hour view with the drums above.
+
+## Tests
+
+428 pass (419 at base). `views/calendar-face.test.ts`: header; five wheels
+in order; centered solid / neighbours faded / far hidden; counts in labels;
+year cascade; hovered wheel only, right wheels follow; claim only on a move;
+trackpad gathering; patch vs rebuild; the hour wheel follows a day change;
+keyboard; empty wheels in words; the locked hour; hour link = day list link
+and the hour view under the drums; folder holds while spinning and lands
+after; passing lines are real moments; a stale folder load is dropped; the
+unreachable connector. `ui-restart.test.ts`: Audit navigates to `/calendar`
+and swaps the panel; on `/calendar` it does not remount. `calendar-rail.css`
+joins the type-role check. tsc and build clean.

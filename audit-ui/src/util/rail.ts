@@ -79,6 +79,18 @@ export function quartersPresent(days: Day[]): Quarter[] {
   return [...seen.values()];
 }
 
+/** Years holding entries, oldest first: the time tree's root. */
+export function yearsPresent(days: Day[]): number[] {
+  const seen = new Set<number>();
+  for (const d of days) seen.add(d.year);
+  return [...seen].sort((a, b) => a - b);
+}
+
+/** Quarters holding entries inside one year, oldest first. */
+export function quartersOfYearPresent(days: Day[], year: number): Quarter[] {
+  return quartersPresent(days).filter((q) => q.year === year);
+}
+
 /** ISO weeks holding entries inside one quarter, oldest first. */
 export function weeksPresent(days: Day[], q: Quarter): Week[] {
   const seen = new Map<string, Week>();

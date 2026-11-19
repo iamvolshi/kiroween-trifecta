@@ -1,11 +1,11 @@
 /**
- * The calendar face (visual direction from a reference mockup): heatmap,
- * hour rows, the knowledge-state snapshot and the tiered rail. Every value
+ * The KTIE page: its header, the heatmap, hour rows, the knowledge-state
+ * snapshot, the time tree as drums and the folder under them. Every value
  * comes from the record stub (a test double), never from the app.
  */
 import { describe, it, expect, afterEach } from 'vitest';
 import { CalendarView, renderSnapshot } from './calendar.ts';
-import { CalendarRail } from './calendar-rail.ts';
+import { CalendarRail, DRUM_FADE, SEGMENTS, type Moment } from './calendar-rail.ts';
 import { Router } from '../router/router.ts';
 import { createLiveAdapter, NO_ADDRESS_ERROR } from '../adapter/live.ts';
 import { daysWithEntries, entriesInHour } from '../util/calendar.ts';
@@ -40,10 +40,10 @@ afterEach(() => {
   root?.remove();
 });
 
-async function mount(target: ConstructorParameters<typeof CalendarView>[1], adapter = stub(ENTRIES)): Promise<void> {
+async function mount(target: ConstructorParameters<typeof CalendarView>[1], adapter = stub(ENTRIES), settleMs?: number): Promise<void> {
   root = document.createElement('div');
   document.body.appendChild(root);
-  view = new CalendarView(adapter, target);
+  view = new CalendarView(adapter, target, settleMs);
   view.mount(root);
   for (let i = 0; i < 4; i++) await tick();
 }
@@ -119,155 +119,280 @@ describe('hour view snapshot', () => {
   });
 });
 
-describe('the rail', () => {
-  const ticks = (rail: HTMLElement, tier: number): string[] =>
-    [...rail.querySelectorAll(`.rail-tier[data-tier="${tier}"] .rail-tick`)].map((t) => t.querySelector('.rail-tick-label')!.textContent!);
+const NOV18 = { year: 2026, month: 11, day: 18 };
+// A second year, so the Years wheel has two values: Sat 6 Dec 2025 (2025-Q4, W49).
+const TWO_YEARS: Entry[] = [...ENTRIES, at('2025-12-06T20:00:00.000Z', 'y1'), at('2025-12-06T21:30:00.000Z', 'y2')];
 
-  it('tiers hold only the quarters, weeks and days present in the loaded entries', () => {
-    const rail = new CalendarRail(ENTRIES, { year: 2026, month: 11, day: 18 }, null).root;
-    expect(ticks(rail, 1)).toEqual(['Q1', 'Q4']);
-    expect(isoWeekOf({ year: 2026, month: 11, day: 18 }).week).toBe(47);
-    expect(ticks(rail, 2)).toEqual(['W47']);
-    expect(ticks(rail, 3)).toEqual(['17', '18']);
-    expect(ticks(rail, 4)).toHaveLength(24);
-    expect(rail.querySelector('.rail-tier[data-tier="1"] .rail-tier-head')?.textContent).toBe('Tier 1: Quarters (2026) \u2014 Q4');
-    expect(rail.querySelector('.rail-tier[data-tier="2"] .rail-tier-head')?.textContent).toBe('Tier 2: Weeks of Q4 \u2014 Week 47');
-    expect(rail.querySelector('.rail-tier[data-tier="3"] .rail-tier-head')?.textContent).toBe('Tier 3: Days (W47) \u2014 Wednesday 18 November');
-    expect(rail.querySelectorAll('.rail-tier[data-tier="4"]')).toHaveLength(1); // the strip, once
-  });
+const wheel = (r: CalendarRail | HTMLElement, seg: string): HTMLElement =>
+  ('root' in r ? r.root : r).querySelector<HTMLElement>(`.drum[data-seg="${seg}"]`)!;
+const labels = (r: CalendarRail | HTMLElement, seg: string): string[] =>
+  [...wheel(r, seg).querySelectorAll('.drum-value')].map((v) => v.textContent!);
+const centered = (r: CalendarRail | HTMLElement, seg: string): string | null =>
+  wheel(r, seg).querySelector('.drum-value[data-selected="true"]')?.textContent ?? null;
+const readout = (r: CalendarRail | HTMLElement): Array<string | null> => SEGMENTS.map((s) => centered(r, s));
+const spin = (target: Element, deltaY: number): WheelEvent => {
+  const e = new WheelEvent('wheel', { deltaY, bubbles: true, cancelable: true });
+  target.dispatchEvent(e);
+  return e;
+};
+const key = (target: Element, k: string, mods: KeyboardEventInit = {}): KeyboardEvent => {
+  const e = new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true, ...mods });
+  target.dispatchEvent(e);
+  return e;
+};
+const wait = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms));
 
-  it('a record with nothing shows NOT KNOWN on every tier, no ticks', () => {
-    const rail = new CalendarRail([], null, null).root;
-    expect(rail.querySelectorAll('.rail-tick')).toHaveLength(0);
-    expect(rail.querySelectorAll('.rail-tier .empty-state')).toHaveLength(4);
-  });
-
-  it('the locked hour is marked Active with its live count', () => {
-    const rail = new CalendarRail(ENTRIES, { year: 2026, month: 11, day: 18 }, 14).root;
-    expect(rail.querySelector('.rail-tier[data-tier="4"] .rail-tier-head')?.textContent).toBe(
-      'Tier 4: 24-hour strip (Nov 18) \u2014 Active \u2014 14:00 UTC (3 entries)',
-    );
-    expect(rail.querySelector('.rail-hour[aria-current="true"]')?.getAttribute('data-hour')).toBe('14');
-  });
-
-  it('hover and wheel change only the tier under the cursor', () => {
-    const r = new CalendarRail(ENTRIES, { year: 2026, month: 11, day: 18 }, null);
-    document.body.appendChild(r.root);
-    const tier = (n: number): HTMLElement => r.root.querySelector<HTMLElement>(`.rail-tier[data-tier="${n}"]`)!;
-    tier(3).dispatchEvent(new MouseEvent('mouseenter'));
-    expect([1, 2, 3, 4].map((n) => tier(n).dataset.hover ?? null)).toEqual([null, null, 'true', null]);
-    const pressed = (n: number): string[] =>
-      [...tier(n).querySelectorAll('.rail-tick[aria-pressed="true"]')].map((t) => t.querySelector('.rail-tick-label')!.textContent!);
-    expect(pressed(3)).toEqual(['18']);
-    tier(3).dispatchEvent(new WheelEvent('wheel', { deltaY: -100, cancelable: true }));
-    expect(pressed(3)).toEqual(['17']); // the hovered tier moved
-    expect(pressed(1)).toEqual(['Q4']); // the others did not
-    expect(pressed(2)).toEqual(['W47']);
-    expect(tier(3).dataset.hover).toBe('true'); // hover survives the re-render
-    r.root.remove();
+describe('the KTIE header', () => {
+  it('the page top is KTIE over "Knowledge Time Indexing Engine"; the intro stays', async () => {
+    await mount({ level: 'month', year: 2026, month: 11 });
+    const head = root.querySelector('.ktie-head')!;
+    expect(head.querySelector('h1')?.textContent).toBe('KTIE');
+    expect(head.querySelector('h1')?.classList.contains('ktie-name')).toBe(true);
+    expect(head.querySelector('.ktie-expansion')?.textContent).toBe('Knowledge Time Indexing Engine');
+    expect(root.querySelectorAll('h1')).toHaveLength(1);
+    expect(root.querySelector('.view-intro')?.getAttribute('data-view')).toBe('Calendar');
+    expect(root.textContent).not.toContain('KATIE');
   });
 });
 
-describe('the rail and the day list open the same hour view', () => {
-  it('clicking the rail hour tick routes to the same hour as the day list', async () => {
+describe('the drums', () => {
+  it('five wheels, left to right: Years, Quarters, Weeks, Days, Hours', () => {
+    const r = new CalendarRail(TWO_YEARS, NOV18, null);
+    const drums = [...r.root.querySelectorAll<HTMLElement>('.drum')];
+    expect(drums.map((d) => d.dataset.seg)).toEqual(['year', 'quarter', 'week', 'day', 'hour']);
+    expect(drums.map((d) => d.querySelector('.drum-head')?.textContent)).toEqual(['Years', 'Quarters', 'Weeks', 'Days', 'Hours (UTC)']);
+    // Only the periods in the record (the Years wheel is new: the root).
+    expect(labels(r, 'year')).toEqual(['2025', '2026']);
+    expect(labels(r, 'quarter')).toEqual(['Q1', 'Q4']); // the quarters of 2026
+    expect(labels(r, 'week')).toEqual(['W47']);
+    expect(labels(r, 'day')).toEqual(['Tue 17', 'Wed 18']);
+    expect(labels(r, 'hour')).toHaveLength(24);
+    // The readout: the newest moment holding an entry.
+    expect(readout(r)).toEqual(['2026', 'Q4', 'W47', 'Wed 18', '16:00']);
+  });
+
+  it('the centered value is solid; its neighbours fade with distance; far ones hide', () => {
+    const r = new CalendarRail(ENTRIES, NOV18, 14);
+    const hours = [...wheel(r, 'hour').querySelectorAll<HTMLElement>('.drum-value')];
+    const fade = (h: number): string => hours[h]!.style.getPropertyValue('--fade');
+    expect(hours[14]!.dataset.selected).toBe('true');
+    expect([fade(14), fade(13), fade(15), fade(12), fade(16), fade(11), fade(17)]).toEqual(
+      ['1', '0.5', '0.5', '0.24', '0.24', '0.1', '0.1'],
+    );
+    expect(Number(fade(14))).toBe(DRUM_FADE[0]);
+    expect(fade(10)).toBe('0');
+    expect(hours[10]!.dataset.far).toBe('true');
+    expect(hours[11]!.dataset.far).toBeUndefined();
+    expect(hours[13]!.style.getPropertyValue('--d')).toBe('-1');
+    expect(wheel(r, 'hour').querySelector<HTMLElement>('.drum-reel')!.style.getPropertyValue('--sel')).toBe('14');
+    // One Tab stop per wheel: the centered value.
+    expect(hours.filter((h) => h.tabIndex === 0)).toEqual([hours[14]]);
+  });
+
+  it('counts ride in the labels; nothing is invented', () => {
+    const r = new CalendarRail(ENTRIES, NOV18, 14);
+    const h14 = wheel(r, 'hour').querySelector<HTMLElement>('.drum-value[data-key="14"]')!;
+    expect(h14.getAttribute('aria-label')).toBe('14:00 UTC, 3 entries');
+    expect(h14.title).toBe('14:00 UTC, 3 entries');
+    expect(wheel(r, 'hour').querySelector('.drum-value[data-key="3"]')?.getAttribute('data-has')).toBe('false');
+    expect(wheel(r, 'day').getAttribute('aria-label')).toBe('Days: Wednesday 18 November 2026, 4 entries');
+    expect(wheel(r, 'year').querySelector('.drum-value')?.getAttribute('aria-label')).toBe('2026, 6 entries');
+  });
+
+  it('a year pick cascades to its last quarter, week, day and hour', () => {
+    const r = new CalendarRail(TWO_YEARS, NOV18, null);
+    document.body.appendChild(r.root);
+    wheel(r, 'year').querySelector<HTMLButtonElement>('.drum-value[data-key="2025"]')!.click();
+    expect(readout(r)).toEqual(['2025', 'Q4', 'W49', 'Sat 6', '21:00']);
+    expect(labels(r, 'quarter')).toEqual(['Q4']);
+    r.root.remove();
+  });
+
+  it('the scroll wheel spins only the hovered wheel; the wheels to its right follow', () => {
+    const r = new CalendarRail(TWO_YEARS, NOV18, null);
+    document.body.appendChild(r.root);
+    wheel(r, 'quarter').dispatchEvent(new MouseEvent('mouseenter'));
+    expect(SEGMENTS.map((s) => wheel(r, s).dataset.hover ?? null)).toEqual([null, 'true', null, null, null]);
+    expect(spin(wheel(r, 'quarter'), -100).defaultPrevented).toBe(true);
+    // Q4 -> Q1 of 2026: the week, day and hour re-derive; the year to its left stays.
+    expect(readout(r)).toEqual(['2026', 'Q1', 'W10', 'Tue 3', '08:00']);
+    expect(wheel(r, 'quarter').dataset.hover).toBe('true'); // hover survives the spin
+    expect(isoWeekOf({ year: 2026, month: 3, day: 3 }).week).toBe(10);
+    r.root.remove();
+  });
+
+  it('the wheel claims the scroll only when it moved: at an end the page scrolls', () => {
+    const r = new CalendarRail(ENTRIES, NOV18, 23);
+    document.body.appendChild(r.root);
+    expect(spin(wheel(r, 'hour'), 100).defaultPrevented).toBe(false); // 23:00 is the end
+    expect(spin(wheel(r, 'hour'), -100).defaultPrevented).toBe(true);
+    expect(centered(r, 'hour')).toBe('22:00');
+    expect(spin(wheel(r, 'quarter'), 100).defaultPrevented).toBe(false); // Q4 is the newest
+    expect(r.move('quarter', 1)).toBe(false);
+    r.root.remove();
+  });
+
+  it('small trackpad deltas gather into one step', () => {
+    const r = new CalendarRail(ENTRIES, NOV18, 14);
+    document.body.appendChild(r.root);
+    for (let i = 0; i < 4; i++) spin(wheel(r, 'hour'), 10);
+    expect(centered(r, 'hour')).toBe('14:00'); // 40px: not yet a step
+    spin(wheel(r, 'hour'), 10);
+    expect(centered(r, 'hour')).toBe('15:00');
+    r.root.remove();
+  });
+
+  it('a spin patches the spun wheel in place (so it turns) and rebuilds only the wheels it changed', () => {
+    const r = new CalendarRail(ENTRIES, NOV18, 14);
+    document.body.appendChild(r.root);
+    const hourReel = wheel(r, 'hour').querySelector('.drum-reel');
+    expect(r.move('hour', 1)).toBe(true);
+    expect(wheel(r, 'hour').querySelector('.drum-reel')).toBe(hourReel);
+    const dayWheel = wheel(r, 'day');
+    expect(r.move('day', -1)).toBe(true);
+    expect(wheel(r, 'day')).toBe(dayWheel); // same days: patched
+    expect(readout(r)).toEqual(['2026', 'Q4', 'W47', 'Tue 17', '09:00']);
+    r.root.remove();
+  });
+
+  it('a day change rebuilds the hour wheel: its links, counts and labels follow the new day', () => {
+    const r = new CalendarRail(ENTRIES, NOV18, 14);
+    document.body.appendChild(r.root);
+    expect(r.move('day', -1)).toBe(true); // Wed 18 -> Tue 17
+    const h9 = wheel(r, 'hour').querySelector<HTMLAnchorElement>('a.drum-value[data-key="9"]')!;
+    expect(h9.getAttribute('href')).toBe('/calendar/2026-11-17/09');
+    expect(h9.getAttribute('aria-label')).toBe('09:00 UTC, 1 entry');
+    expect(wheel(r, 'hour').querySelector('a.drum-value[data-key="14"]')?.getAttribute('data-has')).toBe('false');
+    r.root.remove();
+  });
+
+  it('keyboard twin: arrows spin the focused wheel and keep focus on its centered value', () => {
+    const r = new CalendarRail(TWO_YEARS, NOV18, null);
+    document.body.appendChild(r.root);
+    const q4 = wheel(r, 'quarter').querySelector<HTMLElement>('.drum-value[data-selected="true"]')!;
+    q4.focus();
+    key(q4, 'ArrowUp');
+    expect((document.activeElement as HTMLElement).textContent).toBe('Q1');
+    expect(document.activeElement?.getAttribute('aria-pressed')).toBe('true');
+    key(document.activeElement!, 'ArrowDown');
+    expect((document.activeElement as HTMLElement).textContent).toBe('Q4');
+    key(document.activeElement!, 'ArrowLeft');
+    expect((document.activeElement as HTMLElement).textContent).toBe('Q1');
+    // Hours: Home / End jump to the wheel's ends.
+    const h = wheel(r, 'hour').querySelector<HTMLElement>('.drum-value[data-selected="true"]')!;
+    h.focus();
+    key(h, 'End');
+    expect((document.activeElement as HTMLElement).dataset.key).toBe('23');
+    // Modified arrows are the browser's.
+    expect(key(document.activeElement!, 'ArrowUp', { altKey: true }).defaultPrevented).toBe(false);
+    expect(centered(r, 'hour')).toBe('23:00');
+    r.root.remove();
+  });
+
+  it('an empty record: every wheel says so in words, no values', () => {
+    const r = new CalendarRail([], null, null);
+    expect(r.root.querySelectorAll('.drum-value')).toHaveLength(0);
+    expect([...r.root.querySelectorAll('.drum .empty-state')].map((p) => p.textContent)).toEqual(
+      Array(5).fill('Nothing in the record for this wheel.'),
+    );
+    expect(r.moment()).toBeNull();
+  });
+
+  it('the hour view\'s hour is marked current on the drums', () => {
+    const r = new CalendarRail(ENTRIES, NOV18, 14);
+    expect(wheel(r, 'hour').querySelector('.drum-value[aria-current="true"]')?.getAttribute('data-key')).toBe('14');
+    expect(centered(r, 'hour')).toBe('14:00');
+  });
+});
+
+describe('the drums and the hour view', () => {
+  it('an hour on the drums is a link to the same hour view as the day list', async () => {
     window.history.replaceState({}, '', '/calendar/2026-11-18');
     root = document.createElement('div');
     document.body.appendChild(root);
     const router = new Router(stub(ENTRIES), root);
     for (let i = 0; i < 6; i++) await tick();
     const fromList = root.querySelectorAll<HTMLAnchorElement>('.hour-list .hour-link')[14]!.getAttribute('href');
-    const tick14 = root.querySelector<HTMLAnchorElement>('.calendar-rail .rail-hour[data-hour="14"]')!;
-    expect(tick14.getAttribute('href')).toBe(fromList);
-    tick14.click();
+    const h14 = root.querySelector<HTMLAnchorElement>('.ktie-drums .drum[data-seg="hour"] a.drum-value[data-key="14"]')!;
+    expect(h14.getAttribute('href')).toBe(fromList);
+    h14.click();
     for (let i = 0; i < 6; i++) await tick();
     expect(window.location.pathname).toBe('/calendar/2026-11-18/14');
     expect(root.querySelector('.knowledge-state h2')?.textContent).toContain('14:00 UTC');
+    // The hour view, with the drums above it.
+    const order = [...root.querySelector('.calendar-view')!.children].map((c) => c.className);
+    expect(order).toEqual(['calendar-rail ktie-drums', 'ktie-passing', 'ktie-folder']);
     router.destroy();
   });
 });
 
+describe('the folder under the drums', () => {
+  it('holds while the drums spin, then lands on the settled moment', async () => {
+    await mount({ level: 'month', year: 2026, month: 11 }, stub(ENTRIES), 30);
+    const folder = root.querySelector<HTMLElement>('.ktie-folder')!;
+    const passing = root.querySelector<HTMLElement>('.ktie-passing')!;
+    expect(folder.querySelector('.calendar-grid')).not.toBeNull(); // the route's own content first
+    expect(passing.hidden).toBe(true);
+    const hourWheel = root.querySelector<HTMLElement>('.drum[data-seg="hour"]')!;
+    spin(hourWheel, -100); // 16:00 -> 15:00
+    spin(hourWheel, -100); // -> 14:00
+    expect(folder.querySelector('.calendar-grid')).not.toBeNull(); // still spinning: the old folder stays
+    expect(folder.dataset.spinning).toBe('true');
+    expect(passing.hidden).toBe(false);
+    expect(passing.textContent).toBe('2026-11-18 \u00b7 14:00 UTC \u00b7 3 entries');
+    await wait(10);
+    expect(folder.querySelector('.calendar-grid')).not.toBeNull(); // not settled yet
+    await wait(60);
+    for (let i = 0; i < 4; i++) await tick();
+    expect(folder.querySelector('.calendar-grid')).toBeNull();
+    expect(folder.querySelector('.knowledge-state h2')?.textContent).toContain('14:00 UTC');
+    expect(folder.querySelector('.hour-did')).not.toBeNull();
+    expect(folder.querySelector('.hour-believed')).not.toBeNull();
+    expect(folder.dataset.spinning).toBeUndefined();
+    expect(passing.hidden).toBe(true);
+  });
+
+  it('every passing line names a real moment from the record', async () => {
+    const seen: string[] = [];
+    const r = new CalendarRail(ENTRIES, NOV18, 16, { onSpin: (m: Moment) => seen.push(`${m.day.day} ${m.hour} ${m.count}`), settleMs: 5 });
+    document.body.appendChild(r.root);
+    for (let i = 0; i < 3; i++) r.move('hour', -1);
+    r.move('day', -1);
+    expect(seen).toEqual(['18 15 0', '18 14 3', '18 13 0', '17 9 1']);
+    for (const s of seen) {
+      const [day, hour] = s.split(' ').map(Number);
+      expect(day === 17 || day === 18).toBe(true);
+      expect(hour! >= 0 && hour! < 24).toBe(true);
+    }
+    r.destroy();
+    r.root.remove();
+  });
+
+  it('a newer spin drops an older folder load: no half-loaded folder', async () => {
+    let release: () => void = () => {};
+    const slow = new Promise<void>((res) => { release = res; });
+    const base = stub(ENTRIES);
+    const adapter: SeamAdapter = { ...base, fetchKidMap: async () => { await slow; return base.fetchKidMap(); } };
+    await mount({ level: 'month', year: 2026, month: 11 }, adapter, 5);
+    const hourWheel = root.querySelector<HTMLElement>('.drum[data-seg="hour"]')!;
+    spin(hourWheel, -100);
+    await wait(20); // settled: the load starts and waits on the kid map
+    spin(hourWheel, -100); // spinning again before it lands (now 14:00)
+    release();
+    for (let i = 0; i < 10; i++) await Promise.resolve(); // the stale load finishes, timers not yet
+    expect(root.querySelector('.ktie-folder .calendar-grid')).not.toBeNull(); // dropped: the old folder, untouched
+    await wait(40);
+    for (let i = 0; i < 4; i++) await tick();
+    // The newer moment lands, never the stale 15:00 one.
+    expect(root.querySelector('.ktie-folder .knowledge-state h2')?.textContent).toContain('14:00 UTC');
+  });
+});
+
 describe('unreachable connector', () => {
-  it('the calendar says so in words, rail included', async () => {
+  it('the calendar says so in words, drums included', async () => {
     await mount({ level: 'month', year: 2026, month: 11 }, createLiveAdapter(''));
     expect(root.textContent).toContain(NO_ADDRESS_ERROR);
-    expect(root.querySelector('.calendar-rail')).toBeNull(); // nothing built from a failed read
-  });
-});
-
-describe('rail fixes (review round 1)', () => {
-  const NOV18 = { year: 2026, month: 11, day: 18 };
-  const wheel = (target: Element, deltaY: number): WheelEvent => {
-    const e = new WheelEvent('wheel', { deltaY, bubbles: true, cancelable: true });
-    target.dispatchEvent(e);
-    return e;
-  };
-  const tierEl = (r: CalendarRail, n: number): HTMLElement => r.root.querySelector<HTMLElement>(`.rail-tier[data-tier="${n}"]`)!;
-
-  it('a Tier 4 cursor move keeps the same hour anchors (no rebuild)', () => {
-    const rail = new CalendarRail(ENTRIES, NOV18, 14);
-    document.body.appendChild(rail.root);
-    const before = rail.root.querySelector('.rail-hour[data-hour="15"]');
-    expect(rail.move(4, 1)).toBe(true);
-    const after = rail.root.querySelector('.rail-hour[data-hour="15"]');
-    expect(after).toBe(before);
-    expect(after?.getAttribute('data-cursor')).toBe('true');
-    expect(rail.root.querySelectorAll('.rail-hour[data-cursor]')).toHaveLength(1);
-    rail.root.remove();
-  });
-
-  it('the wheel claims the scroll only when the tier moved', () => {
-    const rail = new CalendarRail(ENTRIES, NOV18, 23);
-    document.body.appendChild(rail.root);
-    expect(wheel(tierEl(rail, 4), 100).defaultPrevented).toBe(false); // at hour 23 already
-    expect(wheel(tierEl(rail, 4), -100).defaultPrevented).toBe(true);
-    // Tier 1: Q4 is the newest quarter, so a forward step does nothing.
-    expect(wheel(tierEl(rail, 1), 100).defaultPrevented).toBe(false);
-    expect(rail.move(1, 1)).toBe(false);
-    rail.root.remove();
-  });
-
-  it('a pick keeps keyboard focus on the picked tick; arrow keys move a tier', () => {
-    const rail = new CalendarRail(ENTRIES, NOV18, null);
-    document.body.appendChild(rail.root);
-    const q1 = [...tierEl(rail, 1).querySelectorAll<HTMLButtonElement>('.rail-tick')].find((b) => b.textContent === 'Q1')!;
-    q1.focus();
-    q1.click();
-    const focused = document.activeElement as HTMLElement;
-    expect(focused.textContent).toBe('Q1');
-    expect(focused.getAttribute('aria-pressed')).toBe('true');
-    expect(tierEl(rail, 1).contains(focused)).toBe(true);
-    focused.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true, cancelable: true }));
-    const next = document.activeElement as HTMLElement;
-    expect(next.textContent).toBe('Q4');
-    expect(next.getAttribute('aria-pressed')).toBe('true');
-    rail.root.remove();
-  });
-});
-
-describe('rail keyboard (review round 2)', () => {
-  const NOV18 = { year: 2026, month: 11, day: 18 };
-  const key = (target: Element, k: string, mods: KeyboardEventInit = {}): KeyboardEvent => {
-    const e = new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true, ...mods });
-    target.dispatchEvent(e);
-    return e;
-  };
-
-  it('Tier 4 arrows step from the focused hour', () => {
-    const rail = new CalendarRail(ENTRIES, NOV18, null);
-    document.body.appendChild(rail.root);
-    const h5 = rail.root.querySelector<HTMLElement>('.rail-hour[data-hour="5"]')!;
-    h5.focus();
-    key(h5, 'ArrowRight');
-    expect((document.activeElement as HTMLElement).dataset.hour).toBe('6');
-    rail.root.remove();
-  });
-
-  it('modified arrows are left to the browser', () => {
-    const rail = new CalendarRail(ENTRIES, NOV18, 10);
-    document.body.appendChild(rail.root);
-    const h10 = rail.root.querySelector<HTMLElement>('.rail-hour[data-hour="10"]')!;
-    expect(key(h10, 'ArrowLeft', { altKey: true }).defaultPrevented).toBe(false);
-    expect(rail.root.querySelector<HTMLElement>('.rail-hour[data-cursor]')?.dataset.hour).toBe('10');
-    rail.root.remove();
+    expect(root.querySelector('.ktie-drums')).toBeNull(); // nothing built from a failed read
+    expect(root.querySelector('.ktie-head h1')?.textContent).toBe('KTIE');
   });
 });

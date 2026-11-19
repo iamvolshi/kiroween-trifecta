@@ -13,7 +13,7 @@ import {
 } from '../util/calendar.ts';
 import { parseUtcInput } from '../util/moment.ts';
 import { renderEntryTable } from './calendar-entries.ts';
-import { CalendarRail } from './calendar-rail.ts';
+import { CalendarRail, type Moment } from './calendar-rail.ts';
 import { PERSONAS } from '../adapter/seam.ts';
 import { createIntro } from './intro.ts';
 
@@ -66,22 +66,49 @@ export function renderSnapshot(did: Entry[], pool: Entry[], hour: number): HTMLE
   return sec;
 }
 
+/** The KTIE page's header: the engine's name over what it stands for. */
+export const KTIE_NAME = 'KTIE';
+export const KTIE_EXPANSION = 'Knowledge Time Indexing Engine';
+
+/** "2026-11-18 ? 14:00 UTC ? 3 entries": a real moment, as the folder pane names it. */
+export function momentLabel(m: Moment): string {
+  const n = `${m.count} ${m.count === 1 ? 'entry' : 'entries'}`;
+  return `${m.day.year}-${p2(m.day.month)}-${p2(m.day.day)} \u00b7 ${p2(m.hour)}:00 UTC \u00b7 ${n}`;
+}
+
+/**
+ * The KTIE page (the Calendar route): the KTIE header, the time tree as
+ * drums across the top, and the folder underneath: the record at the
+ * moment the drums rest on. The folder starts as the route's own content
+ * (the month grid, the day's hours, or the hour view); once the drums have
+ * been spun and have settled, it becomes the hour view for that moment.
+ * While they spin the old folder stays put, and a line above it names the
+ * real moments passing by.
+ */
 export class CalendarView implements View {
   private adapter: SeamAdapter;
   private target: CalendarTarget | null;
   private container: HTMLElement | null = null;
   private body: HTMLElement | null = null;
   private requestToken = 0;
+  /** Counts folder loads; a spin or a newer settle drops an older load. */
+  private folderToken = 0;
+  private rail: CalendarRail | null = null;
+  private settleMs: number | undefined;
 
-  constructor(adapter: SeamAdapter, target: CalendarTarget | null) {
+  /** `settleMs`: the drums' quiet time before the folder follows (tests shorten it). */
+  constructor(adapter: SeamAdapter, target: CalendarTarget | null, settleMs?: number) {
     this.adapter = adapter;
     this.target = target;
+    this.settleMs = settleMs;
   }
 
   mount(container: HTMLElement): void {
     this.container = container;
     container.innerHTML = '';
-    container.appendChild(el('h1', '', 'Calendar'));
+    const head = el('header', 'ktie-head');
+    head.append(el('h1', 'ktie-name', KTIE_NAME), el('p', 'ktie-expansion', KTIE_EXPANSION));
+    container.appendChild(head);
     container.appendChild(createIntro('calendar'));
     const body = el('div', 'view-body calendar-view');
     this.body = body;
@@ -102,16 +129,41 @@ export class CalendarView implements View {
     const entries = all.data;
 
     const t = this.target ?? this.defaultTarget(entries);
-    // The rail sits beside the calendar, built from the same loaded entries.
+    // The folder under the drums: the record at the moment they rest on.
+    const folder = el('div', 'ktie-folder');
+    folder.setAttribute('aria-live', 'polite');
+    const passing = el('p', 'ktie-passing');
+    passing.hidden = true;
+    passing.setAttribute('aria-hidden', 'true'); // motion only; the folder says where it landed
+    const fill = (parts: HTMLElement[]): void => {
+      const main = el('div', 'calendar-main');
+      main.append(...parts);
+      folder.replaceChildren(main);
+    };
+    // The drums across the top, built from the same loaded entries.
+    this.rail?.destroy();
     const rail = new CalendarRail(
       entries,
       { year: t.year, month: t.month, day: t.level === 'month' ? 0 : t.day },
       t.level === 'hour' ? t.hour : null,
-    ).root;
+      {
+        settleMs: this.settleMs,
+        onSpin: (m) => {
+          if (!isCurrent()) return;
+          this.folderToken++; // an older load lands nowhere
+          passing.hidden = false;
+          passing.textContent = momentLabel(m);
+          folder.dataset.spinning = 'true';
+        },
+        onSettle: (m) => {
+          if (isCurrent()) void this.settle(folder, passing, entries, m, isCurrent);
+        },
+      },
+    );
+    this.rail = rail;
     const show = (parts: HTMLElement[]): void => {
-      const main = el('div', 'calendar-main');
-      main.append(...parts);
-      body.replaceChildren(main, rail);
+      fill(parts);
+      body.replaceChildren(rail.root, passing, folder);
     };
 
     if (t.level === 'month') {
@@ -135,6 +187,34 @@ export class CalendarView implements View {
     if (!isCurrent()) return;
     if (!pool.ok) return showError(pool.error);
     show(this.renderHour(entries, pool.data, kidMap, t, input));
+  }
+
+  /** The drums came to rest on `m`: the folder becomes the hour view for it. */
+  private async settle(
+    folder: HTMLElement,
+    passing: HTMLElement,
+    entries: Entry[],
+    m: Moment,
+    isCurrent: () => boolean,
+  ): Promise<void> {
+    const mine = ++this.folderToken;
+    const live = (): boolean => isCurrent() && mine === this.folderToken;
+    const t = { year: m.day.year, month: m.day.month, day: m.day.day, hour: m.hour };
+    const input = hourMomentInput(t.year, t.month, t.day, t.hour);
+    const moment = parseUtcInput(input);
+    const kidMapResult = await this.adapter.fetchKidMap();
+    if (!live()) return;
+    const kidMap: KidMap | null = kidMapResult.ok ? kidMapResult.data : null;
+    const pool = moment === null ? null : await this.adapter.fetchBeliefPool(moment);
+    if (!live()) return;
+    const main = el('div', 'calendar-main');
+    if (pool === null) main.appendChild(el('p', 'error-state', 'Invalid moment.'));
+    else if (!pool.ok) main.appendChild(el('p', 'error-state', pool.error));
+    else main.append(...this.renderHour(entries, pool.data, kidMap, t, input));
+    folder.replaceChildren(main);
+    delete folder.dataset.spinning;
+    folder.dataset.moment = `${input}`;
+    passing.hidden = true;
   }
 
   /** Month of the newest entry by k_start, else the current UTC month. */
@@ -262,6 +342,9 @@ export class CalendarView implements View {
 
   unmount(): void {
     this.requestToken++;
+    this.folderToken++;
+    this.rail?.destroy();
+    this.rail = null;
     this.body = null;
     if (this.container) {
       this.container.innerHTML = '';
