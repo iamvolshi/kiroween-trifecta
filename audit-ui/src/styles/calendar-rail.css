@@ -308,71 +308,13 @@
   scrollbar-color: var(--line-strong) transparent;
   scrollbar-width: thin;
 }
-/* ---- Knowledge state of the locked hour -------------------------------- */
+/* ---- Knowledge state of the locked hour: one log line ------------------ */
 
 .knowledge-state {
   margin: var(--s3) 0;
-  padding: var(--s3) var(--s4);
-  border: 1px solid rgba(0, 240, 255, 0.4);
-  border-radius: var(--radius-lg);
-  background: var(--panel);
-}
-
-.knowledge-state h2 {
-  margin: 0;
-  font-family: var(--display);
-  font-size: var(--t-headline-sm-size);
-  line-height: var(--t-headline-sm-lh);
-  font-weight: 800;
-  letter-spacing: var(--t-headline-sm-ls);
-  text-transform: uppercase;
-}
-
-.knowledge-lede {
-  margin: var(--s1) 0 var(--s3);
-  font-size: var(--t-body-md-size);
-  line-height: var(--t-body-md-lh);
-  font-weight: var(--t-body-md-wt);
+  font-family: var(--mono);
+  font-size: var(--t-telemetry-data-size);
+  line-height: var(--t-telemetry-data-lh);
   color: var(--muted);
-}
-
-.knowledge-stats {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--s2);
-  margin: 0;
-}
-
-.knowledge-stat {
-  padding: var(--s2) var(--s3);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--inset);
-}
-
-.knowledge-stat dt {
-  font-family: var(--mono);
-  font-size: var(--t-label-md-size);
-  line-height: var(--t-label-md-lh);
-  font-weight: 700;
-  letter-spacing: var(--t-label-md-ls);
-  text-transform: uppercase;
-  color: var(--faint);
-}
-
-.knowledge-stat dd {
-  margin: var(--s1) 0 0;
-  font-family: var(--mono);
-  font-size: var(--t-headline-lg-size);
-  line-height: var(--t-headline-lg-lh);
-  letter-spacing: var(--t-headline-lg-ls);
-  font-weight: 800;
-  color: var(--text);
   overflow-wrap: anywhere;
-}
-
-.knowledge-stat[data-stat='masks'] dd {
-  font-size: var(--t-body-md-size);
-  line-height: var(--t-body-md-lh);
-  font-weight: var(--t-body-md-wt);
 }

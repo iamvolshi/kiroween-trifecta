@@ -82,30 +82,26 @@ describe('day view', () => {
 });
 
 describe('hour view snapshot', () => {
-  it('its counts match the two tables below it', async () => {
+  it('its counts match the two logs below it', async () => {
     await mount({ level: 'hour', year: 2026, month: 11, day: 18, hour: 14 });
     const snap = root.querySelector('.knowledge-state')!;
-    expect(snap.querySelector('h2')?.textContent).toBe('Knowledge state at 14:00 UTC (hour #14 record closure)');
-    expect(snap.querySelector('.knowledge-lede')?.textContent).toBe(
-      'Everything recorded and believed by the agent in this 60-minute window.',
-    );
-    const stat = (k: string): string | null | undefined => snap.querySelector(`[data-stat="${k}"] dd`)?.textContent;
-    const didRows = root.querySelectorAll('.hour-did tbody tr').length;
-    const poolRows = root.querySelectorAll('.hour-believed tbody tr').length;
-    expect(stat('recorded')).toBe(String(didRows));
-    expect(stat('live')).toBe(String(poolRows));
-    expect(didRows).toBe(entriesInHour(ENTRIES, 2026, 11, 18, 14).length);
-    expect(poolRows).toBe(2); // m1 + n5: written before 14:00
-    expect(stat('masks')).toBe('Frankenstein'); // named in a reason of the hour
-    // The snapshot sits above the two tables.
+    expect(snap.textContent).toBe('14:00 UTC · recorded 3 · live 2 · masks: Frankenstein');
+    const didLines = root.querySelectorAll('.hour-did .log-line').length;
+    const poolLines = root.querySelectorAll('.hour-believed .log-line').length;
+    expect(snap.getAttribute('data-recorded')).toBe(String(didLines));
+    expect(snap.getAttribute('data-live')).toBe(String(poolLines));
+    expect(didLines).toBe(entriesInHour(ENTRIES, 2026, 11, 18, 14).length);
+    expect(poolLines).toBe(2); // m1 + n5: written before 14:00
+    expect(snap.getAttribute('data-masks')).toBe('Frankenstein'); // named in a reason of the hour
+    // The snapshot sits above the two logs.
     const order = [...root.querySelectorAll('.knowledge-state, .hour-did, .hour-believed')].map((s) => s.className);
-    expect(order).toEqual(['knowledge-state', 'hour-did', 'hour-believed']);
+    expect(order).toEqual(['knowledge-state log-head', 'hour-did log-block', 'hour-believed log-block']);
   });
 
   it('names no mask when no reason names one', () => {
     const snap = renderSnapshot([at('2026-11-18T14:05:00.000Z', 'x', { reason: 'user turn (connector)' })], [], 14);
-    expect(snap.querySelector('[data-stat="masks"] dd')?.textContent).toBe('None named');
-    expect(snap.querySelector('[data-stat="live"] dd')?.textContent).toBe('0');
+    expect(snap.getAttribute('data-masks')).toBe('none named');
+    expect(snap.getAttribute('data-live')).toBe('0');
   });
 
   it('names the mask from the evidence when the reason carries none (live loop shape)', () => {
@@ -115,7 +111,7 @@ describe('hour view snapshot', () => {
       [],
       14,
     );
-    expect(snap.querySelector('[data-stat="masks"] dd')?.textContent).toBe('Frankenstein');
+    expect(snap.getAttribute('data-masks')).toBe('Frankenstein');
   });
 });
 
@@ -358,7 +354,7 @@ describe('the drums and the hour view', () => {
     h14.click();
     for (let i = 0; i < 6; i++) await tick();
     expect(window.location.pathname).toBe('/calendar/2026-11-18/14');
-    expect(root.querySelector('.knowledge-state h2')?.textContent).toContain('14:00 UTC');
+    expect(root.querySelector('.knowledge-state')?.textContent).toContain('14:00 UTC');
     // The hour view, with the drums above it.
     const order = [...root.querySelector('.calendar-view')!.children].map((c) => c.className);
     expect(order).toEqual(['calendar-rail ktie-drums', 'ktie-passing', 'sr-only ktie-landed', 'ktie-folder-caption', 'ktie-folder']);
@@ -394,7 +390,7 @@ describe('the folder under the drums', () => {
     await wait(320);
     for (let i = 0; i < 4; i++) await tick();
     expect(folder.querySelector('.calendar-grid')).toBeNull();
-    expect(folder.querySelector('.knowledge-state h2')?.textContent).toContain('14:00 UTC');
+    expect(folder.querySelector('.knowledge-state')?.textContent).toContain('14:00 UTC');
     expect(folder.querySelector('.hour-did')).not.toBeNull();
     expect(folder.querySelector('.hour-believed')).not.toBeNull();
     expect(folder.dataset.spinning).toBeUndefined();
@@ -444,7 +440,7 @@ describe('the folder under the drums', () => {
     expect(readout(root)).toEqual(['2026', 'Q4', 'W47', 'Wed 18', '16:00']);
     expect(root.querySelector('.drum-value[aria-current]')).toBeNull();
     expect(root.querySelector('.ktie-folder-caption')?.textContent).toBe('Folder: 2026-11-20 \u00b7 05:00 UTC');
-    expect(root.querySelector('.knowledge-state h2')?.textContent).toContain('05:00 UTC');
+    expect(root.querySelector('.knowledge-state')?.textContent).toContain('05:00 UTC');
   });
 
   it('every passing line names a real moment from the record', async () => {
@@ -479,7 +475,7 @@ describe('the folder under the drums', () => {
     await wait(120);
     for (let i = 0; i < 4; i++) await tick();
     // The newer moment lands, never the stale 15:00 one.
-    expect(root.querySelector('.ktie-folder .knowledge-state h2')?.textContent).toContain('14:00 UTC');
+    expect(root.querySelector('.ktie-folder .knowledge-state')?.textContent).toContain('14:00 UTC');
   });
 });
 

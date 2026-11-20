@@ -52,9 +52,12 @@ record; counts ride in labels and titles.
 
 ## Known limits
 
-- The hour view's tables are taller than the screen by design (the
-  believed table holds every entry live at the hour — 44 rows in the stub
-  record). They scroll inside the folder box, never the page: at
+- The hour view's folder is a log, not tables (Darren, Nov 20: the boxes
+  were too big). One line for the hour's state ("14:00 UTC · recorded 3 ·
+  live 2 · masks: Frankenstein"), then `did` and `believed` log lines, one
+  entry per line, clock time first. It is taller than the screen by design
+  (the believed log holds every entry live at the hour — 44 lines in the
+  stub record). It scrolls inside the folder box, never the page: at
   1920×1080 the hour folder reads 3381px tall in a 599px box. That is the
   settled shape (Darren's box rule, Nov 20), not a limit to fix.
 - Because the settle replaces the history entry, Back then Forward lands on

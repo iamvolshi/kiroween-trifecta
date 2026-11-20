@@ -1,67 +1,62 @@
 import type { Entry, KidMap } from '../adapter/seam.ts';
+import { parseMs } from '../util/interval.ts';
 import { renderKid } from '../util/kid-display.ts';
 
-/** Column order for the hour view's entry tables: [header, cell class]. */
-const COLUMNS: Array<[string, string]> = [
-  ['KID', 'kid'],
-  ['Subject', 'subject'],
-  ['State', 'state'],
-  ['Authority (0-9)', 'authority'],
-  ['Evidence', 'evidence'],
-  ['Reason', 'reason'],
-];
+const p2 = (n: number): string => String(n).padStart(2, '0');
 
-function cell(className: string, text: string): HTMLTableCellElement {
-  return Object.assign(document.createElement('td'), { className, textContent: text });
+/** The UTC clock time of an entry, HH:MM:SS, or ??:??:?? when its start cannot be read. */
+function timeOf(e: Entry): string {
+  const ms = parseMs(e.k_start);
+  if (Number.isNaN(ms)) return '??:??:??';
+  const d = new Date(ms);
+  return `${p2(d.getUTCHours())}:${p2(d.getUTCMinutes())}:${p2(d.getUTCSeconds())}`;
 }
 
 /**
- * Entries as a table: column headers on top, one row per entry. Each row has
- * one link to its Entry Detail (in the KID cell; CSS stretches it over the
- * row), so a row is one click target and one tab stop. Data via textContent.
+ * Entries as log lines: one line per entry, clock time first, then KID,
+ * subject, state, authority, evidence, reason. The KID links to its Entry
+ * Detail. Data via textContent.
  */
-export function renderEntryTable(
+export function renderEntryLog(
   entries: Entry[],
   kidMap: KidMap | null,
   label: string,
-): HTMLTableElement {
-  const table = document.createElement('table');
-  table.className = 'entry-table';
-  table.setAttribute('aria-label', label);
+): HTMLElement {
+  const log = document.createElement('div');
+  log.className = 'entry-log';
+  log.setAttribute('role', 'list');
+  log.setAttribute('aria-label', label);
 
-  const head = document.createElement('thead');
-  const headRow = document.createElement('tr');
-  for (const [title, cls] of COLUMNS) {
-    const th = Object.assign(document.createElement('th'), { className: `col-${cls}`, textContent: title });
-    th.setAttribute('scope', 'col');
-    headRow.appendChild(th);
-  }
-  head.appendChild(headRow);
-  table.appendChild(head);
-
-  const body = document.createElement('tbody');
   for (const entry of entries) {
-    const tr = document.createElement('tr');
-    tr.className = 'entry-row';
+    const line = document.createElement('div');
+    line.className = 'log-line';
+    line.setAttribute('role', 'listitem');
+    line.appendChild(document.createTextNode(`${timeOf(entry)} · `));
 
-    const kid = document.createElement('td');
+    const kid = document.createElement('a');
     kid.className = 'kid';
-    const a = document.createElement('a');
-    a.setAttribute(
+    kid.setAttribute(
       'href',
       `/entry/${entry.kid}/${encodeURIComponent(entry.subject)}/${encodeURIComponent(entry.id)}`,
     );
-    a.textContent = renderKid(entry.kid, kidMap);
-    kid.appendChild(a);
-    tr.appendChild(kid);
+    kid.textContent = renderKid(entry.kid, kidMap);
+    line.appendChild(kid);
 
-    tr.appendChild(cell('subject', entry.subject));
-    tr.appendChild(cell('state', entry.state));
-    tr.appendChild(cell('authority', String(entry.authority)));
-    tr.appendChild(cell('evidence', entry.evidence));
-    tr.appendChild(cell('reason', entry.reason));
-    body.appendChild(tr);
+    const fields: Array<[string, string]> = [
+      ['subject', entry.subject],
+      ['state', entry.state],
+      ['authority', String(entry.authority)],
+      ['evidence', entry.evidence],
+      ['reason', entry.reason],
+    ];
+    for (const [cls, text] of fields) {
+      line.appendChild(document.createTextNode(' · '));
+      const span = document.createElement('span');
+      span.className = cls;
+      span.textContent = text;
+      line.appendChild(span);
+    }
+    log.appendChild(line);
   }
-  table.appendChild(body);
-  return table;
+  return log;
 }

@@ -13,7 +13,7 @@ import {
   monthGrid,
 } from '../util/calendar.ts';
 import { parseUtcInput } from '../util/moment.ts';
-import { renderEntryTable } from './calendar-entries.ts';
+import { renderEntryLog } from './calendar-entries.ts';
 import { CalendarRail, type Moment } from './calendar-rail.ts';
 import { PERSONAS } from '../adapter/seam.ts';
 
@@ -41,29 +41,23 @@ function monthTitle(year: number, month: number): string {
 }
 
 /**
- * The locked hour's knowledge state: live-derived counts only. Recorded =
- * the hour's entries (the "did" table), live = the belief pool (the
- * "believed" table), and the masks named in the hour's entries. Live loop
- * reasons carry no mask name ("assistant turn (reply)"); the mask's name is
- * in the turn's evidence, so both are read.
+ * The locked hour's knowledge state, as one log line: the hour, how many
+ * entries it recorded, how many were live at the moment, and the masks
+ * named in the hour's entries. Live loop reasons carry no mask name
+ * ("assistant turn (reply)"); the mask's name is in the turn's evidence,
+ * so both are read. The counts ride in data attributes too, for tests.
  */
 export function renderSnapshot(did: Entry[], pool: Entry[], hour: number): HTMLElement {
-  const sec = el('section', 'knowledge-state');
-  sec.appendChild(el('h2', '', `Knowledge state at ${p2(hour)}:00 UTC (hour #${p2(hour)} record closure)`));
-  sec.appendChild(el('p', 'knowledge-lede', 'Everything recorded and believed by the agent in this 60-minute window.'));
   const masks = PERSONAS.filter((m) => did.some((e) => e.reason.includes(m) || e.evidence.includes(m)));
-  const dl = el('dl', 'knowledge-stats');
-  const stat = (term: string, value: string, key: string): void => {
-    const box = el('div', 'knowledge-stat');
-    box.dataset.stat = key;
-    box.append(el('dt', '', term), el('dd', '', value));
-    dl.appendChild(box);
-  };
-  stat('Recorded this hour', String(did.length), 'recorded');
-  stat('Live at this moment', String(pool.length), 'live');
-  stat('Masks named in the hour', masks.length > 0 ? masks.join(', ') : 'None named', 'masks');
-  sec.appendChild(dl);
-  return sec;
+  const line = el(
+    'p',
+    'knowledge-state log-head',
+    `${p2(hour)}:00 UTC · recorded ${did.length} · live ${pool.length} · masks: ${masks.length > 0 ? masks.join(', ') : 'none named'}`,
+  );
+  line.dataset.recorded = String(did.length);
+  line.dataset.live = String(pool.length);
+  line.dataset.masks = masks.length > 0 ? masks.join(', ') : 'none named';
+  return line;
 }
 
 /** Fired on window when the page moves the address in place (replaceState): the Router refreshes its panels. */
@@ -358,21 +352,21 @@ export class CalendarView implements View {
 
     const did = entriesInHour(entries, t.year, t.month, t.day, t.hour);
     out.push(renderSnapshot(did, pool, t.hour));
-    const didSec = el('section', 'hour-did');
-    didSec.appendChild(el('h2', '', 'What the agent did this hour'));
+    const didSec = el('section', 'hour-did log-block');
+    didSec.appendChild(el('p', 'log-label', `did · ${did.length} ${did.length === 1 ? 'entry' : 'entries'}`));
     didSec.appendChild(
       did.length === 0
         ? el('p', 'empty-state', 'Nothing was recorded in this hour.')
-        : renderEntryTable(did, kidMap, 'What the agent did this hour'),
+        : renderEntryLog(did, kidMap, 'What the agent did this hour'),
     );
     out.push(didSec);
 
-    const beliefSec = el('section', 'hour-believed');
-    beliefSec.appendChild(el('h2', '', 'What it believed at this moment'));
+    const beliefSec = el('section', 'hour-believed log-block');
+    beliefSec.appendChild(el('p', 'log-label', `believed · ${pool.length} ${pool.length === 1 ? 'entry' : 'entries'}`));
     beliefSec.appendChild(
       pool.length === 0
         ? el('p', 'empty-state', 'No entries were live at this moment.')
-        : renderEntryTable(pool, kidMap, 'What it believed at this moment'),
+        : renderEntryLog(pool, kidMap, 'What it believed at this moment'),
     );
     out.push(beliefSec);
     return out;
