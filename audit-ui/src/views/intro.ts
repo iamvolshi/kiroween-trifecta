@@ -51,3 +51,18 @@ export function createIntro(key: IntroKey): HTMLElement {
   box.append(q, h);
   return box;
 }
+
+/**
+ * The helper line alone, without the question sentence: the KTIE page
+ * carries no sentence for a title (a different title comes later).
+ */
+export function createHow(key: IntroKey): HTMLElement {
+  const box = document.createElement('div');
+  box.className = 'view-intro';
+  box.dataset.view = INTROS[key].view;
+  const h = document.createElement('p');
+  h.className = 'view-how';
+  h.textContent = INTROS[key].how;
+  box.append(h);
+  return box;
+}

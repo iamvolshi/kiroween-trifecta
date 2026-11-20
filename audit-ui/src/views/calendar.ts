@@ -15,7 +15,7 @@ import { parseUtcInput } from '../util/moment.ts';
 import { renderEntryTable } from './calendar-entries.ts';
 import { CalendarRail, type Moment } from './calendar-rail.ts';
 import { PERSONAS } from '../adapter/seam.ts';
-import { createIntro } from './intro.ts';
+import { createHow } from './intro.ts';
 
 const p2 = (n: number): string => String(n).padStart(2, '0');
 
@@ -119,7 +119,10 @@ export class CalendarView implements View {
     const head = el('header', 'ktie-head');
     head.append(el('h1', 'ktie-name', KTIE_NAME), el('p', 'ktie-expansion', KTIE_EXPANSION));
     container.appendChild(head);
-    container.appendChild(createIntro('calendar'));
+    // No question sentence for a title on this page: the helper line
+    // alone (a different title comes later). The helper line's wording
+    // stays as it is.
+    container.appendChild(createHow('calendar'));
     const body = el('div', 'view-body calendar-view');
     this.body = body;
     container.appendChild(body);

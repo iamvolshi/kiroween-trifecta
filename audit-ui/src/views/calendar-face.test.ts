@@ -143,14 +143,18 @@ const key = (target: Element, k: string, mods: KeyboardEventInit = {}): Keyboard
 const wait = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms));
 
 describe('the KTIE header', () => {
-  it('the page top is KTIE over "Knowledge Time Indexing Engine"; the intro stays', async () => {
+  it('the page top is KTIE over "Knowledge Time Indexing Engine"; no question sentence, the helper line alone', async () => {
     await mount({ level: 'month', year: 2026, month: 11 });
     const head = root.querySelector('.ktie-head')!;
     expect(head.querySelector('h1')?.textContent).toBe('KTIE');
     expect(head.querySelector('h1')?.classList.contains('ktie-name')).toBe(true);
     expect(head.querySelector('.ktie-expansion')?.textContent).toBe('Knowledge Time Indexing Engine');
     expect(root.querySelectorAll('h1')).toHaveLength(1);
+    expect(root.querySelector('.view-question')).toBeNull();
     expect(root.querySelector('.view-intro')?.getAttribute('data-view')).toBe('Calendar');
+    expect(root.querySelector('.view-how')?.textContent).toBe(
+      'Shaded days have record entries; the darker, the more. Open a day, then an hour, or use the rail.',
+    );
     expect(root.textContent).not.toContain('KATIE');
   });
 });
