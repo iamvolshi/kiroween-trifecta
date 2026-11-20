@@ -65,7 +65,7 @@
 .ktie-drums {
   /* One value's height. --drum-reach (values either side of the center)
      is set from DRUM_REACH in calendar-rail.ts. */
-  --drum-row: 2.25rem;
+  --drum-row: 1.75rem;
   position: relative;
   min-width: 0;
   padding: var(--s2) var(--s3) var(--s3);

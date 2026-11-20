@@ -166,11 +166,11 @@ describe('the drums', () => {
     const drums = [...r.root.querySelectorAll<HTMLElement>('.drum')];
     expect(drums.map((d) => d.dataset.seg)).toEqual(['year', 'quarter', 'week', 'day', 'hour']);
     expect(drums.map((d) => d.querySelector('.drum-head')?.textContent)).toEqual(['Years', 'Quarters', 'Weeks', 'Days', 'Hours (UTC)']);
-    // Only the periods in the record (the Years wheel is new: the root).
-    expect(labels(r, 'year')).toEqual(['2025', '2026']);
-    expect(labels(r, 'quarter')).toEqual(['Q1', 'Q4']); // the quarters of 2026
-    expect(labels(r, 'week')).toEqual(['W47']);
-    expect(labels(r, 'day')).toEqual(['Tue 17', 'Wed 18']);
+    // Every wheel holds its full range; the counts say what the record holds.
+    expect(labels(r, 'year')).toEqual(['2024', '2025', '2026', '2027']);
+    expect(labels(r, 'quarter')).toEqual(['Q1', 'Q2', 'Q3', 'Q4']); // all four quarters of 2026
+    expect(labels(r, 'week')).toEqual(['W40', 'W41', 'W42', 'W43', 'W44', 'W45', 'W46', 'W47', 'W48', 'W49', 'W50', 'W51', 'W52', 'W53']);
+    expect(labels(r, 'day')).toEqual(['Mon 16', 'Tue 17', 'Wed 18', 'Thu 19', 'Fri 20', 'Sat 21', 'Sun 22']);
     expect(labels(r, 'hour')).toHaveLength(24);
     // The readout: the newest moment holding an entry.
     expect(readout(r)).toEqual(['2026', 'Q4', 'W47', 'Wed 18', '16:00']);
@@ -187,13 +187,14 @@ describe('the drums', () => {
     expect(Number(fade(14))).toBe(DRUM_FADE[0]);
     expect(fade(10)).toBe('0');
     expect(hours[10]!.dataset.far).toBe('true');
-    expect(hours[11]!.dataset.far).toBeUndefined();
+    expect(hours[11]!.dataset.far).toBe('true');
+    expect(hours[12]!.dataset.far).toBeUndefined();
     expect(hours[13]!.style.getPropertyValue('--d')).toBe('-1');
     expect(wheel(r, 'hour').querySelector<HTMLElement>('.drum-reel')!.style.getPropertyValue('--sel')).toBe('14');
     // One Tab stop per wheel: the centered value.
     expect(hours.filter((h) => h.tabIndex === 0)).toEqual([hours[14]]);
     const quarters = [...wheel(r, 'quarter').querySelectorAll<HTMLButtonElement>('.drum-value')];
-    expect(quarters.map((q) => q.getAttribute('aria-pressed'))).toEqual(['false', 'true']);
+    expect(quarters.map((q) => q.getAttribute('aria-pressed'))).toEqual(['false', 'false', 'false', 'true']);
     expect(r.root.getAttribute('role')).toBe('group');
     expect(wheel(r, 'hour').getAttribute('role')).toBe('group');
   });
@@ -209,8 +210,8 @@ describe('the drums', () => {
     for (const v of r.root.querySelectorAll<HTMLElement>('.drum-value')) {
       expect(v.getAttribute('aria-label')!.startsWith(v.textContent!)).toBe(true);
     }
-    expect(r.root.style.getPropertyValue('--drum-reach')).toBe('3');
-    expect(wheel(r, 'year').querySelector('.drum-value')?.getAttribute('aria-label')).toBe('2026, 6 entries');
+    expect(r.root.style.getPropertyValue('--drum-reach')).toBe('2');
+    expect(wheel(r, 'year').querySelector('.drum-value[data-key="2026"]')?.getAttribute('aria-label')).toBe('2026, 6 entries');
   });
 
   it('a year pick cascades to its last quarter, week, day and hour', () => {
@@ -218,7 +219,7 @@ describe('the drums', () => {
     document.body.appendChild(r.root);
     wheel(r, 'year').querySelector<HTMLButtonElement>('.drum-value[data-key="2025"]')!.click();
     expect(readout(r)).toEqual(['2025', 'Q4', 'W49', 'Sat 6', '21:00']);
-    expect(labels(r, 'quarter')).toEqual(['Q4']);
+    expect(labels(r, 'quarter')).toEqual(['Q1', 'Q2', 'Q3', 'Q4']);
     r.root.remove();
   });
 
@@ -228,8 +229,9 @@ describe('the drums', () => {
     wheel(r, 'quarter').dispatchEvent(new MouseEvent('mouseenter'));
     expect(SEGMENTS.map((s) => wheel(r, s).dataset.hover ?? null)).toEqual([null, 'true', null, null, null]);
     expect(spin(wheel(r, 'quarter'), -100).defaultPrevented).toBe(true);
-    // Q4 -> Q1 of 2026: the week, day and hour re-derive; the year to its left stays.
-    expect(readout(r)).toEqual(['2026', 'Q1', 'W10', 'Tue 3', '08:00']);
+    // Q4 -> Q3 of 2026: the week, day and hour re-derive; the year to its left stays.
+    // Q3 holds no entries, so the wheels land on its end (W40, Wed 30, 00:00).
+    expect(readout(r)).toEqual(['2026', 'Q3', 'W40', 'Wed 30', '00:00']);
     expect(wheel(r, 'quarter').dataset.hover).toBe('true'); // hover survives the spin
     expect(isoWeekOf({ year: 2026, month: 3, day: 3 }).week).toBe(10);
     r.root.remove();
@@ -310,12 +312,12 @@ describe('the drums', () => {
     const q4 = wheel(r, 'quarter').querySelector<HTMLElement>('.drum-value[data-selected="true"]')!;
     q4.focus();
     key(q4, 'ArrowUp');
-    expect((document.activeElement as HTMLElement).textContent).toBe('Q1');
+    expect((document.activeElement as HTMLElement).textContent).toBe('Q3');
     expect(document.activeElement?.getAttribute('aria-pressed')).toBe('true');
     key(document.activeElement!, 'ArrowDown');
     expect((document.activeElement as HTMLElement).textContent).toBe('Q4');
     key(document.activeElement!, 'ArrowLeft');
-    expect((document.activeElement as HTMLElement).textContent).toBe('Q1');
+    expect((document.activeElement as HTMLElement).textContent).toBe('Q3');
     // Hours: Home / End jump to the wheel's ends.
     const h = wheel(r, 'hour').querySelector<HTMLElement>('.drum-value[data-selected="true"]')!;
     h.focus();

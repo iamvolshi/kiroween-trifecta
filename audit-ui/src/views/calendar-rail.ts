@@ -5,17 +5,17 @@ import {
   type Day,
   type Quarter,
   type Week,
-  daysOfWeekPresent,
+  daysOfWeekInQuarter,
   daysPresent,
   dayKey,
   hourCounts,
   isoWeekOf,
   quarterKey,
   quarterOf,
-  quartersOfYearPresent,
+  quartersOfYear,
   weekKey,
-  weeksPresent,
-  yearsPresent,
+  weeksOfQuarter,
+  yearsRange,
 } from '../util/rail.ts';
 
 /**
@@ -24,9 +24,10 @@ import {
  * segments of a clock readout. The centered value is the selection, solid;
  * the values above and below fade with their distance from the center.
  *
- * Built ONLY from the loaded entries: a wheel holds only the periods present
- * in the record (all 24 hours of the picked day, each with its live count),
- * and a wheel with nothing says so in words. Counts ride in the labels.
+ * Each wheel holds its full range — every year around the record, all four
+ * quarters of a year, every ISO week of a quarter, every day of a week, all
+ * 24 hours of a day — and the counts say what the record holds, 0 where
+ * empty. A wheel with nothing at all in the record says so in words.
  *
  * Hover a wheel and the scroll wheel spins that wheel; the wheels to its
  * right re-derive from the new selection (a year move re-picks the last
@@ -46,7 +47,7 @@ export const SEGMENTS: readonly Segment[] = ['year', 'quarter', 'week', 'day', '
 const HEADS: Record<Segment, string> = { year: 'Years', quarter: 'Quarters', week: 'Weeks', day: 'Days', hour: 'Hours (UTC)' };
 
 /** Values shown either side of the center; further ones are hidden. */
-export const DRUM_REACH = 3;
+export const DRUM_REACH = 2;
 /** Opacity by distance from the center: solid, then fading out. */
 export const DRUM_FADE: readonly number[] = [1, 0.55, 0.3, 0.14];
 /** Quiet time after the last move before the wheels count as settled. */
@@ -202,14 +203,14 @@ export class CalendarRail {
   private values(seg: Segment): Value[] {
     const days = this.all();
     if (seg === 'year') {
-      return yearsPresent(days).map((y) => {
+      return yearsRange(days).map((y) => {
         const n = this.countIn((d) => d.year === y);
         return { key: String(y), label: String(y), aria: `${y}, ${plural(n)}`, count: n };
       });
     }
     if (seg === 'quarter') {
       if (this.year === null) return [];
-      return quartersOfYearPresent(days, this.year).map((q) => {
+      return quartersOfYear(this.year).map((q) => {
         const n = this.countIn((d) => quarterKey(quarterOf(d)) === quarterKey(q));
         return { key: quarterKey(q), label: `Q${q.q}`, aria: `Q${q.q}, ${q.year} Q${q.q}, ${plural(n)}`, count: n };
       });
@@ -217,14 +218,14 @@ export class CalendarRail {
     if (seg === 'week') {
       const q = this.quarter;
       if (!q) return [];
-      return weeksPresent(days, q).map((w) => {
+      return weeksOfQuarter(q).map((w) => {
         const n = this.countIn((d) => quarterKey(quarterOf(d)) === quarterKey(q) && weekKey(isoWeekOf(d)) === weekKey(w));
         return { key: weekKey(w), label: `W${w.week}`, aria: `W${w.week}, week ${w.week} of ${w.isoYear}, ${plural(n)}`, count: n };
       });
     }
     if (seg === 'day') {
       if (!this.quarter || !this.week) return [];
-      return daysOfWeekPresent(days, this.quarter, this.week).map((d) => {
+      return daysOfWeekInQuarter(this.week, this.quarter).map((d) => {
         const n = this.days.find((x) => dayKey(x.day) === dayKey(d))?.count ?? 0;
         return {
           key: dayKey(d),
@@ -254,34 +255,49 @@ export class CalendarRail {
     return this.hour === null ? null : String(this.hour);
   }
 
-  /** Set one wheel's value by its index, and re-pick every wheel to its right (the last of each). */
+  /** The last value holding an entry, else the last value (a range with nothing in it lands on its end). */
+  private lastWithEntries<T>(vals: T[], countOf: (v: T) => number): T {
+    for (let i = vals.length - 1; i >= 0; i--) if (countOf(vals[i]!) > 0) return vals[i]!;
+    return vals[vals.length - 1]!;
+  }
+
+  /** Set one wheel's value by its index, and re-pick every wheel to its right (the last holding an entry in each, else the last). */
   private setIndex(seg: Segment, i: number): void {
-    const days = this.all();
     if (seg === 'hour') {
       this.hour = i;
       return;
     }
+    let quarter = this.quarter!;
+    let week = this.week!;
+    let day = this.day!;
     if (seg === 'year') {
-      const y = yearsPresent(days)[i]!;
-      this.year = y;
-      const qs = quartersOfYearPresent(days, y);
-      this.quarter = qs[qs.length - 1]!;
+      this.year = yearsRange(this.all())[i]!;
+      quarter = this.lastWithEntries(quartersOfYear(this.year), (q) =>
+        this.countIn((d) => quarterKey(quarterOf(d)) === quarterKey(q)),
+      );
+      this.quarter = quarter;
     } else if (seg === 'quarter') {
-      this.quarter = quartersOfYearPresent(days, this.year!)[i]!;
+      quarter = quartersOfYear(this.year!)[i]!;
+      this.quarter = quarter;
     }
     if (seg === 'year' || seg === 'quarter') {
-      const ws = weeksPresent(days, this.quarter!);
-      this.week = ws[ws.length - 1]!;
+      week = this.lastWithEntries(weeksOfQuarter(quarter), (w) =>
+        this.countIn((d) => quarterKey(quarterOf(d)) === quarterKey(quarter) && weekKey(isoWeekOf(d)) === weekKey(w)),
+      );
+      this.week = week;
     } else if (seg === 'week') {
-      this.week = weeksPresent(days, this.quarter!)[i]!;
+      week = weeksOfQuarter(quarter)[i]!;
+      this.week = week;
     }
     if (seg === 'day') {
-      this.day = daysOfWeekPresent(days, this.quarter!, this.week!)[i]!;
+      day = daysOfWeekInQuarter(week, quarter)[i]!;
     } else {
-      const ds = daysOfWeekPresent(days, this.quarter!, this.week!);
-      this.day = ds[ds.length - 1]!;
+      day = this.lastWithEntries(daysOfWeekInQuarter(week, quarter), (d) =>
+        this.days.find((x) => dayKey(x.day) === dayKey(d))?.count ?? 0,
+      );
     }
-    this.hour = this.lastHourOf(this.day);
+    this.day = day;
+    this.hour = this.lastHourOf(day);
   }
 
   /**
