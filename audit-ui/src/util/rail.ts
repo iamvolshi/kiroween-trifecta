@@ -1,5 +1,6 @@
 import type { Entry } from '../adapter/seam.ts';
 import { parseMs } from './interval.ts';
+import { partsInZone, type TimeZone } from './timezone.ts';
 
 /**
  * The calendar rail's periods: each wheel holds its full range, and the
@@ -7,6 +8,11 @@ import { parseMs } from './interval.ts';
  * hour wheel already had, all 24 hours with live counts. A wheel with
  * nothing at all in the record says so in words. Nothing here invents an
  * entry; a period with 0 entries is a true statement about the record.
+ *
+ * The periods are read in a zone: UTC is the record's own frame, local is
+ * the viewer's. A day, a quarter, a week and an hour are calendar fields,
+ * so only the two helpers that read an entry's instant (dayOf, hourCounts)
+ * take the zone; everything else is field arithmetic on those days.
  */
 
 export interface Day {
@@ -28,9 +34,13 @@ export interface Week {
 
 const DAY_MS = 86_400_000;
 
-export function dayOf(e: Entry): Day | null {
+export function dayOf(e: Entry, zone: TimeZone = 'utc', timeZone = 'UTC'): Day | null {
   const ms = parseMs(e.k_start);
   if (Number.isNaN(ms)) return null;
+  if (zone === 'local') {
+    const p = partsInZone(ms, timeZone);
+    return { year: p.year, month: p.month, day: p.day };
+  }
   const d = new Date(ms);
   if (Number.isNaN(d.getTime())) return null;
   return { year: d.getUTCFullYear(), month: d.getUTCMonth() + 1, day: d.getUTCDate() };
@@ -58,10 +68,10 @@ export const quarterKey = (q: Quarter): string => `${q.year}-Q${q.q}`;
 export const weekKey = (w: Week): string => `${w.isoYear}-W${String(w.week).padStart(2, '0')}`;
 
 /** Every distinct day holding an entry, oldest first, with its entry count. */
-export function daysPresent(entries: Entry[]): Array<{ day: Day; count: number }> {
+export function daysPresent(entries: Entry[], zone: TimeZone = 'utc', timeZone = 'UTC'): Array<{ day: Day; count: number }> {
   const counts = new Map<string, { day: Day; count: number }>();
   for (const e of entries) {
-    const d = dayOf(e);
+    const d = dayOf(e, zone, timeZone);
     if (!d) continue;
     const k = dayKey(d);
     const cur = counts.get(k);
@@ -123,12 +133,15 @@ export function daysOfWeekInQuarter(w: Week, q: Quarter): Day[] {
 }
 
 /** The years a wheel spans: one before the earliest entry year through one
- * past the latest entry year or this year, whichever is later. Empty record: none. */
-export function yearsRange(days: Day[]): number[] {
+ * past the latest entry year or this year, whichever is later. Empty record: none.
+ * "This year" is read in the zone, so the wheel never gains or loses a year
+ * a day early at a New Year boundary. */
+export function yearsRange(days: Day[], zone: TimeZone = 'utc', timeZone = 'UTC'): number[] {
   if (days.length === 0) return [];
   const years = days.map((d) => d.year);
   const lo = Math.min(...years) - 1;
-  const hi = Math.max(new Date().getUTCFullYear(), ...years) + 1;
+  const nowYear = zone === 'utc' ? new Date().getUTCFullYear() : partsInZone(Date.now(), timeZone).year;
+  const hi = Math.max(nowYear, ...years) + 1;
   const out: number[] = [];
   for (let y = lo; y <= hi; y++) out.push(y);
   return out;
@@ -167,9 +180,20 @@ export function daysOfWeekPresent(days: Day[], q: Quarter, w: Week): Day[] {
   });
 }
 
-/** Entry count per UTC hour (0-23) of one day. */
-export function hourCounts(entries: Entry[], d: Day): number[] {
+/** Entry count per hour (0-23) of one day, in the zone: a UTC hour of a UTC
+ * day, or a local hour of a local day. On the fall-back day the repeated
+ * local hour holds both of its occurrences. */
+export function hourCounts(entries: Entry[], d: Day, zone: TimeZone = 'utc', timeZone = 'UTC'): number[] {
   const out = new Array<number>(24).fill(0);
+  if (zone === 'local') {
+    for (const e of entries) {
+      const ms = parseMs(e.k_start);
+      if (Number.isNaN(ms)) continue;
+      const p = partsInZone(ms, timeZone);
+      if (p.year === d.year && p.month === d.month && p.day === d.day) out[p.hour]!++;
+    }
+    return out;
+  }
   const start = Date.UTC(d.year, d.month - 1, d.day);
   for (const e of entries) {
     const ms = parseMs(e.k_start);

@@ -3,10 +3,11 @@
  *
  * A K-time moment is an absolute instant. UTC is how the record stores it;
  * local is how a person reads it. Nothing here changes the record, the
- * routes, or the moments the drums point at — it only translates what the
- * folder shows. The drums, the month grid and the day hour list are the
- * record's own structure, so they stay UTC; the hour view (the folder)
- * translates.
+ * routes, or the moments the record is read at — it only translates between
+ * the two readings. The drums follow the switch too: in local mode they show
+ * the viewer's calendar, and a local pick converts back to UTC for the
+ * record read. The month grid and the day hour list are the record's own
+ * structure, so they stay UTC.
  */
 
 export type TimeZone = 'utc' | 'local';
@@ -70,6 +71,37 @@ export function utcMomentToLocal(
 ): { year: number; month: number; day: number; hour: number } {
   const p = partsInZone(Date.UTC(year, month - 1, day, hour), timeZone);
   return { year: p.year, month: p.month, day: p.day, hour: p.hour };
+}
+
+/** The zone's offset from UTC at an instant, in ms (local wall reading minus UTC). */
+function zoneOffsetMs(ms: number, timeZone: string): number {
+  const p = partsInZone(ms, timeZone);
+  return Date.UTC(p.year, p.month - 1, p.day, p.hour, p.minute, p.second) - ms;
+}
+
+/**
+ * The UTC calendar fields of a local wall-clock reading (year/month/day/hour):
+ * the inverse of utcMomentToLocal, for a local pick on the drums. The offset
+ * is read at the guess and then once more at the corrected instant, so a
+ * reading either side of a DST change lands on the right UTC hour. Two
+ * readings share one local hour on the fall-back day; this returns the first
+ * (earlier UTC) one. A reading inside the spring-forward gap has no instant;
+ * it lands on the instant just before the gap.
+ */
+export function localToUtc(
+  year: number,
+  month: number,
+  day: number,
+  hour: number,
+  timeZone: string,
+): { year: number; month: number; day: number; hour: number } {
+  const guess = Date.UTC(year, month - 1, day, hour);
+  const off1 = zoneOffsetMs(guess, timeZone);
+  const once = guess - off1;
+  const off2 = zoneOffsetMs(once, timeZone);
+  const ms = off2 === off1 ? once : guess - off2;
+  const d = new Date(ms);
+  return { year: d.getUTCFullYear(), month: d.getUTCMonth() + 1, day: d.getUTCDate(), hour: d.getUTCHours() };
 }
 
 /** The zone's name on a reading: "UTC" or "Local". */

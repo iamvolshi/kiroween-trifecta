@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   clockTime,
+  localToUtc,
   momentInput,
   partsInZone,
   utcMomentToLocal,
@@ -27,6 +28,41 @@ describe('utcMomentToLocal', () => {
 
   it('midnight UTC is 19:00 the day before in New York', () => {
     expect(utcMomentToLocal(2026, 11, 21, 0, NY)).toEqual({ year: 2026, month: 11, day: 20, hour: 19 });
+  });
+});
+
+describe('localToUtc', () => {
+  it('17:00 in New York is 22:00 UTC the same day (EST, winter)', () => {
+    expect(localToUtc(2026, 11, 20, 17, NY)).toEqual({ year: 2026, month: 11, day: 20, hour: 22 });
+  });
+
+  it('21:00 in New York is 02:00 UTC the next day (the date shifts)', () => {
+    expect(localToUtc(2026, 11, 20, 21, NY)).toEqual({ year: 2026, month: 11, day: 21, hour: 2 });
+  });
+
+  it('18:00 in New York in July is 22:00 UTC (EDT, not a fixed offset)', () => {
+    expect(localToUtc(2026, 7, 4, 18, NY)).toEqual({ year: 2026, month: 7, day: 4, hour: 22 });
+  });
+
+  it('03:00 on the spring-forward day is 07:00 UTC (EDT begins)', () => {
+    expect(localToUtc(2026, 3, 8, 3, NY)).toEqual({ year: 2026, month: 3, day: 8, hour: 7 });
+  });
+
+  it('01:00 on the fall-back day is 05:00 UTC (the first of the two)', () => {
+    expect(localToUtc(2026, 11, 1, 1, NY)).toEqual({ year: 2026, month: 11, day: 1, hour: 5 });
+  });
+
+  it('02:00 after the fall-back is 07:00 UTC (EST again)', () => {
+    expect(localToUtc(2026, 11, 1, 2, NY)).toEqual({ year: 2026, month: 11, day: 1, hour: 7 });
+  });
+
+  it('round-trips with utcMomentToLocal for real times', () => {
+    // The second 01:00 on the fall-back day is the one reading that cannot
+    // round-trip: localToUtc returns the first of the two by design.
+    for (const [y, mo, d, h] of [[2026, 11, 20, 22], [2026, 11, 21, 2], [2026, 7, 4, 22], [2026, 3, 8, 7], [2026, 11, 1, 5]] as const) {
+      const l = utcMomentToLocal(y, mo, d, h, NY);
+      expect(localToUtc(l.year, l.month, l.day, l.hour, NY)).toEqual({ year: y, month: mo, day: d, hour: h });
+    }
   });
 });
 

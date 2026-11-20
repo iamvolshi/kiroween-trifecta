@@ -1,6 +1,7 @@
 import type { Entry } from '../adapter/seam.ts';
 import { MONTH_NAMES, calendarHref } from '../util/calendar.ts';
 import { stripBase } from '../util/base.ts';
+import { localToUtc, utcMomentToLocal, zoneName, type TimeZone } from '../util/timezone.ts';
 import {
   type Day,
   type Quarter,
@@ -29,6 +30,12 @@ import {
  * 24 hours of a day — and the counts say what the record holds, 0 where
  * empty. A wheel with nothing at all in the record says so in words.
  *
+ * The wheels read in a zone (UTC by default, local when the switch is on
+ * local): in local mode they show the viewer's calendar — local years,
+ * quarters, weeks, days and hours — and the moment they point at converts
+ * back to UTC, because the record is read in UTC. The record, the routes
+ * and the address stay UTC; only the clock the user reads is local.
+ *
  * Hover a wheel and the scroll wheel spins that wheel; the wheels to its
  * right re-derive from the new selection (a year move re-picks the last
  * quarter, week, day and hour in it; a quarter move the last week, day and
@@ -44,7 +51,7 @@ import {
 
 export type Segment = 'year' | 'quarter' | 'week' | 'day' | 'hour';
 export const SEGMENTS: readonly Segment[] = ['year', 'quarter', 'week', 'day', 'hour'];
-const HEADS: Record<Segment, string> = { year: 'Years', quarter: 'Quarters', week: 'Weeks', day: 'Days', hour: 'Hours (UTC)' };
+const HEADS: Record<Exclude<Segment, 'hour'>, string> = { year: 'Years', quarter: 'Quarters', week: 'Weeks', day: 'Days' };
 
 /** Values shown either side of the center; further ones are hidden. */
 export const DRUM_REACH = 2;
@@ -79,6 +86,10 @@ export interface RailOptions {
   onSpin?: (m: Moment) => void;
   onSettle?: (m: Moment) => void;
   settleMs?: number;
+  /** The clock the wheels read in: UTC is the record's frame, local is the viewer's. */
+  zone?: TimeZone;
+  /** The viewer's IANA time zone; the local frame reads in it. */
+  timeZone?: string;
 }
 
 /** One value on a wheel. */
@@ -119,6 +130,8 @@ export class CalendarRail {
   readonly root: HTMLElement;
   private days: Array<{ day: Day; count: number }>;
   private entries: Entry[];
+  private zone: TimeZone;
+  private timeZone: string;
   private year: number | null = null;
   private quarter: Quarter | null = null;
   private week: Week | null = null;
@@ -135,12 +148,39 @@ export class CalendarRail {
   private settleTimer: ReturnType<typeof setTimeout> | null = null;
   private opts: RailOptions;
 
-  /** `focus`: the day the view is on (if any); `lockedHour`: the hour view's hour on that day. */
+  /** A wheel's head: the hours name the clock they read in. */
+  private head(seg: Segment): string {
+    return seg === 'hour' ? `Hours (${zoneName(this.zone)})` : HEADS[seg];
+  }
+
+  /**
+   * `focus`: the day the view is on, in the record's UTC (if any);
+   * `lockedHour`: the hour view's hour on that day, in UTC. In local mode
+   * both are translated into the viewer's frame before the wheels are
+   * built: an hour focus translates as a moment, a bare day as the local
+   * day of its noon (the day's middle, so the wheels land on the day the
+   * user means). The moment the wheels point at is always reported in
+   * UTC — the record's frame — whatever they display.
+   */
   constructor(entries: Entry[], focus: Day | null, lockedHour: number | null, opts: RailOptions = {}) {
     this.entries = entries;
-    this.days = daysPresent(entries);
-    this.lockedHour = lockedHour;
-    this.lockedDay = lockedHour !== null ? focus : null;
+    this.zone = opts.zone ?? 'utc';
+    this.timeZone = opts.timeZone ?? 'UTC';
+    this.days = daysPresent(entries, this.zone, this.timeZone);
+    let focusDay = focus;
+    let lockHour = lockedHour;
+    if (this.zone === 'local' && focus !== null) {
+      if (lockedHour !== null) {
+        const l = utcMomentToLocal(focus.year, focus.month, focus.day, lockedHour, this.timeZone);
+        focusDay = { year: l.year, month: l.month, day: l.day };
+        lockHour = l.hour;
+      } else {
+        const l = utcMomentToLocal(focus.year, focus.month, focus.day, 12, this.timeZone);
+        focusDay = { year: l.year, month: l.month, day: l.day };
+      }
+    }
+    this.lockedHour = lockHour;
+    this.lockedDay = lockHour !== null ? focusDay : null;
     this.opts = opts;
     this.root = el('div', 'calendar-rail ktie-drums');
     this.root.setAttribute('role', 'group');
@@ -149,21 +189,29 @@ export class CalendarRail {
     this.row = el('div', 'drum-row');
     this.root.appendChild(this.row);
     const start =
-      (focus && this.days.find((d) => dayKey(d.day) === dayKey(focus))?.day) ??
-      (focus && this.newestIn((d) => d.year === focus.year && d.month === focus.month)) ??
+      (focusDay && this.days.find((d) => dayKey(d.day) === dayKey(focusDay))?.day) ??
+      (focusDay && this.newestIn((d) => d.year === focusDay.year && d.month === focusDay.month)) ??
       this.days[this.days.length - 1]?.day ??
       null;
     if (start) {
       this.selectDay(start);
-      this.hour = lockedHour !== null && focus && dayKey(start) === dayKey(focus) ? lockedHour : this.lastHourOf(start);
+      this.hour = lockHour !== null && focusDay && dayKey(start) === dayKey(focusDay) ? lockHour : this.lastHourOf(start);
     }
     this.render();
   }
 
-  /** The moment the wheels point at, or null with nothing in the record. */
+  /**
+   * The moment the wheels point at, or null with nothing in the record.
+   * Always in the record's UTC: in local mode the wheels' local pick
+   * converts back before it is reported. The count is the picked hour's
+   * own count, in the wheels' frame.
+   */
   moment(): Moment | null {
     if (!this.day || this.hour === null) return null;
-    return { day: this.day, hour: this.hour, count: hourCounts(this.entries, this.day)[this.hour] ?? 0 };
+    const count = hourCounts(this.entries, this.day, this.zone, this.timeZone)[this.hour] ?? 0;
+    if (this.zone === 'utc') return { day: this.day, hour: this.hour, count };
+    const u = localToUtc(this.day.year, this.day.month, this.day.day, this.hour, this.timeZone);
+    return { day: { year: u.year, month: u.month, day: u.day }, hour: u.hour, count };
   }
 
   /** Stop the settle timer (the view is going away). */
@@ -190,7 +238,7 @@ export class CalendarRail {
 
   /** The last hour of `d` that holds an entry (every present day has one). */
   private lastHourOf(d: Day): number {
-    const counts = hourCounts(this.entries, d);
+    const counts = hourCounts(this.entries, d, this.zone, this.timeZone);
     for (let h = 23; h >= 0; h--) if (counts[h]! > 0) return h;
     return 0;
   }
@@ -203,7 +251,7 @@ export class CalendarRail {
   private values(seg: Segment): Value[] {
     const days = this.all();
     if (seg === 'year') {
-      return yearsRange(days).map((y) => {
+      return yearsRange(days, this.zone, this.timeZone).map((y) => {
         const n = this.countIn((d) => d.year === y);
         return { key: String(y), label: String(y), aria: `${y}, ${plural(n)}`, count: n };
       });
@@ -237,13 +285,22 @@ export class CalendarRail {
     }
     const d = this.day;
     if (!d) return [];
-    return hourCounts(this.entries, d).map((n, h) => ({
-      key: String(h),
-      label: `${p2(h)}:00`,
-      aria: `${p2(h)}:00 UTC, ${plural(n)}`,
-      count: n,
-      href: calendarHref({ level: 'hour', year: d.year, month: d.month, day: d.day, hour: h }),
-    }));
+    // The hour wheel shows the wheels' frame (local hours in local mode);
+    // each hour links to the hour view of the UTC hour it reads as, because
+    // the record, the routes and the address stay UTC.
+    return hourCounts(this.entries, d, this.zone, this.timeZone).map((n, h) => {
+      const u =
+        this.zone === 'local'
+          ? localToUtc(d.year, d.month, d.day, h, this.timeZone)
+          : { year: d.year, month: d.month, day: d.day, hour: h };
+      return {
+        key: String(h),
+        label: `${p2(h)}:00`,
+        aria: `${p2(h)}:00 ${zoneName(this.zone)}, ${plural(n)}`,
+        count: n,
+        href: calendarHref({ level: 'hour', year: u.year, month: u.month, day: u.day, hour: u.hour }),
+      };
+    });
   }
 
   /** The selected value's key on a wheel. */
@@ -271,7 +328,7 @@ export class CalendarRail {
     let week = this.week!;
     let day = this.day!;
     if (seg === 'year') {
-      this.year = yearsRange(this.all())[i]!;
+      this.year = yearsRange(this.all(), this.zone, this.timeZone)[i]!;
       quarter = this.lastWithEntries(quartersOfYear(this.year), (q) =>
         this.countIn((d) => quarterKey(quarterOf(d)) === quarterKey(q)),
       );
@@ -381,13 +438,13 @@ export class CalendarRail {
     drum.dataset.seg = seg;
     drum.dataset.keys = signature(vals);
     if (this.hovered === seg) drum.dataset.hover = 'true';
-    drum.appendChild(el('h3', 'drum-head', HEADS[seg]));
+    drum.appendChild(el('h3', 'drum-head', this.head(seg)));
     const win = el('div', 'drum-window');
     drum.appendChild(win);
     if (vals.length === 0) {
       drum.dataset.empty = 'true';
       win.appendChild(el('p', 'empty-state', 'Nothing in the record for this wheel.'));
-      drum.setAttribute('aria-label', `${HEADS[seg]}: nothing in the record`);
+      drum.setAttribute('aria-label', `${this.head(seg)}: nothing in the record`);
       return drum;
     }
     const reel = el('div', 'drum-reel');
@@ -473,7 +530,7 @@ export class CalendarRail {
     if (!reel) return;
     reel.style.setProperty('--sel', String(sel));
     const v = vals[sel]!;
-    drum.setAttribute('aria-label', `${HEADS[seg]}: ${v.aria}`);
+    drum.setAttribute('aria-label', `${this.head(seg)}: ${v.aria}`);
     const lockedOn = seg === 'hour' && this.lockedHour !== null && this.lockedDay !== null && this.day !== null && dayKey(this.lockedDay) === dayKey(this.day);
     for (const item of reel.querySelectorAll<HTMLElement>('.drum-value')) {
       const i = Number(item.dataset.index);

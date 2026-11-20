@@ -113,13 +113,20 @@ active). Local translates the moment line, the snapshot hour, the log clock
 times and the folder caption through `src/util/timezone.ts` (Intl, the
 viewer's zone; a UTC moment past midnight reads the day before locally).
 The record, the routes, the address and the record reads stay UTC, and the
-drums, the month grid and the day hour list are the record's own structure,
-so they stay UTC too. The switch re-reads the folder in place (same moment,
-same entries, new clock); a flip drops an in-flight settle.
+month grid and the day hour list are the record's own structure, so they
+stay UTC too. The switch re-reads the folder in place (same moment, same
+entries, new clock); a flip drops an in-flight settle.
+
+## The drums follow the switch (Nov 20, Elara)
+
+Darren: the barrel clock needs to match local; the interface for the user is local time, converting to the record in UTC. The drums now follow the zone switch: in local mode they show the viewer's calendar (local years, quarters, weeks, days, hours) and a local pick converts back to UTC for the record read (`localToUtc` in `src/util/timezone.ts`; the offset is read twice so a reading either side of a DST change lands on the right UTC hour; the fall-back hour returns its first occurrence, a spring-gap reading lands just before the gap). The moment the drums report stays UTC, so the settle, the folder read and the address are unchanged. The hour wheel links name the UTC hour each local hour reads as. A bare day focus translates as the local day of its noon. The zone holds for the session (sessionStorage `hackenstein-ktie-zone`, UTC default), so opening another hour keeps local. The month grid and the day hour list stay UTC. Known edges: on the fall-back day the repeated local hour holds both occurrences but the folder shows the first; the switch lives on the hour view, so flipping from a month or day route waits for an hour view.
 
 ## Tests
 
-452 pass (437 before). `util/timezone.test.ts`: the translator, New York
-cases incl. the date shift and DST. `views/calendar-face.test.ts`: the
-switch end to end (UTC default, flip to local and back, past-midnight
-moment) and the snapshot's local hour.
+463 pass (452 before). `util/timezone.test.ts`: the translator, New York
+cases incl. the date shift and DST, plus `localToUtc` (round-trips,
+spring-forward and fall-back). `views/calendar-face.test.ts`: the switch end
+to end (UTC default, flip to local and back, past-midnight moment) and the
+snapshot's local hour; the drums follow the switch (local heads and labels,
+hour links naming the UTC hour, a local spin settling on its UTC hour, the
+past-midnight day on the drums, the zone holding across mounts).

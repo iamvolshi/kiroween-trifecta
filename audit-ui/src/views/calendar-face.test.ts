@@ -4,7 +4,7 @@
  * comes from the record stub (a test double), never from the app.
  */
 import { describe, it, expect, afterEach } from 'vitest';
-import { CalendarView, renderSnapshot } from './calendar.ts';
+import { CalendarView, KTIE_ZONE_KEY, renderSnapshot } from './calendar.ts';
 import { CalendarRail, DRUM_FADE, SEGMENTS, type Moment } from './calendar-rail.ts';
 import { Router } from '../router/router.ts';
 import { createLiveAdapter, NO_ADDRESS_ERROR } from '../adapter/live.ts';
@@ -38,6 +38,9 @@ afterEach(() => {
   view?.unmount();
   view = null;
   root?.remove();
+  // The zone persists for the session; a test that flips it cleans up after
+  // itself so the next test starts on UTC.
+  window.sessionStorage.removeItem(KTIE_ZONE_KEY);
 });
 
 async function mount(target: ConstructorParameters<typeof CalendarView>[1], adapter = stub(ENTRIES), settleMs?: number, timeZone?: string): Promise<void> {
@@ -178,6 +181,77 @@ describe('UTC / Local switch', () => {
     buttons[1]!.click();
     for (let i = 0; i < 4; i++) await tick();
     expect(root.querySelector('.cursor-display')!.textContent).toBe('Moment (Local): 2026-11-20T21:00');
+  });
+});
+
+describe('the drums follow the UTC / Local switch', () => {
+  it('flip to local: the drums read local, the hour links still name the UTC hour', async () => {
+    await mount({ level: 'hour', year: 2026, month: 11, day: 18, hour: 14 }, stub(ENTRIES), undefined, 'America/New_York');
+    expect(readout(root)).toEqual(['2026', 'Q4', 'W47', 'Wed 18', '14:00']);
+    expect(wheel(root, 'hour').querySelector('.drum-head')?.textContent).toBe('Hours (UTC)');
+    const buttons = [...root.querySelectorAll<HTMLElement>('.zone-switch button')];
+    buttons[1]!.click();
+    for (let i = 0; i < 4; i++) await tick();
+    expect(readout(root)).toEqual(['2026', 'Q4', 'W47', 'Wed 18', '09:00']);
+    expect(wheel(root, 'hour').querySelector('.drum-head')?.textContent).toBe('Hours (Local)');
+    const h9 = wheel(root, 'hour').querySelector<HTMLElement>('.drum-value[data-key="9"]')!;
+    expect(h9.getAttribute('aria-label')).toBe('09:00 Local, 3 entries');
+    expect(h9.getAttribute('href')).toBe('/calendar/2026-11-18/14');
+    // The folder still reads the same UTC hour, in local time.
+    expect(root.querySelector('.cursor-display')!.textContent).toBe('Moment (Local): 2026-11-18T09:00');
+    expect(root.querySelector('.knowledge-state')!.textContent).toContain('09:00 Local');
+  });
+
+  it('a local spin settles on the UTC hour it reads as', async () => {
+    await mount({ level: 'hour', year: 2026, month: 11, day: 18, hour: 14 }, stub(ENTRIES), 20, 'America/New_York');
+    const buttons = [...root.querySelectorAll<HTMLElement>('.zone-switch button')];
+    buttons[1]!.click();
+    for (let i = 0; i < 4; i++) await tick();
+    expect(centered(root, 'hour')).toBe('09:00');
+    const hourWheel = root.querySelector<HTMLElement>('.drum[data-seg="hour"]')!;
+    spin(hourWheel, 100); // 09:00 -> 10:00 local
+    spin(hourWheel, 100); // -> 11:00 local
+    expect(centered(root, 'hour')).toBe('11:00');
+    await wait(120);
+    for (let i = 0; i < 4; i++) await tick();
+    // 11:00 local is 16:00 UTC: the folder reads the record's hour (n4, the
+    // 16:00 UTC entry), shows it on the local clock, and the address stays
+    // UTC — that address is the conversion's proof.
+    expect(root.querySelector('.cursor-display')!.textContent).toBe('Moment (Local): 2026-11-18T11:00');
+    expect(root.querySelector('.knowledge-state')?.textContent).toContain('11:00 Local');
+    expect(root.querySelector('.knowledge-state')?.textContent).toContain('recorded 1');
+    expect(root.querySelector('.ktie-folder-caption')?.textContent).toBe('Folder: 2026-11-18 \u00b7 11:00 Local \u00b7 1 entry');
+    expect(window.location.pathname).toBe('/calendar/2026-11-18/16');
+  });
+
+  it('a UTC moment past midnight reads the day before on the drums too', async () => {
+    const entries = [...ENTRIES, at('2026-11-21T02:00:00.000Z', 'd1')];
+    await mount({ level: 'hour', year: 2026, month: 11, day: 21, hour: 2 }, stub(entries), undefined, 'America/New_York');
+    expect(readout(root)).toEqual(['2026', 'Q4', 'W47', 'Sat 21', '02:00']);
+    const buttons = [...root.querySelectorAll<HTMLElement>('.zone-switch button')];
+    buttons[1]!.click();
+    for (let i = 0; i < 4; i++) await tick();
+    expect(readout(root)).toEqual(['2026', 'Q4', 'W47', 'Fri 20', '21:00']);
+    const h21 = wheel(root, 'hour').querySelector<HTMLElement>('.drum-value[data-key="21"]')!;
+    expect(h21.getAttribute('href')).toBe('/calendar/2026-11-21/02');
+    expect(h21.getAttribute('aria-label')).toBe('21:00 Local, 1 entry');
+  });
+
+  it('the zone holds across mounts: a fresh view opens on local', async () => {
+    await mount({ level: 'hour', year: 2026, month: 11, day: 18, hour: 14 }, stub(ENTRIES), undefined, 'America/New_York');
+    const buttons = [...root.querySelectorAll<HTMLElement>('.zone-switch button')];
+    buttons[1]!.click();
+    for (let i = 0; i < 4; i++) await tick();
+    expect(centered(root, 'hour')).toBe('09:00');
+    // A fresh view (a new hour opened next) reads the stored zone.
+    view!.unmount();
+    view = null;
+    root.remove();
+    await mount({ level: 'hour', year: 2026, month: 11, day: 18, hour: 14 }, stub(ENTRIES), undefined, 'America/New_York');
+    const again = [...root.querySelectorAll<HTMLElement>('.zone-switch button')];
+    expect(again[1]!.getAttribute('aria-pressed')).toBe('true');
+    expect(centered(root, 'hour')).toBe('09:00');
+    expect(wheel(root, 'hour').querySelector('.drum-head')?.textContent).toBe('Hours (Local)');
   });
 });
 

@@ -14,6 +14,7 @@ import {
 } from '../util/calendar.ts';
 import { parseUtcInput } from '../util/moment.ts';
 import { momentInput, utcMomentToLocal, viewerTimeZone, zoneName, type TimeZone } from '../util/timezone.ts';
+import type { Day } from '../util/rail.ts';
 import { renderEntryLog } from './calendar-entries.ts';
 import { CalendarRail, type Moment } from './calendar-rail.ts';
 import { PERSONAS } from '../adapter/seam.ts';
@@ -73,6 +74,29 @@ export function renderSnapshot(
 /** Fired on window when the page moves the address in place (replaceState): the Router refreshes its panels. */
 export const ADDRESS_FOLLOWED = 'hackenstein:address-followed';
 
+/**
+ * The zone the drums and the folder read in, kept for the session: the
+ * drums are the clock the user reads, so a flip to local holds across the
+ * hour views they open next. UTC is the default (the record's time).
+ * Storage can be unavailable (private mode); then the zone just does not
+ * persist and the view still works.
+ */
+export const KTIE_ZONE_KEY = 'hackenstein-ktie-zone';
+function storedZone(): TimeZone {
+  try {
+    return window.sessionStorage.getItem(KTIE_ZONE_KEY) === 'local' ? 'local' : 'utc';
+  } catch {
+    return 'utc';
+  }
+}
+function storeZone(zone: TimeZone): void {
+  try {
+    window.sessionStorage.setItem(KTIE_ZONE_KEY, zone);
+  } catch {
+    // No storage: the zone holds for this view only.
+  }
+}
+
 /** The KTIE page's header: the engine's name over what it stands for. */
 export const KTIE_NAME = 'KTIE';
 export const KTIE_EXPANSION = 'Knowledge Time Indexing Engine';
@@ -124,6 +148,7 @@ export class CalendarView implements View {
   private current: { year: number; month: number; day: number; hour: number } | null = null;
   private folder: HTMLElement | null = null;
   private caption: HTMLElement | null = null;
+  private passing: HTMLElement | null = null;
   private landed: HTMLElement | null = null;
   private settleMs: number | undefined;
 
@@ -133,6 +158,7 @@ export class CalendarView implements View {
     this.target = target;
     this.settleMs = settleMs;
     this.timeZone = timeZone ?? viewerTimeZone();
+    this.zone = storedZone();
   }
 
   mount(container: HTMLElement): void {
@@ -178,6 +204,7 @@ export class CalendarView implements View {
     const passing = el('p', 'ktie-passing');
     passing.hidden = true;
     passing.setAttribute('aria-hidden', 'true'); // motion only
+    this.passing = passing;
     const landed = el('p', 'sr-only ktie-landed');
     landed.setAttribute('role', 'status');
     this.landed = landed;
@@ -190,27 +217,11 @@ export class CalendarView implements View {
       folder.replaceChildren(main);
     };
     // The drums across the top, built from the same loaded entries.
-    this.rail?.destroy();
-    const rail = new CalendarRail(
+    const rail = this.makeRail(
       entries,
       { year: t.year, month: t.month, day: t.level === 'month' ? 0 : t.day },
       t.level === 'hour' ? t.hour : null,
-      {
-        settleMs: this.settleMs,
-        onSpin: (m) => {
-          if (!isCurrent()) return;
-          this.folderToken++; // an older load lands nowhere
-          passing.hidden = false;
-          passing.textContent = momentLabel(m, this.zone, this.timeZone);
-          folder.dataset.spinning = 'true';
-          folder.setAttribute('aria-busy', 'true');
-        },
-        onSettle: (m) => {
-          if (isCurrent()) void this.settle(folder, passing, caption, landed, entries, m, isCurrent);
-        },
-      },
     );
-    this.rail = rail;
     const show = (parts: HTMLElement[]): void => {
       fill(parts);
       body.replaceChildren(rail.root, passing, landed, caption, folder);
@@ -234,6 +245,43 @@ export class CalendarView implements View {
     if (!pool.ok) return showError(pool.error);
     this.current = { year: t.year, month: t.month, day: t.day, hour: t.hour };
     show(this.renderHour(entries, pool.data, t));
+  }
+
+  /**
+   * Build the drums for `entries`, focused on the UTC `focus` day (and
+   * hour, when locked), in the current zone. The rail translates the focus
+   * into its own frame; its moments come back in UTC. Replaces the old
+   * drums, so a zone flip rebuilds them in place on the same moment.
+   */
+  private makeRail(entries: Entry[], focus: Day | null, lockedHour: number | null): CalendarRail {
+    const token = this.requestToken;
+    const live = (): boolean => token === this.requestToken && this.body !== null;
+    this.rail?.destroy();
+    const rail = new CalendarRail(entries, focus, lockedHour, {
+      settleMs: this.settleMs,
+      zone: this.zone,
+      timeZone: this.timeZone,
+      onSpin: (m) => {
+        const folder = this.folder;
+        const passing = this.passing;
+        if (!live() || folder === null || passing === null) return;
+        this.folderToken++; // an older load lands nowhere
+        passing.hidden = false;
+        passing.textContent = momentLabel(m, this.zone, this.timeZone);
+        folder.dataset.spinning = 'true';
+        folder.setAttribute('aria-busy', 'true');
+      },
+      onSettle: (m) => {
+        const folder = this.folder;
+        const passing = this.passing;
+        const caption = this.caption;
+        const landed = this.landed;
+        if (!live() || folder === null || passing === null || caption === null || landed === null) return;
+        void this.settle(folder, passing, caption, landed, entries, m, live);
+      },
+    });
+    this.rail = rail;
+    return rail;
   }
 
   /** The drums came to rest on `m`: the folder becomes the hour view for it. */
@@ -402,7 +450,7 @@ export class CalendarView implements View {
     return out;
   }
 
-  /** UTC / Local switch: the record stays UTC; the folder reads in the shown zone. */
+  /** UTC / Local switch: the record stays UTC; the drums and the folder read in the shown zone. */
   private renderZoneSwitch(): HTMLElement {
     const group = el('div', 'zone-switch');
     group.setAttribute('role', 'group');
@@ -415,12 +463,46 @@ export class CalendarView implements View {
       b.addEventListener('click', () => {
         if (this.zone !== z) {
           this.zone = z;
-          void this.refreshFolder();
+          storeZone(z);
+          void this.refreshZone();
         }
       });
       group.appendChild(b);
     }
     return group;
+  }
+
+  /**
+   * The zone flipped: the drums rebuild in the new zone on the same moment
+   * (a local pick reads the same UTC record), and the folder re-reads.
+   * The month grid and the day hour list are the record's own structure,
+   * so they stay UTC; only the drums and the hour folder follow the switch.
+   * The switch lives on the hour view, so a flip from a month or day route
+   * waits for an hour view — the zone it sets holds across mounts.
+   */
+  private async refreshZone(): Promise<void> {
+    const oldRoot = this.rail?.root ?? null;
+    let focus: Day | null = null;
+    let locked: number | null = null;
+    if (this.current !== null) {
+      focus = { year: this.current.year, month: this.current.month, day: this.current.day };
+      locked = this.current.hour;
+    } else {
+      const target = this.target;
+      if (target !== null) {
+        if (target.level === 'hour') {
+          focus = { year: target.year, month: target.month, day: target.day };
+          locked = target.hour;
+        } else if (target.level === 'day') {
+          focus = { year: target.year, month: target.month, day: target.day };
+        } else {
+          focus = { year: target.year, month: target.month, day: 0 };
+        }
+      }
+    }
+    const rail = this.makeRail(this.entries, focus, locked);
+    if (oldRoot !== null) oldRoot.replaceWith(rail.root);
+    await this.refreshFolder();
   }
 
   /** Re-read the folder in the new zone: same moment, same entries, new clock. */
@@ -458,6 +540,7 @@ export class CalendarView implements View {
     this.body = null;
     this.folder = null;
     this.caption = null;
+    this.passing = null;
     this.landed = null;
     this.current = null;
     this.entries = [];
