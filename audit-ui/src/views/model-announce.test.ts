@@ -1,12 +1,12 @@
 /**
- * The live-model announcement under the chat box: nothing before a voice is
+ * The live-model announcement in the picker row: nothing before a voice is
  * picked; after it, the picked voice's model from the status, served_by
  * after a turn (served_by wins); the unconfigured words (Young Frankenstein
  * unpicked); the unreachable words (also with no connector address); the
  * visible change when the voice switches.
  */
 import { describe, it, expect, afterEach } from 'vitest';
-import { announce, renderModelBanner } from './model-banner.ts';
+import { announce } from './model-announce.ts';
 import { ChatView, type ModelSource } from './chat.ts';
 import { ChatLog } from './chat-log.ts';
 import { fetchModelStatus, isModelStatus, type ModelStatus } from '../adapter/live-models.ts';
@@ -91,19 +91,6 @@ describe('announce()', () => {
   });
 });
 
-describe('renderModelBanner()', () => {
-  it('the band carries the voice and the state; a switch adds the pulse', () => {
-    const a = announce({ register: 'book', status: { state: 'ok', data: STATUS }, served: null });
-    const b = renderModelBanner(a!, true);
-    expect(b.dataset.position).toBe('book');
-    expect(b.dataset.state).toBe('live');
-    expect(b.classList.contains('model-flip')).toBe(true);
-    expect(b.querySelector('.model-position')?.textContent).toBe('BOOK');
-    expect(b.querySelector('.model-name')?.textContent).toBe('model-book-1');
-    expect(renderModelBanner(a!).classList.contains('model-flip')).toBe(false);
-  });
-});
-
 describe('fetchModelStatus()', () => {
   it('reads GET /models and refuses a malformed reply in words', async () => {
     const ok: FetchLike = async () => new Response(JSON.stringify(STATUS), { status: 200 });
@@ -135,7 +122,7 @@ describe('fetchModelStatus()', () => {
   });
 });
 
-describe('ChatView: the announcement under the chat box', () => {
+describe('ChatView: the model rides in the picker row', () => {
   let slot: HTMLElement;
   let view: ChatView | null = null;
   afterEach(() => { view?.unmount(); view = null; slot?.remove(); });
@@ -155,7 +142,7 @@ describe('ChatView: the announcement under the chat box', () => {
     return { log, bodies };
   }
 
-  const banner = (): HTMLElement => slot.querySelector<HTMLElement>('.chat-dock .model-banner')!;
+  const model = (): HTMLElement | null => slot.querySelector<HTMLElement>('.voice-picker .voice-model');
   const pick = (voice: string): void => slot.querySelector<HTMLButtonElement>(`.voice-picker [data-voice="${voice}"]`)!.click();
   const send = async (text: string): Promise<void> => {
     slot.querySelector<HTMLInputElement>('#chat-message')!.value = text;
@@ -163,27 +150,26 @@ describe('ChatView: the announcement under the chat box', () => {
     for (let i = 0; i < 4; i++) await tick();
   };
 
-  it('switching voice changes the band, the word and the model name', async () => {
+  it('switching voice changes the model at the row\'s right end', async () => {
     const live: ModelSource = { status: async () => ({ ok: true, data: STATUS }) };
     await mount(live, async () => new Response('{}', { status: 500 }));
     pick('movie');
-    expect(banner().dataset.position).toBe('movie');
-    expect(banner().querySelector('.model-name')?.textContent).toBe('model-movie-1');
+    expect(model()?.textContent).toBe('model-movie-1');
+    expect(model()?.dataset.state).toBe('live');
     pick('book');
-    expect(banner().dataset.position).toBe('book');
-    expect(banner().querySelector('.model-position')?.textContent).toBe('BOOK');
-    expect(banner().querySelector('.model-name')?.textContent).toBe('model-book-1');
-    expect(banner().classList.contains('model-flip')).toBe(true);
+    expect(model()?.textContent).toBe('model-book-1');
+    expect(model()?.dataset.state).toBe('live');
+    // The model sits in the chip row, after the chips.
+    const row = slot.querySelector('.voice-picker')!;
+    expect(row.lastElementChild).toBe(model());
   });
 
-  it('Young Frankenstein unconfigured shows the unconfigured wording under the chat box', async () => {
+  it('Young Frankenstein unconfigured shows "Not configured" in the row', async () => {
     const live: ModelSource = { status: async () => ({ ok: true, data: STATUS }) };
     await mount(live, async () => new Response('{}', { status: 500 }));
     pick('young-frankenstein');
-    expect(banner().dataset.state).toBe('unconfigured');
-    expect(banner().querySelector('.model-name')?.textContent).toBe('Not configured');
-    expect(banner().querySelector('.model-source')?.textContent).toBe(YF_UNSET.error);
-    expect(banner().querySelector('.model-provider')).toBeNull();
+    expect(model()?.dataset.state).toBe('unconfigured');
+    expect(model()?.textContent).toBe('Not configured');
   });
 
   it('a reply\'s served_by replaces the status for that voice only', async () => {
@@ -193,11 +179,10 @@ describe('ChatView: the announcement under the chat box', () => {
     pick('book');
     await send('hi');
     expect(bodies).toEqual([{ message: 'hi', persona: 'Frankenstein', register: 'book' }]);
-    expect(banner().querySelector('.model-name')?.textContent).toBe('model-other');
-    expect(banner().querySelector('.model-note')?.textContent).toContain('prov-book / model-book-1');
+    expect(model()?.textContent).toBe('model-other');
     // The other voice still shows its own status.
     pick('movie');
-    expect(banner().querySelector('.model-name')?.textContent).toBe('model-movie-1');
+    expect(model()?.textContent).toBe('model-movie-1');
   });
 
   it('a failed turn drops the old served_by and re-reads the live map', async () => {
@@ -211,14 +196,13 @@ describe('ChatView: the announcement under the chat box', () => {
       : new Response(JSON.stringify(turn('hi', other)), { status: 200 })));
     pick('movie');
     await send('hi');
-    expect(banner().querySelector('.model-name')?.textContent).toBe('model-other');
+    expect(model()?.textContent).toBe('model-other');
     const before = reads;
     data = { ...STATUS, registers: { ...STATUS.registers, movie: { provider: 'prov-new', model: 'model-new' } } };
     fail = true;
     await send('again');
     expect(reads).toBe(before + 1);
-    expect(banner().querySelector('.model-name')?.textContent).toBe('model-new');
-    expect(banner().querySelector('.model-source')?.textContent).toBe("From the connector's status");
+    expect(model()?.textContent).toBe('model-new');
   });
 
   it('a switch re-reads the live map, so a config change shows', async () => {
@@ -231,7 +215,7 @@ describe('ChatView: the announcement under the chat box', () => {
     pick('book');
     await tick(); await tick();
     expect(reads).toBe(2);
-    expect(banner().querySelector('.model-name')?.textContent).toBe('model-book-2');
+    expect(model()?.textContent).toBe('model-book-2');
   });
 
   it('an older /models answer that lands late is dropped', async () => {
@@ -250,29 +234,28 @@ describe('ChatView: the announcement under the chat box', () => {
     await tick();
     answers[1]!(late); // read 2, older, lands last: dropped
     await tick();
-    pick('book'); // read 4, unanswered: the band keeps read 3's map
-    expect(banner().querySelector('.model-name')?.textContent).toBe('model-book-1');
+    pick('book'); // read 4, unanswered: the row keeps read 3's map
+    expect(model()?.textContent).toBe('model-book-1');
   });
 
-  it('before a voice is picked the banner slot is empty: no band, no words', async () => {
+  it('before a voice is picked the row is chips only: no model, no model slot', async () => {
     const live: ModelSource = { status: async () => ({ ok: true, data: STATUS }) };
     await mount(live, async () => new Response('{}', { status: 500 }));
-    const modelSlot = (): HTMLElement => slot.querySelector<HTMLElement>('.chat-dock .model-slot')!;
-    expect(modelSlot().children).toHaveLength(0);
-    expect(modelSlot().textContent).toBe('');
+    expect(model()).toBeNull();
+    expect(slot.querySelector('.model-slot')).toBeNull();
     const down: ModelSource = { status: async () => ({ ok: false, error: 'Connector unreachable: refused' }) };
     view?.unmount();
     slot.remove();
     await mount(down, async () => new Response('{}', { status: 500 }));
-    expect(modelSlot().children).toHaveLength(0);
+    expect(model()).toBeNull();
   });
 
-  it('an unreachable connector: no voices to pick, the words in the picker slot, nothing under the box', async () => {
+  it('an unreachable connector: no voices to pick, the words in the picker slot, no model', async () => {
     const down: ModelSource = { status: async () => ({ ok: false, error: 'Connector unreachable: refused' }) };
     await mount(down, async () => new Response('{}', { status: 500 }));
     expect(slot.querySelector('.voice-picker')).toBeNull();
     expect(slot.querySelector('.voice-slot .error-state')?.textContent).toBe('Connector unreachable: refused');
-    expect(slot.querySelector('.model-banner')).toBeNull();
+    expect(model()).toBeNull();
   });
 
   it('a build with no connector address says the connector is unreachable', async () => {
@@ -282,7 +265,7 @@ describe('ChatView: the announcement under the chat box', () => {
     expect((slot.querySelector<HTMLInputElement>('#chat-message'))!.disabled).toBe(true);
   });
 
-  it('a voice switch that fails to re-read keeps the chips; the band says the connector is unreachable', async () => {
+  it('a voice switch that fails to re-read keeps the chips; the model says it is unknown', async () => {
     let up = true;
     const live: ModelSource = { status: async () => (up ? { ok: true, data: STATUS } : { ok: false, error: 'Connector unreachable: refused' }) };
     await mount(live, async () => new Response('{}', { status: 500 }));
@@ -291,8 +274,8 @@ describe('ChatView: the announcement under the chat box', () => {
     pick('book');
     await tick(); await tick();
     expect(slot.querySelectorAll('.voice-picker .voice-chip')).toHaveLength(3);
-    expect(banner().dataset.state).toBe('unreachable');
-    expect(banner().textContent).toContain('Connector unreachable: refused');
+    expect(model()?.dataset.state).toBe('unreachable');
+    expect(model()?.textContent).toBe('Model unknown');
   });
 });
 

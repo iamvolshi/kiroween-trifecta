@@ -96,13 +96,3 @@
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.35), 0 2px 4px -2px rgba(0, 0, 0, 0.35);
 }
 
-/* ---- Chat: the model band ---------------------------------------------- */
-
-/* The band sits under the composer at the bottom of the centered chat
-   column, once a voice is picked; it is not a separate fixed bar. */
-.model-banner {
-  padding: var(--s4);
-  border-radius: var(--radius);
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
-}
-

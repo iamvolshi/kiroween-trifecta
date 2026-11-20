@@ -58,8 +58,8 @@ describe('no connector address: every view says so', () => {
 
   it('/chat: no voices can load, so the picker slot says the connector is unreachable', async () => {
     await open('/chat');
-    // No voice can be picked: nothing under the chat box, the composer stays locked.
-    expect(container.querySelector('.model-banner')).toBeNull();
+    // No voice can be picked: no model shown, the composer stays locked.
+    expect(container.querySelector('.voice-model')).toBeNull();
     expect(container.querySelector('.voice-picker')).toBeNull();
     expect(container.querySelector('.voice-slot .error-state')?.textContent).toBe(NO_ADDRESS_ERROR);
     const input = container.querySelector<HTMLInputElement>('#chat-message')!;
@@ -86,6 +86,6 @@ describe('connector down (address set, nothing answers): every view says so', ()
     await open('/chat', down, 'http://127.0.0.1:9', models);
     expect(container.querySelector('.voice-slot .error-state')?.textContent).toBe('Connector unreachable: Failed to fetch');
     expect(container.querySelector('.voice-picker')).toBeNull();
-    expect(container.querySelector('.model-banner')).toBeNull();
+    expect(container.querySelector('.voice-model')).toBeNull();
   });
 });

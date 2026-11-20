@@ -1,10 +1,10 @@
 /*
  * Chat view: a standard chat-app column, centered in the pane (max 768px).
  * Bubbles: your messages on the right, the voice's replies on the left.
- * The voice picker and the composer are pinned at the bottom; the model
- * band sits under the composer once a voice is picked. The engines' work
- * is not shown here (see the telemetry column on the right). The shape took
- * cues from a reference mockup (a three-column chat app); the code is
+ * The voice picker and the composer are pinned at the bottom; the picked
+ * voice's live model rides at the right end of the chip row. The engines'
+ * work is not shown here (see the telemetry column on the right). The shape
+ * took cues from a reference mockup (a three-column chat app); the code is
  * written fresh.
  */
 
@@ -200,6 +200,24 @@
 .voice-chip[aria-checked='true'] {
   border-color: var(--voice-accent);
   color: var(--voice-accent);
+}
+
+/* The picked voice's live model, at the chip row's right end. It wears the
+   voice's accent; unreachable or unconfigured shows in the error colour. */
+.voice-model {
+  margin-left: auto;
+  align-self: center;
+  color: var(--voice-accent);
+  font-family: var(--mono);
+  font-size: var(--t-label-md-size);
+  line-height: var(--t-label-md-lh);
+  font-weight: var(--t-label-md-wt);
+  letter-spacing: var(--t-label-md-ls);
+}
+
+.voice-model[data-state='unreachable'],
+.voice-model[data-state='unconfigured'] {
+  color: var(--error);
 }
 
 /* The composer: one rounded box, the send button inside it on the right. */

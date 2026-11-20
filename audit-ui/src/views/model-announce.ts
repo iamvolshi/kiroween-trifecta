@@ -1,8 +1,10 @@
-// The model announcement under the chat box. It says which model is live,
-// from LIVE data only: the connector's status (GET /models) before a turn,
-// and each reply's served_by after it. When the two disagree, served_by wins.
-// No provider or model name is written here; every name is the connector's.
-// With no connector address, or no answer, it says the connector is unreachable.
+// The model announcement in the picker row: which model is live for the
+// picked voice, from LIVE data only: the connector's status (GET /models)
+// before a turn, and each reply's served_by after it. When the two
+// disagree, served_by wins. No provider or model name is written here;
+// every name is the connector's. With no connector address, or no answer,
+// it says the connector is unreachable. The chat renders it as one span at
+// the chip row's right end; nothing is announced before a voice is picked.
 import type { Register, ServedBy } from '../adapter/seam.ts';
 import type { ModelRoute, ModelStatus } from '../adapter/live-models.ts';
 import { VOICE_LABELS } from './voices.ts';
@@ -72,31 +74,4 @@ export function announce(input: BannerInput): Announcement | null {
   }
   const r = route as ServedBy;
   return { ...base, state: 'live', model: r.model, provider: r.provider, source: "From the connector's status" };
-}
-
-function el(tag: string, className: string, text: string): HTMLElement {
-  const e = document.createElement(tag);
-  e.className = className;
-  e.textContent = text;
-  return e;
-}
-
-/** The band. `flipped` adds a short highlight when the position just changed. */
-export function renderModelBanner(a: Announcement, flipped = false): HTMLElement {
-  const box = document.createElement('section');
-  box.className = flipped ? 'model-banner model-flip' : 'model-banner';
-  box.dataset.position = a.position;
-  box.dataset.state = a.state;
-  box.setAttribute('aria-live', 'polite');
-  box.setAttribute('aria-label', 'Live model');
-
-  box.appendChild(el('span', 'model-position', a.label));
-  const main = el('div', 'model-main', '');
-  const name = el('span', 'model-name', a.model);
-  main.appendChild(name);
-  if (a.provider) main.appendChild(el('span', 'model-provider', a.provider));
-  box.appendChild(main);
-  box.appendChild(el('span', 'model-source', a.source));
-  if (a.note) box.appendChild(el('span', 'model-note', a.note));
-  return box;
 }

@@ -1,18 +1,22 @@
 import type { Register } from '../adapter/seam.ts';
+import type { Announcement } from './model-announce.ts';
 import { VOICE_LABELS } from './voices.ts';
 
 /**
  * The voice picker: a "Pick your Frankenstein" label over one small bordered
- * chip per voice, in a row above the composer ("[BOOK] 1818"). A radio group
- * made of real buttons: role=radiogroup (labelled by the caption),
- * role=radio buttons with aria-checked. One Tab stop (the picked chip, else
- * the first: a roving tabindex); Enter / Space pick; Left/Right and Up/Down
- * move to the next chip and pick it.
+ * chip per voice, in a row above the composer ("[BOOK] 1818"). The picked
+ * voice's live model rides at the row's right end (`announcement`, null
+ * before a voice is picked: then the row is chips only). A radio group made
+ * of real buttons: role=radiogroup (labelled by the caption), role=radio
+ * buttons with aria-checked. One Tab stop (the picked chip, else the first:
+ * a roving tabindex); Enter / Space pick; Left/Right and Up/Down move to the
+ * next chip and pick it.
  */
 export function renderVoicePicker(
   voices: readonly Register[],
   selected: Register | null,
   onChoose: (v: Register) => void,
+  announcement: Announcement | null = null,
 ): HTMLDivElement {
   const wrap = document.createElement('div');
   wrap.className = 'voice-picker-wrap';
@@ -50,6 +54,13 @@ export function renderVoicePicker(
     });
     group.appendChild(b);
   });
+  if (announcement !== null) {
+    const m = document.createElement('span');
+    m.className = 'voice-model';
+    m.dataset.state = announcement.state;
+    m.textContent = announcement.model;
+    group.appendChild(m);
+  }
   wrap.append(label, group);
   return wrap;
 }

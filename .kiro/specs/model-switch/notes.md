@@ -152,3 +152,16 @@ stub speaking SubQ's OpenAI-compatible shape (POST path, Bearer header,
 model from env, no `reasoning_effort`, Book voice sent, `served_by` subq),
 using the real connector, loop, config and model client. That is a stub,
 not a live call.
+
+## Nov 20, 2026: the band moved into the picker row (Darren)
+
+The full-width band under the composer is gone: Darren crossed it out and
+pointed at the empty space right of the persona chips. The picked voice's
+model now rides at the chip row's right end (`.voice-model`, in the voice's
+accent; red when unreachable/unconfigured), and nothing shows there before
+a voice is picked. The pure `announce()` is unchanged (served_by still
+wins; the disagreement note is computed but no longer displayed anywhere).
+Files: `views/model-banner.ts` -> `views/model-announce.ts` (announce only),
+`views/model-banner.test.ts` -> `views/model-announce.test.ts`,
+`styles/model-banner.css` deleted, `views/chat.ts` (no model slot),
+`views/voice-picker.ts` (the model span), `styles/chat.css` (`.voice-model`).

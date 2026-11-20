@@ -101,7 +101,7 @@ describe('before the first pick: the picker and the composer, nothing else', () 
     }
     expect(view.textContent).not.toMatch(/who do you want|ARCHE runs|Chat with|nothing yet|No messages yet|NOT KNOWN/i);
     expect(container.querySelector('.chat-transcript')!.childNodes).toHaveLength(0);
-    expect(container.querySelector('.model-slot')!.childNodes).toHaveLength(0);
+    expect(container.querySelector('.model-slot')).toBeNull();
   });
 
   it('the composer is locked, with the awaiting placeholder; a submit does nothing', async () => {
@@ -122,7 +122,7 @@ describe('before the first pick: the picker and the composer, nothing else', () 
     const { adapter } = fake(async () => ({ ok: true, data: turn1() }));
     await open(adapter);
     const dock = container.querySelector('.chat-column > .chat-dock')!;
-    expect(Array.from(dock.children).map((c) => c.className)).toEqual(['voice-slot', 'chat-composer', 'model-slot']);
+    expect(Array.from(dock.children).map((c) => c.className)).toEqual(['voice-slot', 'chat-composer']);
     const chips = Array.from(container.querySelectorAll<HTMLButtonElement>('.voice-picker .voice-chip'));
     expect(chips.map((c) => c.textContent)).toEqual(['[BOOK] 1818', '[MOVIE] 1931', '[YOUNG FRANKENSTEIN] 1974']);
     expect(chips.map((c) => c.dataset.voice)).toEqual(['book', 'movie', 'young-frankenstein']);
@@ -181,7 +181,7 @@ describe('picking a voice', () => {
     expect(view.dataset.voice).toBe('young-frankenstein');
     const replies = Array.from(container.querySelectorAll<HTMLElement>('.chat-reply'));
     expect(replies.map((r) => r.dataset.voice)).toEqual(['book', 'movie']);
-    expect(container.querySelector('.model-banner')?.getAttribute('data-position')).toBe('young-frankenstein');
+    expect(container.querySelector('.voice-model')?.textContent).toBe('stub-model-young-frankenstein');
   });
 
   it('arrow keys move through the chips and pick', async () => {

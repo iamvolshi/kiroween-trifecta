@@ -2,7 +2,7 @@ import type { View } from '../router/router.ts';
 import { isChatTurn, type AdapterResult, type ChatOptions, type Register, type SeamAdapter, type ServedBy } from '../adapter/seam.ts';
 import { CONNECTOR_URL } from '../adapter/connector-url.ts';
 import { fetchModelStatus, type ModelStatus } from '../adapter/live-models.ts';
-import { announce, renderModelBanner, type StatusState } from './model-banner.ts';
+import { announce, type StatusState } from './model-announce.ts';
 import { ChatLog } from './chat-log.ts';
 import { renderChatTurn } from './chat-turn.ts';
 import { syncEngineBoxes } from './engine-boxes.ts';
@@ -33,10 +33,10 @@ function el<K extends keyof HTMLElementTagNameMap>(tag: K, className: string, te
 
 /**
  * The chat: a centered chat-app column. Messages as bubbles; the voice
- * picker and the composer pinned at the bottom; the model band under the
- * composer once a voice is picked. Before the first send the column holds
- * the picker and the composer and nothing else. The picked voice sets the
- * accent (data-voice on the view): picked chip, model band, replies.
+ * picker and the composer pinned at the bottom; the picked voice's model
+ * rides at the right end of the chip row. Before the first send the column
+ * holds the picker and the composer and nothing else. The picked voice sets
+ * the accent (data-voice on the view): picked chip, model name, replies.
  */
 export class ChatView implements View {
   private adapter: SeamAdapter;
@@ -55,11 +55,9 @@ export class ChatView implements View {
   /** Incremented per submit and on unmount; stale replies are dropped. */
   private requestToken = 0;
   private models: ModelSource;
-  private modelSlot: HTMLElement | null = null;
   private status: StatusState = { state: 'loading' };
   /** served_by of the last reply per voice. */
   private served = new Map<Register, ServedBy>();
-  private lastVoice: Register | null = null;
   /** Keeps the pressed engine box in step with the telemetry column's focus. */
   private unsubscribeFocus: (() => void) | null = null;
   /** Counts /models reads; only the latest answer is kept. */
@@ -94,8 +92,7 @@ export class ChatView implements View {
     this.sendBtn = el('button', 'chat-send', 'Send');
     this.sendBtn.type = 'submit';
     this.form.append(label, this.input, this.sendBtn);
-    this.modelSlot = el('div', 'model-slot');
-    dock.append(this.pickerSlot, this.form, this.modelSlot);
+    dock.append(this.pickerSlot, this.form);
     column.append(this.transcript, this.errorSlot, dock);
     root.appendChild(column);
     this.root = root;
@@ -135,17 +132,6 @@ export class ChatView implements View {
     );
   }
 
-  /** The announcement under the composer, for the picked voice. */
-  private renderModel(): void {
-    if (!this.modelSlot) return;
-    const voice = this.log.voice();
-    const flipped = this.lastVoice !== null && this.lastVoice !== voice;
-    this.lastVoice = voice;
-    const a = announce({ register: voice, status: this.status, served: voice ? this.served.get(voice) ?? null : null });
-    // Before a voice is picked the slot stays empty: no band, no words.
-    this.modelSlot.replaceChildren(...(a ? [renderModelBanner(a, flipped)] : []));
-  }
-
   /** The voices the connector reports, or the words saying why there are none. */
   private renderPicker(focus: boolean): void {
     const slot = this.pickerSlot;
@@ -160,9 +146,12 @@ export class ChatView implements View {
       else slot.replaceChildren();
       return;
     }
-    // A failed re-read keeps the chips; the band under the composer says the connector is unreachable.
+    // A failed re-read keeps the chips; the model at the row's end says the connector is unreachable.
     // A rebuild must not drop keyboard focus: a chip that had it gets it back.
     const hadFocus = slot.contains(document.activeElement);
+    // The picked voice's live model rides at the row's right end; before a
+    // voice is picked the announcement is null and the row is chips only.
+    const announcement = announce({ register: voice, status: this.status, served: voice ? this.served.get(voice) ?? null : null });
     slot.replaceChildren(
       renderVoicePicker(voices, voice, (v) => {
         const switched = this.log.voice() !== null && this.log.voice() !== v;
@@ -170,12 +159,12 @@ export class ChatView implements View {
         this.renderControls(true);
         // A switch re-reads the live map, so a config change shows up.
         if (switched) this.loadStatus(false);
-      }),
+      }, announcement),
     );
     if (focus || hadFocus) slot.querySelector<HTMLButtonElement>('[tabindex="0"]')?.focus();
   }
 
-  /** Accent, picker, composer and band follow the picked voice. */
+  /** Accent, picker, composer and the model in the picker row follow the picked voice. */
   private renderControls(focus = false): void {
     const voice = this.log.voice();
     if (this.root) {
@@ -191,7 +180,6 @@ export class ChatView implements View {
       this.input.placeholder = ready && voice ? `Message ${VOICE_LABELS[voice].name}` : AWAITING_MASK;
     }
     if (this.sendBtn) this.sendBtn.disabled = !ready || this.pending;
-    this.renderModel();
   }
 
   private renderTranscript(): void {
@@ -252,12 +240,12 @@ export class ChatView implements View {
 
     btn.disabled = input.disabled; // locked with the composer
     if (!result.ok) {
-      this.renderModel();
+      this.renderControls();
       this.errorSlot?.replaceChildren(el('p', 'error-state', result.error));
       return;
     }
     input.value = '';
-    this.renderModel();
+    this.renderControls();
     this.renderTranscript();
     this.transcript?.lastElementChild?.scrollIntoView?.({ block: 'end' });
   }
@@ -279,8 +267,6 @@ export class ChatView implements View {
     this.pickerSlot = null;
     this.transcript = null;
     this.errorSlot = null;
-    this.modelSlot = null;
-    this.lastVoice = null;
     if (this.container) {
       this.container.replaceChildren();
       this.container = null;

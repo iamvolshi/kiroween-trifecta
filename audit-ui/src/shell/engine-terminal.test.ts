@@ -174,8 +174,9 @@ describe('the terminal feed', () => {
     const chat = read('styles/chat.css');
     expect(chat).toContain("[data-voice='young-frankenstein'] {");
     expect(chat).toContain('--voice-accent: var(--skin);');
-    const band = read('styles/model-banner.css');
-    expect(band).toContain('--band: var(--skin);');
+    // The model at the chip row's right end takes the voice's accent.
+    expect(chat).toContain('.voice-model');
+    expect(chat).toContain('color: var(--voice-accent);');
     for (const [e, v] of [['KATIE', 'katie'], ['ERIE', 'erie'], ['ELLE', 'elle']]) {
       expect(css).toContain(`.feed-item[data-engine='${e}']::before { background: var(--engine-${v}); }`);
       expect(css).toContain(`.feed-item[data-engine='${e}'] > .engine-tag { color: var(--engine-${v}); }`);
