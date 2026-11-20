@@ -115,15 +115,20 @@ export class CalendarView implements View {
   mount(container: HTMLElement): void {
     this.container = container;
     container.innerHTML = '';
+    // One page, no page scroll: head and body share a single full-height
+    // column, and the folder below the drums is the box that scrolls
+    // inside it when its content is taller than the screen.
+    const page = el('div', 'ktie-page');
     const head = el('header', 'ktie-head');
     head.append(el('h1', 'ktie-name', KTIE_NAME), el('p', 'ktie-expansion', KTIE_EXPANSION));
-    container.appendChild(head);
+    page.appendChild(head);
     const body = el('div', 'view-body calendar-view');
     // The intro used to carry data-view="Calendar"; with no intro the
     // body carries it, so the header strip still reads "View: Calendar".
     body.dataset.view = 'Calendar';
     this.body = body;
-    container.appendChild(body);
+    page.appendChild(body);
+    container.appendChild(page);
     void this.load(body);
   }
 

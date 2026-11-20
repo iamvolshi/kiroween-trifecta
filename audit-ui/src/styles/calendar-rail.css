@@ -6,8 +6,19 @@
 /* Single column: the drums on top, the folder under them. */
 .calendar-view {
   display: grid;
+  grid-template-rows: auto auto auto minmax(0, 1fr);
   gap: var(--s3);
-  align-items: start;
+  flex: 1;
+  min-height: 0;
+}
+
+/* The page itself: head and body share one full-height column, so the
+   page never scrolls — the folder below is the box that scrolls inside
+   it when its content is taller than the screen. */
+.ktie-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .calendar-main {
@@ -292,6 +303,10 @@
 
 .ktie-folder {
   min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-color: var(--line-strong) transparent;
+  scrollbar-width: thin;
 }
 /* ---- Knowledge state of the locked hour -------------------------------- */
 

@@ -55,9 +55,10 @@ record; counts ride in labels and titles.
 - The hour view does NOT fit one screen at 1024×768: measured
   centerScrollHeight 5287px against 712px of room (4,575px over). The
   believed table holds every entry live at the hour — 44 rows in the stub
-  record — and no shrinking makes that fit. Shrinking was not attempted
-  for the hour view; the shape (cap the tables, a summary screen, or let
-  the hour folder scroll) is Darren's call.
+  record — and no shrinking makes that fit. At 1920×1080 it is 2,782px
+  over. Darren's no-scroll doctrine (Nov 20) rules the scroll option out
+  entirely: the shape is a summary screen or tables paginating in place,
+  his pick pending — the hour folder must not scroll.
 - Because the settle replaces the history entry, Back then Forward lands on
   the settled hour, not the month or day first opened.
 - The idle passing line keeps one line of space under the drums.

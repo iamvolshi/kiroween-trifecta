@@ -511,5 +511,20 @@ describe('one screen at 1024x768', () => {
     // The center's bottom padding tightens at 1100px and under.
     const sys = read('styles/stitch-system.css');
     expect(sys).toContain('padding-bottom: var(--s3);');
+    // No page scroll: head and body share one full-height column, the
+    // folder row takes what is left, and the folder is the box that
+    // scrolls inside it when its content is taller than the screen.
+    expect(rail).toContain('.ktie-page {');
+    expect(rail).toContain('height: 100%;');
+    expect(rail).toContain('grid-template-rows: auto auto auto minmax(0, 1fr);');
+    expect(rail).toContain('overflow-y: auto;');
+  });
+
+  it('the page wraps head and body in one full-height column', async () => {
+    await mount({ level: 'month', year: 2026, month: 11 });
+    const page = root.querySelector('.ktie-page');
+    expect(page).not.toBeNull();
+    expect(page?.querySelector('.ktie-head')).not.toBeNull();
+    expect(page?.querySelector('.calendar-view')).not.toBeNull();
   });
 });
