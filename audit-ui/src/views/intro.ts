@@ -13,11 +13,6 @@ export const INTROS = {
     question: 'What did it believe at that moment?',
     how: 'Pick a moment in UTC. You see every entry that was live then, and nothing else.',
   },
-  calendar: {
-    view: 'Calendar',
-    question: 'When did it act, and what did it believe then?',
-    how: 'Shaded days have record entries; the darker, the more. Open a day, then an hour, or use the rail.',
-  },
   record: {
     view: 'Record',
     question: 'What does the record hold for this account?',
@@ -52,17 +47,3 @@ export function createIntro(key: IntroKey): HTMLElement {
   return box;
 }
 
-/**
- * The helper line alone, without the question sentence: the KTIE page
- * carries no sentence for a title (a different title comes later).
- */
-export function createHow(key: IntroKey): HTMLElement {
-  const box = document.createElement('div');
-  box.className = 'view-intro';
-  box.dataset.view = INTROS[key].view;
-  const h = document.createElement('p');
-  h.className = 'view-how';
-  h.textContent = INTROS[key].how;
-  box.append(h);
-  return box;
-}

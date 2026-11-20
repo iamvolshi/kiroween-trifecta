@@ -48,17 +48,6 @@
   color: var(--muted);
 }
 
-/* The helper line alone, no question sentence above it: full width so it
-   sits on one line, and tight, so the folder starts higher. */
-.ktie-head + .view-intro {
-  margin-bottom: var(--s2);
-  padding-bottom: var(--s2);
-}
-
-.ktie-head + .view-intro .view-how {
-  margin-top: 0;
-  max-width: none;
-}
 
 /* ---- The drums ---------------------------------------------------------- */
 
