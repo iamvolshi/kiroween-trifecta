@@ -98,3 +98,28 @@ after; passing lines are real moments; a stale folder load is dropped; the
 unreachable connector. `ui-restart.test.ts`: Audit navigates to `/calendar`
 and swaps the panel; on `/calendar` it does not remount. `calendar-rail.css`
 joins the type-role check. tsc and build clean.
+
+## KID is a number; UTC / Local switch (Nov 20, Elara)
+
+The log printed the full kidmap tag after every KID (a long opaque string,
+identical on every line). A KID is a number: the log, the record cards and
+the entry detail now show the number alone. The tag stays the machine key
+behind the number; the /kidmap adapter surface is untouched, the views just
+stop fetching it for display. `renderKid(kid)` takes no map.
+
+UTC is for the records, local is for people. The hour view (the folder) has
+a UTC / Local switch beside the moment line (UTC default, solid rose when
+active). Local translates the moment line, the snapshot hour, the log clock
+times and the folder caption through `src/util/timezone.ts` (Intl, the
+viewer's zone; a UTC moment past midnight reads the day before locally).
+The record, the routes, the address and the record reads stay UTC, and the
+drums, the month grid and the day hour list are the record's own structure,
+so they stay UTC too. The switch re-reads the folder in place (same moment,
+same entries, new clock); a flip drops an in-flight settle.
+
+## Tests
+
+452 pass (437 before). `util/timezone.test.ts`: the translator, New York
+cases incl. the date shift and DST. `views/calendar-face.test.ts`: the
+switch end to end (UTC default, flip to local and back, past-midnight
+moment) and the snapshot's local hour.

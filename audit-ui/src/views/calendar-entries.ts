@@ -1,15 +1,13 @@
 import type { Entry } from '../adapter/seam.ts';
 import { parseMs } from '../util/interval.ts';
 import { renderKid } from '../util/kid-display.ts';
+import { clockTime, type TimeZone } from '../util/timezone.ts';
 
-const p2 = (n: number): string => String(n).padStart(2, '0');
-
-/** The UTC clock time of an entry, HH:MM:SS, or ??:??:?? when its start cannot be read. */
-function timeOf(e: Entry): string {
+/** The clock time of an entry, HH:MM:SS — UTC, or the viewer's local time — or ??:??:?? when its start cannot be read. */
+function timeOf(e: Entry, zone: TimeZone, timeZone: string): string {
   const ms = parseMs(e.k_start);
   if (Number.isNaN(ms)) return '??:??:??';
-  const d = new Date(ms);
-  return `${p2(d.getUTCHours())}:${p2(d.getUTCMinutes())}:${p2(d.getUTCSeconds())}`;
+  return clockTime(ms, zone, timeZone);
 }
 
 /**
@@ -20,6 +18,8 @@ function timeOf(e: Entry): string {
 export function renderEntryLog(
   entries: Entry[],
   label: string,
+  zone: TimeZone,
+  timeZone: string,
 ): HTMLElement {
   const log = document.createElement('div');
   log.className = 'entry-log';
@@ -30,7 +30,7 @@ export function renderEntryLog(
     const line = document.createElement('div');
     line.className = 'log-line';
     line.setAttribute('role', 'listitem');
-    line.appendChild(document.createTextNode(`${timeOf(entry)} · `));
+    line.appendChild(document.createTextNode(`${timeOf(entry, zone, timeZone)} · `));
 
     const kid = document.createElement('a');
     kid.className = 'kid';

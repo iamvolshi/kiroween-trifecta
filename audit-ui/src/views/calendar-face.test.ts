@@ -40,10 +40,10 @@ afterEach(() => {
   root?.remove();
 });
 
-async function mount(target: ConstructorParameters<typeof CalendarView>[1], adapter = stub(ENTRIES), settleMs?: number): Promise<void> {
+async function mount(target: ConstructorParameters<typeof CalendarView>[1], adapter = stub(ENTRIES), settleMs?: number, timeZone?: string): Promise<void> {
   root = document.createElement('div');
   document.body.appendChild(root);
-  view = new CalendarView(adapter, target, settleMs);
+  view = new CalendarView(adapter, target, settleMs, timeZone);
   view.mount(root);
   for (let i = 0; i < 4; i++) await tick();
 }
@@ -99,7 +99,13 @@ describe('hour view snapshot', () => {
   });
 
   it('names no mask when no reason names one', () => {
-    const snap = renderSnapshot([at('2026-11-18T14:05:00.000Z', 'x', { reason: 'user turn (connector)' })], [], 14);
+    const snap = renderSnapshot(
+      [at('2026-11-18T14:05:00.000Z', 'x', { reason: 'user turn (connector)' })],
+      [],
+      { year: 2026, month: 11, day: 18, hour: 14 },
+      'utc',
+      'UTC',
+    );
     expect(snap.getAttribute('data-masks')).toBe('none named');
     expect(snap.getAttribute('data-live')).toBe('0');
   });
@@ -109,9 +115,69 @@ describe('hour view snapshot', () => {
     const snap = renderSnapshot(
       [at('2026-11-18T14:05:00.000Z', 'x', { reason: 'assistant turn (reply)', evidence: 'Frankenstein' })],
       [],
-      14,
+      { year: 2026, month: 11, day: 18, hour: 14 },
+      'utc',
+      'UTC',
     );
     expect(snap.getAttribute('data-masks')).toBe('Frankenstein');
+  });
+
+  it('reads the hour in local time when the switch is on local', () => {
+    const snap = renderSnapshot(
+      [at('2026-11-18T14:05:00.000Z', 'x', { reason: 'user turn (connector)' })],
+      [],
+      { year: 2026, month: 11, day: 18, hour: 14 },
+      'local',
+      'America/New_York',
+    );
+    expect(snap.textContent).toContain('09:00 Local');
+    expect(snap.textContent).not.toContain('14:00');
+  });
+});
+
+describe('UTC / Local switch', () => {
+  it('UTC by default; Local translates the cursor, the snapshot, the log times and the caption', async () => {
+    await mount({ level: 'hour', year: 2026, month: 11, day: 18, hour: 14 }, stub(ENTRIES), undefined, 'America/New_York');
+    const cursor = (): string => root.querySelector('.cursor-display')!.textContent!;
+    const snap = (): string => root.querySelector('.knowledge-state')!.textContent!;
+    const firstDid = (): string => root.querySelector('.hour-did .log-line')!.textContent!;
+    const caption = (): string => root.querySelector('.ktie-folder-caption')!.textContent!;
+
+    // UTC is the record's time, and the default.
+    expect(cursor()).toBe('Moment (UTC): 2026-11-18T14:00');
+    expect(snap()).toContain('14:00 UTC');
+    expect(firstDid()).toContain('14:05:00');
+    expect(caption()).toContain('14:00 UTC');
+    const buttons = [...root.querySelectorAll<HTMLElement>('.zone-switch button')];
+    expect(buttons.map((b) => b.textContent)).toEqual(['UTC', 'Local']);
+    expect(buttons[0]!.getAttribute('aria-pressed')).toBe('true');
+    expect(buttons[1]!.getAttribute('aria-pressed')).toBe('false');
+
+    // Flip to local: the same moment, the same entries, a new clock.
+    buttons[1]!.click();
+    for (let i = 0; i < 4; i++) await tick();
+    expect(cursor()).toBe('Moment (Local): 2026-11-18T09:00');
+    expect(snap()).toContain('09:00 Local');
+    expect(snap()).not.toContain('14:00');
+    expect(firstDid()).toContain('09:05:00');
+    expect(caption()).toContain('09:00 Local');
+    expect(caption()).toContain('3 entries');
+
+    // Flip back: UTC again.
+    const back = [...root.querySelectorAll<HTMLElement>('.zone-switch button')];
+    back[0]!.click();
+    for (let i = 0; i < 4; i++) await tick();
+    expect(cursor()).toBe('Moment (UTC): 2026-11-18T14:00');
+    expect(snap()).toContain('14:00 UTC');
+    expect(firstDid()).toContain('14:05:00');
+  });
+
+  it('a UTC moment past midnight reads the day before in local time', async () => {
+    await mount({ level: 'hour', year: 2026, month: 11, day: 21, hour: 2 }, stub(ENTRIES), undefined, 'America/New_York');
+    const buttons = [...root.querySelectorAll<HTMLElement>('.zone-switch button')];
+    buttons[1]!.click();
+    for (let i = 0; i < 4; i++) await tick();
+    expect(root.querySelector('.cursor-display')!.textContent).toBe('Moment (Local): 2026-11-20T21:00');
   });
 });
 

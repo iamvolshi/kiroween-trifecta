@@ -13,6 +13,7 @@ import {
   monthGrid,
 } from '../util/calendar.ts';
 import { parseUtcInput } from '../util/moment.ts';
+import { momentInput, utcMomentToLocal, viewerTimeZone, zoneName, type TimeZone } from '../util/timezone.ts';
 import { renderEntryLog } from './calendar-entries.ts';
 import { CalendarRail, type Moment } from './calendar-rail.ts';
 import { PERSONAS } from '../adapter/seam.ts';
@@ -45,14 +46,23 @@ function monthTitle(year: number, month: number): string {
  * entries it recorded, how many were live at the moment, and the masks
  * named in the hour's entries. Live loop reasons carry no mask name
  * ("assistant turn (reply)"); the mask's name is in the turn's evidence,
- * so both are read. The counts ride in data attributes too, for tests.
+ * so both are read. The hour reads in the record's UTC, or in the viewer's
+ * local time when the switch is on local. The counts ride in data
+ * attributes too, for tests.
  */
-export function renderSnapshot(did: Entry[], pool: Entry[], hour: number): HTMLElement {
+export function renderSnapshot(
+  did: Entry[],
+  pool: Entry[],
+  t: { year: number; month: number; day: number; hour: number },
+  zone: TimeZone,
+  timeZone: string,
+): HTMLElement {
   const masks = PERSONAS.filter((m) => did.some((e) => e.reason.includes(m) || e.evidence.includes(m)));
+  const hour = zone === 'utc' ? t.hour : utcMomentToLocal(t.year, t.month, t.day, t.hour, timeZone).hour;
   const line = el(
     'p',
     'knowledge-state log-head',
-    `${p2(hour)}:00 UTC · recorded ${did.length} · live ${pool.length} · masks: ${masks.length > 0 ? masks.join(', ') : 'none named'}`,
+    `${p2(hour)}:00 ${zoneName(zone)} · recorded ${did.length} · live ${pool.length} · masks: ${masks.length > 0 ? masks.join(', ') : 'none named'}`,
   );
   line.dataset.recorded = String(did.length);
   line.dataset.live = String(pool.length);
@@ -67,17 +77,23 @@ export const ADDRESS_FOLLOWED = 'hackenstein:address-followed';
 export const KTIE_NAME = 'KTIE';
 export const KTIE_EXPANSION = 'Knowledge Time Indexing Engine';
 
-/** "2026-11-18 \u00b7 14:00 UTC \u00b7 3 entries": a real moment, as the folder pane names it. */
-export function momentLabel(m: Moment): string {
+/** "2026-11-18 \u00b7 14:00 UTC \u00b7 3 entries": a real moment, as the folder pane names it — in UTC, or in the viewer's local time. */
+export function momentLabel(m: Moment, zone: TimeZone, timeZone: string): string {
   const n = `${m.count} ${m.count === 1 ? 'entry' : 'entries'}`;
-  return `${m.day.year}-${p2(m.day.month)}-${p2(m.day.day)} \u00b7 ${p2(m.hour)}:00 UTC \u00b7 ${n}`;
+  if (zone === 'utc') {
+    return `${m.day.year}-${p2(m.day.month)}-${p2(m.day.day)} \u00b7 ${p2(m.hour)}:00 UTC \u00b7 ${n}`;
+  }
+  const l = utcMomentToLocal(m.day.year, m.day.month, m.day.day, m.hour, timeZone);
+  return `${l.year}-${p2(l.month)}-${p2(l.day)} \u00b7 ${p2(l.hour)}:00 Local \u00b7 ${n}`;
 }
 
-/** What the folder shows before any spin: the route's own content. */
-function folderCaption(t: CalendarTarget): string {
+/** What the folder shows before any spin: the route's own content. The hour names its moment in the shown zone; the month and day are the record's own structure, so they stay UTC. */
+function folderCaption(t: CalendarTarget, zone: TimeZone, timeZone: string): string {
   if (t.level === 'month') return `Folder: ${MONTH_NAMES[t.month - 1]} ${t.year} (UTC)`;
   if (t.level === 'day') return `Folder: ${t.year}-${p2(t.month)}-${p2(t.day)} (UTC)`;
-  return `Folder: ${t.year}-${p2(t.month)}-${p2(t.day)} \u00b7 ${p2(t.hour)}:00 UTC`;
+  if (zone === 'utc') return `Folder: ${t.year}-${p2(t.month)}-${p2(t.day)} \u00b7 ${p2(t.hour)}:00 UTC`;
+  const l = utcMomentToLocal(t.year, t.month, t.day, t.hour, timeZone);
+  return `Folder: ${l.year}-${p2(l.month)}-${p2(l.day)} \u00b7 ${p2(l.hour)}:00 Local`;
 }
 
 /**
@@ -98,13 +114,25 @@ export class CalendarView implements View {
   /** Counts folder loads; a spin or a newer settle drops an older load. */
   private folderToken = 0;
   private rail: CalendarRail | null = null;
+  /** The zone the folder reads in: UTC is the record's time, local is the viewer's. The record never changes. */
+  private zone: TimeZone = 'utc';
+  /** The viewer's IANA time zone; injected in tests so local readings are exact. */
+  private timeZone: string;
+  /** The record's entries, for re-rendering the folder when the zone flips. */
+  private entries: Entry[] = [];
+  /** The hour the folder is on, in the record's UTC, for the same re-render. */
+  private current: { year: number; month: number; day: number; hour: number } | null = null;
+  private folder: HTMLElement | null = null;
+  private caption: HTMLElement | null = null;
+  private landed: HTMLElement | null = null;
   private settleMs: number | undefined;
 
-  /** `settleMs`: the drums' quiet time before the folder follows (tests shorten it). */
-  constructor(adapter: SeamAdapter, target: CalendarTarget | null, settleMs?: number) {
+  /** `settleMs`: the drums' quiet time before the folder follows (tests shorten it). `timeZone`: the viewer's IANA zone (tests pass one so local readings are exact). */
+  constructor(adapter: SeamAdapter, target: CalendarTarget | null, settleMs?: number, timeZone?: string) {
     this.adapter = adapter;
     this.target = target;
     this.settleMs = settleMs;
+    this.timeZone = timeZone ?? viewerTimeZone();
   }
 
   mount(container: HTMLElement): void {
@@ -138,10 +166,12 @@ export class CalendarView implements View {
     if (!isCurrent()) return;
     if (!all.ok) return showError(all.error);
     const entries = all.data;
+    this.entries = entries;
 
     const t = this.target ?? this.defaultTarget(entries);
     // The folder under the drums: the record at the moment they rest on.
     const folder = el('div', 'ktie-folder');
+    this.folder = folder;
     // The line above the folder: the moment passing while the drums spin (its
     // space is kept when idle, so the folder never jumps), and, for screen
     // readers, a short word of where the folder landed.
@@ -150,8 +180,10 @@ export class CalendarView implements View {
     passing.setAttribute('aria-hidden', 'true'); // motion only
     const landed = el('p', 'sr-only ktie-landed');
     landed.setAttribute('role', 'status');
+    this.landed = landed;
     // What the folder shows: the route's own content, until a spin settles.
-    const caption = el('p', 'ktie-folder-caption', folderCaption(t));
+    const caption = el('p', 'ktie-folder-caption', folderCaption(t, this.zone, this.timeZone));
+    this.caption = caption;
     const fill = (parts: HTMLElement[]): void => {
       const main = el('div', 'calendar-main');
       main.append(...parts);
@@ -169,7 +201,7 @@ export class CalendarView implements View {
           if (!isCurrent()) return;
           this.folderToken++; // an older load lands nowhere
           passing.hidden = false;
-          passing.textContent = momentLabel(m);
+          passing.textContent = momentLabel(m, this.zone, this.timeZone);
           folder.dataset.spinning = 'true';
           folder.setAttribute('aria-busy', 'true');
         },
@@ -200,7 +232,8 @@ export class CalendarView implements View {
     const pool = await this.adapter.fetchBeliefPool(moment);
     if (!isCurrent()) return;
     if (!pool.ok) return showError(pool.error);
-    show(this.renderHour(entries, pool.data, t, input));
+    this.current = { year: t.year, month: t.month, day: t.day, hour: t.hour };
+    show(this.renderHour(entries, pool.data, t));
   }
 
   /** The drums came to rest on `m`: the folder becomes the hour view for it. */
@@ -220,16 +253,17 @@ export class CalendarView implements View {
     const moment = parseUtcInput(input);
     const pool = moment === null ? null : await this.adapter.fetchBeliefPool(moment);
     if (!live()) return;
+    this.current = t;
     const main = el('div', 'calendar-main');
     const failed = pool === null ? 'Invalid moment.' : !pool.ok ? pool.error : null;
     if (failed !== null) main.appendChild(el('p', 'error-state', failed));
-    else main.append(...this.renderHour(entries, (pool as { ok: true; data: Entry[] }).data, t, input));
+    else main.append(...this.renderHour(entries, (pool as { ok: true; data: Entry[] }).data, t));
     folder.replaceChildren(main);
     delete folder.dataset.spinning;
     folder.removeAttribute('aria-busy');
     folder.dataset.moment = input;
     passing.hidden = true;
-    const words = failed === null ? `Folder: ${momentLabel(m)}` : `Folder: ${momentLabel(m)}, could not load`;
+    const words = failed === null ? `Folder: ${momentLabel(m, this.zone, this.timeZone)}` : `Folder: ${momentLabel(m, this.zone, this.timeZone)}, could not load`;
     caption.textContent = words;
     landed.textContent = words;
     if (failed !== null) return; // the address stays where it was
@@ -330,7 +364,6 @@ export class CalendarView implements View {
     entries: Entry[],
     pool: Entry[],
     t: { year: number; month: number; day: number; hour: number },
-    input: string,
   ): HTMLElement[] {
     const out: HTMLElement[] = [];
     out.push(
@@ -340,16 +373,21 @@ export class CalendarView implements View {
         'cal-back',
       ),
     );
-    out.push(el('p', 'cursor-display', `Moment (UTC): ${input}`));
+    const cursorRow = el('div', 'cursor-row');
+    cursorRow.appendChild(
+      el('p', 'cursor-display', `Moment (${zoneName(this.zone)}): ${momentInput(t.year, t.month, t.day, t.hour, this.zone, this.timeZone)}`),
+    );
+    cursorRow.appendChild(this.renderZoneSwitch());
+    out.push(cursorRow);
 
     const did = entriesInHour(entries, t.year, t.month, t.day, t.hour);
-    out.push(renderSnapshot(did, pool, t.hour));
+    out.push(renderSnapshot(did, pool, t, this.zone, this.timeZone));
     const didSec = el('section', 'hour-did log-block');
     didSec.appendChild(el('p', 'log-label', `did · ${did.length} ${did.length === 1 ? 'entry' : 'entries'}`));
     didSec.appendChild(
       did.length === 0
         ? el('p', 'empty-state', 'Nothing was recorded in this hour.')
-        : renderEntryLog(did, 'What the agent did this hour'),
+        : renderEntryLog(did, 'What the agent did this hour', this.zone, this.timeZone),
     );
     out.push(didSec);
 
@@ -358,10 +396,58 @@ export class CalendarView implements View {
     beliefSec.appendChild(
       pool.length === 0
         ? el('p', 'empty-state', 'No entries were live at this moment.')
-        : renderEntryLog(pool, 'What it believed at this moment'),
+        : renderEntryLog(pool, 'What it believed at this moment', this.zone, this.timeZone),
     );
     out.push(beliefSec);
     return out;
+  }
+
+  /** UTC / Local switch: the record stays UTC; the folder reads in the shown zone. */
+  private renderZoneSwitch(): HTMLElement {
+    const group = el('div', 'zone-switch');
+    group.setAttribute('role', 'group');
+    group.setAttribute('aria-label', 'Times shown in');
+    for (const z of ['utc', 'local'] as const) {
+      const b = el('button', 'zone-button', z === 'utc' ? 'UTC' : 'Local');
+      b.type = 'button';
+      b.setAttribute('aria-pressed', String(this.zone === z));
+      if (this.zone === z) b.classList.add('zone-active');
+      b.addEventListener('click', () => {
+        if (this.zone !== z) {
+          this.zone = z;
+          void this.refreshFolder();
+        }
+      });
+      group.appendChild(b);
+    }
+    return group;
+  }
+
+  /** Re-read the folder in the new zone: same moment, same entries, new clock. */
+  private async refreshFolder(): Promise<void> {
+    const folder = this.folder;
+    const caption = this.caption;
+    const landed = this.landed;
+    const current = this.current;
+    if (folder === null || caption === null || landed === null || current === null) return;
+    const mine = ++this.folderToken;
+    const live = (): boolean => mine === this.folderToken && this.body !== null;
+    const input = hourMomentInput(current.year, current.month, current.day, current.hour);
+    const moment = parseUtcInput(input);
+    const pool = moment === null ? null : await this.adapter.fetchBeliefPool(moment);
+    if (!live()) return;
+    if (pool === null || !pool.ok) return;
+    const main = el('div', 'calendar-main');
+    main.append(...this.renderHour(this.entries, pool.data, current));
+    folder.replaceChildren(main);
+    const m: Moment = {
+      day: { year: current.year, month: current.month, day: current.day },
+      hour: current.hour,
+      count: entriesInHour(this.entries, current.year, current.month, current.day, current.hour).length,
+    };
+    const words = `Folder: ${momentLabel(m, this.zone, this.timeZone)}`;
+    caption.textContent = words;
+    landed.textContent = words;
   }
 
   unmount(): void {
@@ -370,6 +456,11 @@ export class CalendarView implements View {
     this.rail?.destroy();
     this.rail = null;
     this.body = null;
+    this.folder = null;
+    this.caption = null;
+    this.landed = null;
+    this.current = null;
+    this.entries = [];
     if (this.container) {
       this.container.innerHTML = '';
       this.container = null;
