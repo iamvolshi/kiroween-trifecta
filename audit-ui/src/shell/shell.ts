@@ -1,5 +1,3 @@
-import { CONNECTOR_URL } from '../adapter/connector-url.ts';
-
 export interface ShellSlots {
   /** The shell grid itself (the layout's widths and terminal state live on it). */
   shell: HTMLElement;
@@ -30,7 +28,7 @@ export function createShell(container: HTMLElement): ShellSlots {
   skip.setAttribute('href', '#main-view');
   skip.textContent = 'Skip to the view';
 
-  // Presentational header: the app's name, the seam it reads, and where you are.
+  // Presentational header: the app's name, the line, and where you are.
   const brand = document.createElement('header');
   brand.className = 'shell-brand';
   const mark = document.createElement('span');
@@ -38,19 +36,13 @@ export function createShell(container: HTMLElement): ShellSlots {
   mark.textContent = 'Hackenstein';
   const tag = document.createElement('span');
   tag.className = 'brand-tag';
-  tag.textContent = 'What did the agent do, and what did it believe when it did it?';
-  // Seam chip: the app is live-only; it says when no connector address was set.
-  const seam = document.createElement('span');
-  seam.className = 'seam-chip';
-  seam.dataset.seam = CONNECTOR_URL === '' ? 'no-address' : 'live';
-  seam.textContent =
-    CONNECTOR_URL === '' ? 'Seam: live adapter. No connector address set.' : 'Seam: live adapter, active.';
+  tag.textContent = 'Never lies. Learns lessons. Develops identity through use. Multiple persona options.';
   // Current view: set in JS from the mounted view's own intro (setViewLabel).
   const view = document.createElement('span');
   view.className = 'brand-view';
   view.setAttribute('aria-hidden', 'true');
   view.hidden = true;
-  brand.append(mark, tag, seam, view);
+  brand.append(mark, tag, view);
 
   const rail = document.createElement('aside');
   rail.className = 'shell-rail';

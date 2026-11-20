@@ -55,30 +55,6 @@
   text-overflow: ellipsis;
 }
 
-/* Seam chip: the active adapter, in words. The square is its active marker. */
-.seam-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--s2);
-  padding: 2px var(--s2);
-  border: 1px solid var(--accent);
-  border-radius: var(--radius);
-  background: var(--accent-bg);
-  font-family: var(--mono);
-  font-size: var(--t-label-md-size);
-  line-height: var(--t-label-md-lh);
-  font-weight: 700;
-  letter-spacing: var(--t-label-md-ls);
-  text-transform: uppercase;
-}
-
-.seam-chip::before {
-  content: '';
-  width: 7px;
-  height: 7px;
-  background: var(--accent);
-}
-
 /* Current view: read from the mounted view's own intro (data-view). */
 .brand-view {
   margin-left: auto;

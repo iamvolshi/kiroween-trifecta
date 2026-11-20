@@ -37,11 +37,11 @@ const lesson = (id: string, detail: string, status: Lesson['status']): Lesson =>
 });
 
 describe('rename', () => {
-  it('the header says Hackenstein; the tagline and the chips stay', async () => {
+  it('the header says Hackenstein; the tagline says what it can do and the seam chip is gone', async () => {
     await start('/chat');
     expect(container.querySelector('.brand-mark')?.textContent).toBe('Hackenstein');
-    expect(container.querySelector('.brand-tag')?.textContent).toBe('What did the agent do, and what did it believe when it did it?');
-    expect(container.querySelector('.seam-chip')).not.toBeNull();
+    expect(container.querySelector('.brand-tag')?.textContent).toBe('Never lies. Learns lessons. Develops identity through use. Multiple persona options.');
+    expect(container.querySelector('.seam-chip')).toBeNull();
     expect(container.querySelector('.brand-view')?.textContent).toBe('View: Chat / Observability');
     expect(container.querySelector('.shell-brand')?.textContent).not.toContain('Audit UI');
     expect(indexHtml).toContain('<title>Hackenstein</title>');

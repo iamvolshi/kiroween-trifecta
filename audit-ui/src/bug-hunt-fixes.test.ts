@@ -161,15 +161,16 @@ describe('LOW-3: the tab title and favicon are ours', () => {
   });
 });
 
-describe('LOW-4: the app runs one adapter, the live one, and its chip says so', () => {
-  it('main.ts builds the live adapter from the connector address; with none set, the chip says so', () => {
+describe('LOW-4: the app runs one adapter, the live one, and the header says the line', () => {
+  it('main.ts builds the live adapter from the connector address; the header carries the line and no seam chip', () => {
     expect(mainTs).toContain('createLiveAdapter(CONNECTOR_URL)');
     expect(mainTs).not.toContain('createRecordStub');
     const root = host();
     createShell(root);
-    // Tests build with no VITE_CONNECTOR_URL.
-    expect(root.querySelector('.seam-chip')?.getAttribute('data-seam')).toBe('no-address');
-    expect(root.querySelector('.seam-chip')?.textContent).toBe('Seam: live adapter. No connector address set.');
+    expect(root.querySelector('.brand-tag')?.textContent).toBe('Never lies. Learns lessons. Develops identity through use. Multiple persona options.');
+    // The seam chip is gone: it claimed "active" while the connector was
+    // unreachable, so the header says nothing about the seam at all.
+    expect(root.querySelector('.seam-chip')).toBeNull();
     expect(NO_ADDRESS_ERROR).toMatch(/^Connector unreachable: /);
   });
 });
