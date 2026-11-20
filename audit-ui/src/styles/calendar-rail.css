@@ -215,8 +215,10 @@
   font-weight: var(--t-body-sm-wt);
 }
 
-/* A narrow center column: smaller values, so five wheels still fit. */
-@container (max-width: 44rem) {
+/* A narrow center column: smaller values, so five wheels still fit. At a
+   standard 1024 screen the center column is ~617px, so the narrow drums
+   fire there and the page fits one viewport. */
+@container (max-width: 48rem) {
   .drum-value {
     font-size: var(--t-headline-sm-size);
     line-height: var(--t-headline-sm-lh);
@@ -232,6 +234,23 @@
   .drum-reel,
   .drum-value {
     transition: none;
+  }
+}
+
+/* ---- One screen at 1024x768 ------------------------------------------- */
+
+/* A standard 1024 screen: the whole page fits one viewport, no scrolling.
+   The drums shrink through the container rule above; the title drops a
+   size and the gaps tighten here, the month grid cells shrink in
+   calendar.css, the center's bottom padding shrinks in stitch-system.css. */
+@media (max-width: 1100px) {
+  .ktie-head .ktie-name {
+    font-size: var(--t-headline-lg-size);
+    line-height: var(--t-headline-lg-lh);
+  }
+
+  .calendar-view {
+    gap: var(--s2);
   }
 }
 

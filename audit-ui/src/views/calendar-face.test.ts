@@ -489,3 +489,27 @@ describe('unreachable connector', () => {
     expect(root.querySelector('.ktie-head h1')?.textContent).toBe('KTIE');
   });
 });
+
+describe('one screen at 1024x768', () => {
+  it('the fit rules are in the CSS: narrow drums, smaller title, shorter day cells, hours as a grid', async () => {
+    // Vitest blanks CSS imports, so read the files from disk (run from audit-ui/; Node built-in, no new dependency).
+    const fs = (await import(/* @vite-ignore */ 'node:' + 'fs')) as unknown as { readFileSync(p: string, e: 'utf8'): string };
+    const read = (f: string): string => fs.readFileSync(`src/${f}`, 'utf8');
+    const rail = read('styles/calendar-rail.css');
+    // At a 1024 screen the center column is ~617px, so the narrow drums
+    // must fire there (48rem), not only under 44rem.
+    expect(rail).toContain('@container (max-width: 48rem)');
+    expect(rail).toContain('--drum-row: 2rem;');
+    // The title drops a size and the gaps tighten at 1100px and under.
+    expect(rail).toContain('@media (max-width: 1100px)');
+    expect(rail).toContain('font-size: var(--t-headline-lg-size);');
+    const cal = read('styles/calendar.css');
+    // Shorter day cells at 1100px and under, so the month grid fits.
+    expect(cal).toContain('height: 2.75rem;');
+    // The day's 24 hours sit as a 6-column grid, not a long list.
+    expect(cal).toContain('grid-template-columns: repeat(6, minmax(0, 1fr));');
+    // The center's bottom padding tightens at 1100px and under.
+    const sys = read('styles/stitch-system.css');
+    expect(sys).toContain('padding-bottom: var(--s3);');
+  });
+});

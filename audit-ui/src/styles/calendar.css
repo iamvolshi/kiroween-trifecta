@@ -73,6 +73,14 @@
   vertical-align: top;
 }
 
+/* A standard 1024 screen: shorter day cells, so the month grid fits one
+   viewport with the drums above it. */
+@media (max-width: 1100px) {
+  .calendar-grid td {
+    height: 2.75rem;
+  }
+}
+
 .calendar-grid .day-blank {
   border-color: transparent;
   background: transparent;
@@ -126,11 +134,12 @@
 
 /* ---- 24 hours --------------------------------------------------------- */
 
-/* One row per hour. */
+/* One cell per hour: the 24 hours sit as a compact grid, so the day fits
+   one screen instead of a long list. */
 .hour-list {
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 2px;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: var(--s2);
   margin: var(--s3) 0;
   padding: 0;
   list-style: none;
@@ -145,6 +154,7 @@
   line-height: var(--t-telemetry-data-lh);
   font-weight: var(--t-telemetry-data-wt);
   letter-spacing: var(--t-telemetry-data-ls);
+  text-align: center;
 }
 
 .hour-list li:has(.hour-count) {

@@ -10,8 +10,8 @@
 }
 
 /* The center padding lives in two variables so the sticky view bar can
-   bleed to the column edges at every width: s4 / s5 on desktop, s3 top at
-   1100px and under, s4 sides under 640px. */
+   bleed to the column edges at every width: s4 / s5 on desktop, s3 top and
+   bottom at 1100px and under, s4 sides under 640px. */
 .shell-center {
   --pad-top: var(--s4);
   --pad-x: var(--s5);
@@ -19,7 +19,7 @@
 }
 
 @media (max-width: 1100px) {
-  .shell-center { --pad-top: var(--s3); }
+  .shell-center { --pad-top: var(--s3); padding-bottom: var(--s3); }
 }
 
 @media (max-width: 639.98px) {
