@@ -2,6 +2,7 @@ import type { SeamAdapter } from '../adapter/seam.ts';
 import type { Panel } from './panel.ts';
 import { LeftPanel } from './left.ts';
 import { AuditPanel, LessonsPanel, ResearchPanel } from './rail-panels.ts';
+import { stripBase } from '../util/base.ts';
 
 /**
  * The icon rail on the far left and the list panel beside it. The rail's
@@ -89,7 +90,7 @@ export class RailPanel implements Panel {
       b.appendChild(icon(item.icon));
       b.addEventListener('click', () => {
         this.show(item.key);
-        if (item.key === 'audit' && this.navigate && !onKtiePage(window.location.pathname)) this.navigate('/calendar');
+        if (item.key === 'audit' && this.navigate && !onKtiePage(stripBase(window.location.pathname))) this.navigate('/calendar');
       });
       nav.appendChild(b);
     }

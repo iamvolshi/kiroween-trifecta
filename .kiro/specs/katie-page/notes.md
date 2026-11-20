@@ -13,7 +13,7 @@ record; counts ride in labels and titles.
 | Years | New root wheel (`yearsPresent`, and `quartersOfYearPresent` for the Quarters wheel). A year pick takes its last quarter, week, day and hour. |
 | Behaviour | Hover a wheel and the scroll wheel spins it; the wheels to its right re-derive (last of each; the hour is the day's last hour holding an entry). The wheel claims the scroll only when it moved. Small trackpad deltas gather into one step (50px); a mouse notch is one step. Arrows spin the focused wheel (Up/Down and Left/Right), Home/End jump to its ends. Clicking a value centers it; an hour value is a link to the hour view. One Tab stop per wheel (the centered value). |
 | Settle | Every move reports the moment it passes; 420ms after the last move the drums count as settled. While they spin, the old folder stays put and a rose line names the real moment passing (`2026-03-03 · 11:00 UTC · 0 entries`). Once settled, the folder becomes the hour view for that moment (snapshot + did + believed, the existing `renderHour`). A newer spin drops an older folder load. |
-| Layout | One column: header, drums, the passing line, the folder. The folder starts as the route's own content (month grid / day hours / hour view). The page fits one screen at 1024×768, no scrolling: no question sentence, no helper line, the title drops a size at 1100px and under, the drums go narrow through the 48rem container rule, the month grid cells are 2.75rem, gaps and the center's bottom padding tighten. The day's 24 hours sit as a 6-column grid, not a list, so the day fits one screen too. The hour view's tables do NOT fit one screen (see Known limits) — that is Darren's call, pending. |
+| Layout | One column: header, drums, the passing line, the folder. The folder starts as the route's own content (month grid / day hours / hour view). The page fits one screen at 1024×768, no scrolling: no question sentence, no helper line, the title drops a size at 1100px and under, the drums go narrow through the 48rem container rule, the month grid cells are 2.75rem, gaps and the center's bottom padding tighten. The day's 24 hours sit as a 6-column grid, not a list, so the day fits one screen too. The page never scrolls at any size: head and body share one full-height column (`.ktie-page`), the folder row takes what is left, and the folder is its own scrolling box (`overflow-y: auto`) when its content is taller than the screen. |
 | Audit | Tapping Audit swaps the list panel and, unless the center is already on the KTIE page (`/calendar` at any level), navigates to `/calendar` through the Router. Chat, Research, Lessons: panel only. |
 
 ## Decisions
@@ -52,13 +52,12 @@ record; counts ride in labels and titles.
 
 ## Known limits
 
-- The hour view does NOT fit one screen at 1024×768: measured
-  centerScrollHeight 5287px against 712px of room (4,575px over). The
+- The hour view's tables are taller than the screen by design (the
   believed table holds every entry live at the hour — 44 rows in the stub
-  record — and no shrinking makes that fit. At 1920×1080 it is 2,782px
-  over. Darren's no-scroll doctrine (Nov 20) rules the scroll option out
-  entirely: the shape is a summary screen or tables paginating in place,
-  his pick pending — the hour folder must not scroll.
+  record). They scroll inside the folder box, never the page: at
+  1920×1080 the hour folder reads 3381px tall in a 599px box. That is the
+  settled shape (Darren's box rule, Nov 20), not a limit to fix.
+- Because the settle replaces the history entry, Back then Forward lands on
 - Because the settle replaces the history entry, Back then Forward lands on
   the settled hour, not the month or day first opened.
 - The idle passing line keeps one line of space under the drums.

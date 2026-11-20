@@ -1,6 +1,7 @@
 import type { View } from '../router/router.ts';
 import type { SeamAdapter, Entry, KidMap } from '../adapter/seam.ts';
 import { parseMs } from '../util/interval.ts';
+import { stripBase, withBase } from '../util/base.ts';
 import {
   type CalendarTarget,
   MONTH_NAMES,
@@ -248,8 +249,8 @@ export class CalendarView implements View {
     // The address follows the folder (no new history entry), so a reload or a
     // shared link shows the same moment; the shell is told so its labels follow.
     const href = calendarHref({ level: 'hour', ...t });
-    if (window.location.pathname !== href) {
-      window.history.replaceState(window.history.state, '', href);
+    if (stripBase(window.location.pathname) !== href) {
+      window.history.replaceState(window.history.state, '', withBase(href));
       window.dispatchEvent(new Event(ADDRESS_FOLLOWED));
     }
   }

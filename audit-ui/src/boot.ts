@@ -1,5 +1,6 @@
 import type { SeamAdapter } from './adapter/seam.ts';
 import { Router } from './router/router.ts';
+import { stripBase, withBase } from './util/base.ts';
 
 /**
  * Boots the app into ppEl.
@@ -10,8 +11,8 @@ import { Router } from './router/router.ts';
  * and no extra history entry.
  */
 export function boot(adapter: SeamAdapter, appEl: HTMLElement): Router {
-  if (window.location.pathname === '/') {
-    window.history.replaceState({}, '', '/chat');
+  if (stripBase(window.location.pathname) === '/') {
+    window.history.replaceState({}, '', withBase('/chat'));
   }
   return new Router(adapter, appEl);
 }

@@ -9,6 +9,7 @@ import { ADDRESS_FOLLOWED, CalendarView } from '../views/calendar.ts';
 import { parseCalendarPath } from '../util/calendar.ts';
 import { RecordView } from '../views/record.ts';
 import { createShell, setViewLabel, type ShellSlots } from '../shell/shell.ts';
+import { stripBase, withBase } from '../util/base.ts';
 import { RailPanel } from '../shell/rail.ts';
 import { TelemetryPanel } from '../shell/telemetry.ts';
 import { ShellLayout } from '../shell/layout.ts';
@@ -86,7 +87,7 @@ export class Router {
   }
 
   navigate(path: string): void {
-    window.history.pushState({}, '', path);
+    window.history.pushState({}, '', withBase(path));
     this.resolve(path);
   }
 
@@ -122,8 +123,9 @@ export class Router {
   }
 
   private match(rawPath: string): View {
-    // Match on the path only: drop query and hash, and a trailing slash.
-    let path = rawPath.split(/[?#]/)[0]!;
+    // Match on the app path only: strip the served base, drop query and
+    // hash, and a trailing slash.
+    let path = stripBase(rawPath).split(/[?#]/)[0]!;
     if (path.length > 1 && path.endsWith('/')) path = path.slice(0, -1);
     if (path === '/actions') {
       return new ActionListView(this.adapter);

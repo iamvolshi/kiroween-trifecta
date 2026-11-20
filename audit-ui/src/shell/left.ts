@@ -1,6 +1,7 @@
 import type { SeamAdapter, Entry, Lesson } from '../adapter/seam.ts';
 import type { Panel } from './panel.ts';
 import { createNav } from '../views/nav.ts';
+import { stripBase } from '../util/base.ts';
 import { compareKStart } from '../util/interval.ts';
 import { groupOf, renderFolder, renderLesson, subjectsByGroup } from './subject-folders.ts';
 
@@ -87,7 +88,7 @@ export class LeftPanel implements Panel {
     if (!slot || !folderBody || !this.navHost) return;
 
     // Mark the current destination right away; the folders follow the seam.
-    this.navHost.replaceChildren(createNav(window.location.pathname));
+    this.navHost.replaceChildren(createNav(stripBase(window.location.pathname)));
 
     const token = ++this.requestToken;
     void Promise.all([this.adapter.fetchAllEntries(), this.adapter.fetchLessons()]).then(

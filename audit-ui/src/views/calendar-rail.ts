@@ -1,5 +1,6 @@
 import type { Entry } from '../adapter/seam.ts';
 import { MONTH_NAMES, calendarHref } from '../util/calendar.ts';
+import { stripBase } from '../util/base.ts';
 import {
   type Day,
   type Quarter,
@@ -389,7 +390,7 @@ export class CalendarRail {
       else {
         // The hour already open: no second history entry, no remount.
         item.addEventListener('click', (e) => {
-          if (v.href === normalPath(window.location.pathname)) {
+          if (v.href === normalPath(stripBase(window.location.pathname))) {
             e.preventDefault();
             e.stopPropagation();
           }
