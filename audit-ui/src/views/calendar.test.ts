@@ -88,7 +88,7 @@ describe('CalendarView', () => {
     const did = [...root.querySelectorAll('.hour-did a')].map(hrefId);
     expect(did).toEqual(entriesInHour(E, 2026, 11, 16, 14).map((e) => e.id));
     expect(root.querySelector('.hour-believed a')?.getAttribute('href')).toMatch(/^\/entry\/1\/temperature\//);
-    expect(root.querySelector('.kid')?.textContent).toContain('alpha (stub)');
+    expect(root.querySelector('.kid')?.textContent).toBe('1');
   });
 
   it('hour: displayed moment parses to the queried moment', async () => {

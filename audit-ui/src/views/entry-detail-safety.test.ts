@@ -1,5 +1,5 @@
 /**
- * Entry Detail: KIDMAP label escaping (task 3) and unmatched id (task 4).
+ * Entry Detail: unmatched id.
  */
 import { describe, it, expect } from 'vitest';
 import { EntryDetailView } from './entry-detail.ts';
@@ -15,26 +15,6 @@ async function mountDetail(adapter: SeamAdapter, kid: number, subject: string, i
   await tick();
   return { container, view };
 }
-
-describe('Entry Detail: KIDMAP label is text, never markup', () => {
-  it('renders a markup label as text; no element is created, .kid-label remains', async () => {
-    const evil = '<img src=x onerror="window.__pwned=1">';
-    const base = createRecordStub([makeEntry()]);
-    const adapter: SeamAdapter = {
-      ...base,
-      fetchKidMap: async () => ({ ok: true, data: { 1: evil } }),
-    };
-    const { container, view } = await mountDetail(adapter, 1, 'temperature', 'e1');
-
-    const label = container.querySelector('.kid .kid-label');
-    expect(label).not.toBeNull();
-    expect(label!.textContent).toBe(evil);
-    expect(container.querySelector('img')).toBeNull();
-    expect((window as unknown as { __pwned?: number }).__pwned).toBeUndefined();
-    view.unmount();
-    container.remove();
-  });
-});
 
 describe('Entry Detail: unmatched id', () => {
   it('shows an explicit not-found state naming the id, not another entry', async () => {

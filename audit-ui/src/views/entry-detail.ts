@@ -1,5 +1,5 @@
 import type { View } from '../router/router.ts';
-import type { SeamAdapter, Entry, KidMap } from '../adapter/seam.ts';
+import type { SeamAdapter, Entry } from '../adapter/seam.ts';
 import { compareKStart } from '../util/interval.ts';
 import { fillRecordCard } from './record-card.ts';
 import { createIntro } from './intro.ts';
@@ -43,10 +43,7 @@ export class EntryDetailView implements View {
   }
 
   private async render(container: HTMLElement): Promise<void> {
-    const [chainResult, kidMapResult] = await Promise.all([
-      this.adapter.fetchChain(this.kid, this.subject),
-      this.adapter.fetchKidMap(),
-    ]);
+    const chainResult = await this.adapter.fetchChain(this.kid, this.subject);
 
     // Guard: container may have been unmounted while awaiting
     if (this.container !== container) return;
@@ -71,8 +68,6 @@ export class EntryDetailView implements View {
       return;
     }
 
-    const kidMap: KidMap | null = kidMapResult.ok ? kidMapResult.data : null;
-
     const primary = chain.find(e => e.id === this.id);
     if (!primary) {
       // Never show another entry's data for an id that matched nothing.
@@ -89,26 +84,23 @@ export class EntryDetailView implements View {
     }
 
     body.replaceChildren(
-      this.renderPrimary(primary, kidMap),
+      this.renderPrimary(primary),
       this.renderChain(chain),
     );
   }
 
-  private renderKidField(kid: number, kidMap: KidMap | null): string {
-    if (kidMap !== null && kidMap[kid] !== undefined) {
-      return `${kid} <span class="kid-label">${escapeHtml(kidMap[kid])}</span>`;
-    }
+  private renderKidField(kid: number): string {
     return String(kid);
   }
 
-  private renderPrimary(entry: Entry, kidMap: KidMap | null): HTMLElement {
+  private renderPrimary(entry: Entry): HTMLElement {
     const section = document.createElement('section');
     section.className = 'entry-primary';
 
     const dl = document.createElement('dl');
 
     const fields: Array<[string, string, string]> = [
-      ['KID',                'kid',       this.renderKidField(entry.kid, kidMap)],
+      ['KID',                'kid',       this.renderKidField(entry.kid)],
       ['Subject',            'subject',   escapeHtml(entry.subject)],
       ['State',              'state',     escapeHtml(entry.state)],
       ['Authority',          'authority', escapeHtml(String(entry.authority))],
@@ -155,7 +147,7 @@ export class EntryDetailView implements View {
     for (const e of sorted) {
       const li = document.createElement('li');
       li.className = 'chain-entry';
-      fillRecordCard(li, e, null, {
+      fillRecordCard(li, e, {
         fields: ['authority', 'state', 'k-start', 'reason', 'evidence', 'k-time'],
       });
       ol.appendChild(li);

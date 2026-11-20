@@ -89,16 +89,12 @@ export class TimeTravelView implements View {
       return;
     }
 
-    const kidMapResult = await this.adapter.fetchKidMap();
-    if (!isCurrent()) return;
-    const kidMap = kidMapResult.ok ? kidMapResult.data : null;
-
     const ul = document.createElement('ul');
     ul.className = 'belief-pool';
 
     for (const entry of result.data) {
       const li = document.createElement('li');
-      fillRecordCard(li, entry, kidMap, {
+      fillRecordCard(li, entry, {
         fields: ['authority', 'state', 'kid', 'subject', 'k-start', 'reason', 'evidence', 'k-time'],
       });
       ul.appendChild(li);

@@ -1,5 +1,5 @@
 import type { View } from '../router/router.ts';
-import type { SeamAdapter, KidMap, Entry } from '../adapter/seam.ts';
+import type { SeamAdapter, Entry } from '../adapter/seam.ts';
 import { fillRecordCard } from './record-card.ts';
 import { createIntro } from './intro.ts';
 import { compareKStart } from '../util/interval.ts';
@@ -39,17 +39,13 @@ export class RecordView implements View {
   }
 
   private async load(body: HTMLElement): Promise<void> {
-    const [recordResult, kidMapResult] = await Promise.all([
-      this.adapter.fetchRecord(this.accountId),
-      this.adapter.fetchKidMap(),
-    ]);
+    const recordResult = await this.adapter.fetchRecord(this.accountId);
     if (this.body !== body) return;
 
     if (!recordResult.ok) {
       body.replaceChildren(el('p', 'error-state', recordResult.error));
       return;
     }
-    const kidMap: KidMap | null = kidMapResult.ok ? kidMapResult.data : null;
     const subjects = Object.keys(recordResult.data.fields)
       .filter((s) => recordResult.data.fields[s]!.length > 0)
       .sort();
@@ -71,7 +67,7 @@ export class RecordView implements View {
           'href',
           `/entry/${e.kid}/${encodeURIComponent(e.subject)}/${encodeURIComponent(e.id)}`,
         );
-        fillRecordCard(a, e, kidMap, {
+        fillRecordCard(a, e, {
           fields: ['authority', 'state', 'kid', 'k-start', 'evidence', 'k-time'],
           link: true,
         });

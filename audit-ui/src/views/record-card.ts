@@ -1,4 +1,4 @@
-import type { Entry, KidMap } from '../adapter/seam.ts';
+import type { Entry } from '../adapter/seam.ts';
 import { renderKid } from '../util/kid-display.ts';
 import { formatLabel } from '../util/format.ts';
 
@@ -70,14 +70,14 @@ export function srOnly(text: string): HTMLSpanElement {
 }
 
 /** [hidden spoken label, value span] for one field of `entry`. */
-function labelledField(entry: Entry, f: CardField, kidMap: KidMap | null): HTMLElement[] {
-  return [srOnly(`${FIELD_LABELS[f]}: `), span(f, value(entry, f, kidMap))];
+function labelledField(entry: Entry, f: CardField): HTMLElement[] {
+  return [srOnly(`${FIELD_LABELS[f]}: `), span(f, value(entry, f))];
 }
 
-function value(entry: Entry, f: CardField, kidMap: KidMap | null): string {
+function value(entry: Entry, f: CardField): string {
   switch (f) {
     case 'kid':
-      return renderKid(entry.kid, kidMap);
+      return renderKid(entry.kid);
     case 'subject':
       return entry.subject;
     case 'state':
@@ -103,11 +103,10 @@ function value(entry: Entry, f: CardField, kidMap: KidMap | null): string {
 export function fillRecordCard(
   host: HTMLElement,
   entry: Entry,
-  kidMap: KidMap | null,
   opts: CardOptions,
 ): void {
   const has = (f: CardField): boolean => opts.fields.includes(f);
-  const field = (f: CardField): HTMLElement[] => labelledField(entry, f, kidMap);
+  const field = (f: CardField): HTMLElement[] => labelledField(entry, f);
 
   host.classList.add('record-card');
   host.dataset.state = entry.state;
@@ -155,10 +154,9 @@ export interface CollapsibleOptions {
 export function fillCollapsibleCard(
   host: HTMLElement,
   entry: Entry,
-  kidMap: KidMap | null,
   opts: CollapsibleOptions,
 ): void {
-  const field = (f: CardField): HTMLElement[] => labelledField(entry, f, kidMap);
+  const field = (f: CardField): HTMLElement[] => labelledField(entry, f);
 
   host.classList.add('record-card', 'card-collapsible');
   host.dataset.state = entry.state;

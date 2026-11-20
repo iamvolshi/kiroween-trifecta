@@ -35,7 +35,7 @@ function makeEntry(overrides: Partial<Entry> = {}): Entry {
   };
 }
 
-/** Create a SeamAdapter that always returns the given entries (and empty kidMap). */
+/** Create a SeamAdapter that always returns the given entries. */
 function adapterFromEntries(entries: Entry[]): SeamAdapter {
   return {
     ...assemblyNotUsed(),

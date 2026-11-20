@@ -1,5 +1,5 @@
 import type { View } from '../router/router.ts';
-import type { SeamAdapter, Entry, KidMap } from '../adapter/seam.ts';
+import type { SeamAdapter, Entry } from '../adapter/seam.ts';
 import { parseMs } from '../util/interval.ts';
 import { stripBase, withBase } from '../util/base.ts';
 import {
@@ -194,17 +194,13 @@ export class CalendarView implements View {
       return;
     }
 
-    const kidMapResult = await this.adapter.fetchKidMap();
-    if (!isCurrent()) return;
-    const kidMap: KidMap | null = kidMapResult.ok ? kidMapResult.data : null;
-
     const input = hourMomentInput(t.year, t.month, t.day, t.hour);
     const moment = parseUtcInput(input);
     if (moment === null) return showError('Invalid moment.');
     const pool = await this.adapter.fetchBeliefPool(moment);
     if (!isCurrent()) return;
     if (!pool.ok) return showError(pool.error);
-    show(this.renderHour(entries, pool.data, kidMap, t, input));
+    show(this.renderHour(entries, pool.data, t, input));
   }
 
   /** The drums came to rest on `m`: the folder becomes the hour view for it. */
@@ -222,15 +218,12 @@ export class CalendarView implements View {
     const t = { year: m.day.year, month: m.day.month, day: m.day.day, hour: m.hour };
     const input = hourMomentInput(t.year, t.month, t.day, t.hour);
     const moment = parseUtcInput(input);
-    const kidMapResult = await this.adapter.fetchKidMap();
-    if (!live()) return;
-    const kidMap: KidMap | null = kidMapResult.ok ? kidMapResult.data : null;
     const pool = moment === null ? null : await this.adapter.fetchBeliefPool(moment);
     if (!live()) return;
     const main = el('div', 'calendar-main');
     const failed = pool === null ? 'Invalid moment.' : !pool.ok ? pool.error : null;
     if (failed !== null) main.appendChild(el('p', 'error-state', failed));
-    else main.append(...this.renderHour(entries, (pool as { ok: true; data: Entry[] }).data, kidMap, t, input));
+    else main.append(...this.renderHour(entries, (pool as { ok: true; data: Entry[] }).data, t, input));
     folder.replaceChildren(main);
     delete folder.dataset.spinning;
     folder.removeAttribute('aria-busy');
@@ -336,7 +329,6 @@ export class CalendarView implements View {
   private renderHour(
     entries: Entry[],
     pool: Entry[],
-    kidMap: KidMap | null,
     t: { year: number; month: number; day: number; hour: number },
     input: string,
   ): HTMLElement[] {
@@ -357,7 +349,7 @@ export class CalendarView implements View {
     didSec.appendChild(
       did.length === 0
         ? el('p', 'empty-state', 'Nothing was recorded in this hour.')
-        : renderEntryLog(did, kidMap, 'What the agent did this hour'),
+        : renderEntryLog(did, 'What the agent did this hour'),
     );
     out.push(didSec);
 
@@ -366,7 +358,7 @@ export class CalendarView implements View {
     beliefSec.appendChild(
       pool.length === 0
         ? el('p', 'empty-state', 'No entries were live at this moment.')
-        : renderEntryLog(pool, kidMap, 'What it believed at this moment'),
+        : renderEntryLog(pool, 'What it believed at this moment'),
     );
     out.push(beliefSec);
     return out;

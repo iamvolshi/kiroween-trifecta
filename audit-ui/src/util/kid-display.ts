@@ -1,8 +1,5 @@
-import type { KidMap } from "../adapter/seam";
-
-export function renderKid(kid: number, kidMap: KidMap | null): string {
-  if (kidMap !== null && kidMap[kid] !== undefined) {
-    return `${kid} ${kidMap[kid]}`;
-  }
+/** A KID displays as its number, nothing else. The kidmap's tag is the
+ * machine key behind the number; it is never printed. */
+export function renderKid(kid: number): string {
   return String(kid);
 }

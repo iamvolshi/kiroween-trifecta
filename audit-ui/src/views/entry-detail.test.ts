@@ -262,13 +262,8 @@ describe('Property 12: KID numeric primacy (view layer)', () => {
             const ddKid = container.querySelector('.entry-primary dd.kid');
             expect(ddKid, 'dd.kid missing').not.toBeNull();
 
-            const text = ddKid!.textContent ?? '';
-            // The numeric kid must appear as a substring of the text
-            expect(text).toContain(String(entry.kid));
-
-            // The dd must NOT consist solely of a label with no number at all
-            const numericPart = text.replace(/<[^>]*>/g, '').trim();
-            expect(numericPart.length).toBeGreaterThan(0);
+            // The KID shows as its number alone, whatever the kidmap holds
+            expect(ddKid!.textContent).toBe(String(entry.kid));
           } finally {
             cleanup(container);
           }
@@ -284,55 +279,39 @@ describe('Property 12: KID numeric primacy (view layer)', () => {
 // Validates: Requirements 5.2, 9.5
 // ---------------------------------------------------------------------------
 
-describe('Property 13: KIDMAP label fidelity (view layer)', () => {
-  it('shows kid-label span with correct label when kidMap has the entry kid', async () => {
+describe('Property 13: no KIDMAP label ever renders (view layer)', () => {
+  it('no .kid-label span, whatever the kidmap holds', async () => {
     /**
      * **Validates: Requirements 5.2, 9.5**
+     * The kidmap's tag is the machine key behind the number; it is never
+     * printed. (Darren, Nov 20: the long tag in the log was ridiculous.)
      */
     await fc.assert(
       fc.asyncProperty(
         arbEntry,
-        fc.string({ minLength: 1, maxLength: 64 }).filter(s => !s.includes('<') && !s.includes('>')),
-        async (entry, label) => {
+        fc.oneof(
+          fc.constant<KidMap>({}),
+          fc.dictionary(
+            fc.integer({ min: 1, max: 9999 }).map(String),
+            fc.string({ minLength: 1, maxLength: 32 }),
+          ),
+        ),
+        async (entry, kidMap) => {
           const container = makeContainer();
           try {
-            const kidMap: KidMap = { [entry.kid]: label };
             const adapter = makeAdapter([entry], kidMap);
             const view = new EntryDetailView(adapter, entry.kid, entry.subject, entry.id);
             await mountAndFlush(view, container);
 
-            const kidLabel = container.querySelector('.entry-primary dd.kid .kid-label');
-            expect(kidLabel, '.kid-label span missing when kid is in kidMap').not.toBeNull();
-            expect(kidLabel!.textContent).toBe(label);
+            expect(container.querySelector('.entry-primary dd.kid .kid-label')).toBeNull();
+            const ddKid = container.querySelector('.entry-primary dd.kid');
+            expect(ddKid, 'dd.kid missing').not.toBeNull();
+            expect(ddKid!.textContent).toBe(String(entry.kid));
           } finally {
             cleanup(container);
           }
         },
       ),
-      { numRuns: 50 },
-    );
-  });
-
-  it('no kid-label span when kidMap does NOT have the entry kid', async () => {
-    /**
-     * **Validates: Requirements 5.2, 9.5**
-     */
-    await fc.assert(
-      fc.asyncProperty(arbEntry, async (entry) => {
-        const container = makeContainer();
-        try {
-          // kidMap has no entry for this kid
-          const kidMap: KidMap = {};
-          const adapter = makeAdapter([entry], kidMap);
-          const view = new EntryDetailView(adapter, entry.kid, entry.subject, entry.id);
-          await mountAndFlush(view, container);
-
-          const kidLabel = container.querySelector('.entry-primary dd.kid .kid-label');
-          expect(kidLabel, '.kid-label span should be absent when kid not in kidMap').toBeNull();
-        } finally {
-          cleanup(container);
-        }
-      }),
       { numRuns: 50 },
     );
   });
@@ -412,16 +391,17 @@ describe('EntryDetailView — example-based', () => {
     }
   });
 
-  it('no .kid-label when kid is absent from KIDMAP (Req 9.5)', async () => {
+  it('no .kid-label ever; dd.kid is the number alone (Req 9.5)', async () => {
     const container = makeContainer();
     try {
-      // kidMap has a different kid (99), not the entry's kid (42)
-      const kidMap: KidMap = { 99: 'some-label' };
+      // kidMap HAS the entry's kid — the tag still never renders
+      const kidMap: KidMap = { 42: 'some-label' };
       const adapter = makeAdapter([FIXTURE_ENTRY], kidMap);
       const view = new EntryDetailView(adapter, FIXTURE_ENTRY.kid, FIXTURE_ENTRY.subject, FIXTURE_ENTRY.id);
       await mountAndFlush(view, container);
 
       expect(container.querySelector('.entry-primary dd.kid .kid-label')).toBeNull();
+      expect(container.querySelector('.entry-primary dd.kid')!.textContent).toBe('42');
     } finally {
       cleanup(container);
     }

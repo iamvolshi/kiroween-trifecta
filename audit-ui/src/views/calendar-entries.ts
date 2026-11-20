@@ -1,4 +1,4 @@
-import type { Entry, KidMap } from '../adapter/seam.ts';
+import type { Entry } from '../adapter/seam.ts';
 import { parseMs } from '../util/interval.ts';
 import { renderKid } from '../util/kid-display.ts';
 
@@ -19,7 +19,6 @@ function timeOf(e: Entry): string {
  */
 export function renderEntryLog(
   entries: Entry[],
-  kidMap: KidMap | null,
   label: string,
 ): HTMLElement {
   const log = document.createElement('div');
@@ -39,7 +38,7 @@ export function renderEntryLog(
       'href',
       `/entry/${entry.kid}/${encodeURIComponent(entry.subject)}/${encodeURIComponent(entry.id)}`,
     );
-    kid.textContent = renderKid(entry.kid, kidMap);
+    kid.textContent = renderKid(entry.kid);
     line.appendChild(kid);
 
     const fields: Array<[string, string]> = [

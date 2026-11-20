@@ -311,11 +311,6 @@ button:disabled {
   overflow-wrap: anywhere;
 }
 
-.entry-primary .kid-label {
-  margin-left: var(--s1);
-  color: var(--muted);
-}
-
 .entry-primary .kid,
 .entry-primary .prev-hash,
 .entry-primary .pool,

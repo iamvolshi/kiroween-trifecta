@@ -1,5 +1,5 @@
 import type { View } from '../router/router.ts';
-import type { SeamAdapter, KidMap } from '../adapter/seam.ts';
+import type { SeamAdapter } from '../adapter/seam.ts';
 import { fillCollapsibleCard, srOnly } from './record-card.ts';
 import { createIntro } from './intro.ts';
 import { compareKStart } from '../util/interval.ts';
@@ -35,10 +35,6 @@ export class ActionListView implements View {
   }
 
   async load(container: HTMLElement): Promise<void> {
-    const kidMapResult = await this.adapter.fetchKidMap();
-    if (this.container !== container) return;
-    const kidMap: KidMap | null = kidMapResult.ok ? kidMapResult.data : null;
-
     const entriesResult = await this.adapter.fetchAllEntries();
     if (this.container !== container) return;
 
@@ -72,7 +68,7 @@ export class ActionListView implements View {
 
     for (const [i, entry] of sorted.entries()) {
       const li = document.createElement('li');
-      fillCollapsibleCard(li, entry, kidMap, {
+      fillCollapsibleCard(li, entry, {
         href: `/entry/${entry.kid}/${encodeURIComponent(entry.subject)}/${encodeURIComponent(entry.id)}`,
         detailsId: `action-details-${i}`,
       });

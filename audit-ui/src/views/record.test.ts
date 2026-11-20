@@ -37,7 +37,7 @@ describe('RecordView', () => {
       `/entry/1/${encodeURIComponent(subject)}/late`,
     ]);
     const first = links[0]!;
-    expect(first.querySelector('.kid')?.textContent).toContain('alpha');
+    expect(first.querySelector('.kid')?.textContent).toBe('1');
     expect(first.querySelector('.state')?.textContent).toBe('confirmed');
     expect(first.querySelector('.authority')?.textContent).toBe('5');
     expect(first.querySelector('.evidence')?.textContent).toBe('ev-early');

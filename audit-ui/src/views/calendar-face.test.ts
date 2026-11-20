@@ -463,11 +463,11 @@ describe('the folder under the drums', () => {
     let release: () => void = () => {};
     const slow = new Promise<void>((res) => { release = res; });
     const base = stub(ENTRIES);
-    const adapter: SeamAdapter = { ...base, fetchKidMap: async () => { await slow; return base.fetchKidMap(); } };
+    const adapter: SeamAdapter = { ...base, fetchBeliefPool: async (m: number) => { await slow; return base.fetchBeliefPool(m); } };
     await mount({ level: 'month', year: 2026, month: 11 }, adapter, 20);
     const hourWheel = root.querySelector<HTMLElement>('.drum[data-seg="hour"]')!;
     spin(hourWheel, -100);
-    await wait(80); // settled: the load starts and waits on the kid map
+    await wait(80); // settled: the load starts and waits on the belief pool
     spin(hourWheel, -100); // spinning again before it lands (now 14:00)
     release();
     for (let i = 0; i < 10; i++) await Promise.resolve(); // the stale load finishes, timers not yet
