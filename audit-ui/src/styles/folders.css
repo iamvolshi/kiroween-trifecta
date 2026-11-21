@@ -172,7 +172,7 @@
 }
 
 .left-folders .subject-folder {
-  padding: var(--s2);
+  padding: var(--s1) var(--s2);
 }
 
 .left-folders .folder-subject {
@@ -182,12 +182,30 @@
 }
 
 .left-folders .folder-value {
-  min-width: 2.25rem;
-  height: 2.25rem;
-  font-size: var(--t-headline-xl-mobile-size);
-  line-height: var(--t-headline-xl-mobile-lh);
-  font-weight: var(--t-headline-xl-mobile-wt);
-  letter-spacing: var(--t-headline-xl-mobile-ls);
+  min-width: 1.5rem;
+  height: 1.5rem;
+  font-size: var(--t-headline-sm-size);
+  line-height: var(--t-headline-sm-lh);
+  font-weight: var(--t-headline-sm-wt);
+  letter-spacing: var(--t-headline-sm-ls);
+}
+
+/* Label and history: one line each, … when they run long, full text on
+   hover. A wrapping label is what made every folder a different height. */
+.left-folders .folder-label,
+.left-folders .folder-history {
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.left-folders .subject-folder[data-authority] .folder-authority::after {
+  margin-top: var(--s1);
+}
+
+.left-folders .folder-list > .folder {
+  margin-bottom: var(--s1);
 }
 
 .left-folders .lesson {

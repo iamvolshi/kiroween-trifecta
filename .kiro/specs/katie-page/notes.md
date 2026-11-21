@@ -161,3 +161,11 @@ Proof shots: `docs/folder-grid-proof/01`–`06`.
 Review (Sage, ready to merge): a drag now stops if its table leaves the page mid-drag; a clipped header label shows an ellipsis and its full name on hover. Keyboard resize was not asked for and is not built.
 
 Tests: 485 pass (463 before). `views/entry-grid.test.ts`: every column sorted both ways, KID 2 before 10, ties and unreadable times, the header row and its labels, widths in ch, cells, click sort and reverse with aria-sort and arrows, the KID link through a sort, the two lists apart and held across a new hour, a fresh load, the resize (pair sum, 4ch floor, window-level move/up, a capture that throws, a table removed mid-drag).
+
+## The left-column folders are compact, one line each (Nov 20, Darren)
+
+Darren: the subject folder cards are comically big, and the loose wrapping makes every one look different. Measured Nov 20 (live, 27 seed entries, 1920x1080): the left column is 208px wide; every card was 144px tall (head 56px with the name breaking mid-word to 2 lines, authority box 84px with the label on 2 lines); the list ran 4096px with 5 cards visible. The name broke at a different place in each card (`overflow-wrap: break-word` on the head link), and the count and badge landed wherever the text ended.
+
+Fix (Elara, direct, on the branch): the head is one line — the name ends in … with the full name on hover (`title`, set in `shell/left.ts`), the count and badge sit in fixed slots. The authority box shrinks: value 2.25rem to 1.5rem, label and history one line each with … and the full text on hover (`title`, set in `shell/subject-folders.ts`), tighter padding and gaps. Nothing removed: name, count, badge, value, label, history and the 9-cell meter are all still there. Measured after, same setup: every card 84px (head 24px, box 56px), the list 2476px, 9 cards visible, no page scroll. Suite 486 (one new test: the head link and the history carry their full text as `title`).
+
+Note: with the names ellipsised, all 27 read "frankens…" at a glance — the shared prefix fills the line and the number that tells them apart is the part that clips. The full name is on hover. Darren's call whether that stands.

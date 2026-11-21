@@ -242,8 +242,12 @@
   font-weight: var(--t-telemetry-data-wt);
   letter-spacing: var(--t-telemetry-data-ls);
   text-decoration: none;
-  /* Break a name only when it cannot fit on its own line. */
-  overflow-wrap: break-word;
+  /* One line, always: a long name ends in … and the full name is on hover
+     (title). A name that wraps mid-word makes every head a different
+     height and the words land in a different place in each one. */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .left-links a {

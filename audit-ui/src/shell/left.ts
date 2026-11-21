@@ -131,7 +131,10 @@ export class LeftPanel implements Panel {
       li.dataset.group = name;
       const head = el('div', 'folder-head');
       const href = groupHref(name, entries);
-      head.appendChild(href ? link(href, name) : el('span', 'folder-name', name));
+      // The name sits on one line and ends in …; the full name is on hover.
+      const nameNode = href ? link(href, name) : el('span', 'folder-name', name);
+      nameNode.title = name;
+      head.appendChild(nameNode);
       const count = entries.filter((e) => groupOf(e.subject) === name).length;
       head.appendChild(el('span', 'folder-count', ` (${count})`));
       // The folder's 0-9 value, on the folder: the authority of its latest entry.

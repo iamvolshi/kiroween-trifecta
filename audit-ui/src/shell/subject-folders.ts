@@ -31,7 +31,9 @@ export function renderFolder(subject: string, entries: Entry[], lessons: Lesson[
 
   const mine = entries.filter((e) => e.subject === subject).sort(compareKStart);
   const value = el('p', 'folder-authority');
-  value.appendChild(el('span', 'folder-label', 'authority of latest entry: '));
+  const label = el('span', 'folder-label', 'authority of latest entry: ');
+  label.title = 'authority of latest entry: ';
+  value.appendChild(label);
   if (mine.length === 0) {
     value.appendChild(el('span', 'folder-value', '--'));
     value.appendChild(el('span', 'folder-history', 'no entry recorded'));
@@ -40,7 +42,11 @@ export function renderFolder(subject: string, entries: Entry[], lessons: Lesson[
     // Presentational hook: the CSS meter reads the same number, nothing else.
     folder.dataset.authority = String(latest);
     value.appendChild(el('span', 'folder-value', String(latest)));
-    value.appendChild(el('span', 'folder-history', mine.map((e) => String(e.authority)).join(' -> ')));
+    // The history sits on one line and ends in …; the full chain is on hover.
+    const chain = mine.map((e) => String(e.authority)).join(' -> ');
+    const history = el('span', 'folder-history', chain);
+    history.title = chain;
+    value.appendChild(history);
   }
   folder.appendChild(value);
 

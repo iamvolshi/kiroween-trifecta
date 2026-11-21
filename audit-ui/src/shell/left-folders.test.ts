@@ -52,6 +52,24 @@ describe('LeftPanel subject folders', () => {
     expect(slot.textContent).not.toContain('Volshi');
   });
 
+  it('a long name and a long history keep their full text on hover', async () => {
+    const slot = await mount(
+      adapter(
+        [
+          makeEntry({ id: 'a', kid: 4, subject: 'order-1042.delivery_date', authority: 6, k_start: '2026-11-16T09:00:00.000Z' }),
+          makeEntry({ id: 'b', kid: 4, subject: 'order-1042.delivery_date', authority: 7, k_start: '2026-11-16T14:00:00.000Z' }),
+        ],
+        [],
+      ),
+    );
+    const head = slot.querySelector<HTMLAnchorElement>('.folder[data-group="order-1042"] .folder-head a')!;
+    expect(head.textContent).toBe('order-1042');
+    expect(head.title).toBe('order-1042');
+    const history = slot.querySelector<HTMLElement>('.subject-folder[data-subject="order-1042.delivery_date"] .folder-history')!;
+    expect(history.textContent).toBe('6 -> 7');
+    expect(history.title).toBe('6 -> 7');
+  });
+
   it('a lesson-only subject gets a folder with "--" and no meter', async () => {
     const slot = await mount(adapter([], [L({ subject: 'acct.thing' })]));
     const f = slot.querySelector<HTMLElement>('.subject-folder[data-subject="acct.thing"]')!;
