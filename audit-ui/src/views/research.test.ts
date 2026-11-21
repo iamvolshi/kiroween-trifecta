@@ -138,12 +138,12 @@ describe('the ERIE page', () => {
     expect(t.querySelector('.erie-provenance')).toBeNull();
   });
 
-  it('a turn ERIE did not act on says so, with the message it was asked', async () => {
+  it('a turn ERIE did not act on says "No action", with the message it was asked', async () => {
     const log = await mount();
     log.push(turn('hello', null));
     await tick();
     expect(q('.erie-retrieval .erie-question .erie-value').textContent).toBe('hello');
-    expect(q('.erie-retrieval .erie-cannot').textContent).toBe('ERIE did not act on this turn.');
+    expect(q('.erie-retrieval .erie-cannot').textContent).toBe('No action');
   });
 
   it('injection: injected lessons verbatim; held ones grey, as questions for ELLE', async () => {

@@ -66,7 +66,7 @@ export function renderRetrieval(erie: AskResult | null, n: number, message: stri
   turn.appendChild(el('p', 'erie-turn-head', `turn ${n}`));
   if (erie === null) {
     turn.dataset.state = 'none';
-    turn.append(field('question', message), el('p', 'erie-cannot', 'ERIE did not act on this turn.'));
+    turn.append(field('question', message), el('p', 'erie-cannot', 'No action'));
     return turn;
   }
   turn.dataset.state = erie.state;
