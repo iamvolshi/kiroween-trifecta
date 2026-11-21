@@ -31,9 +31,8 @@ export function renderFolder(subject: string, entries: Entry[], lessons: Lesson[
 
   const mine = entries.filter((e) => e.subject === subject).sort(compareKStart);
   const value = el('p', 'folder-authority');
-  const label = el('span', 'folder-label', 'authority of latest entry: ');
-  label.title = 'authority of latest entry: ';
-  value.appendChild(label);
+  // No label: it said the same thing on every card ('authority of latest
+  // entry'), which is noise. The number and its history are the content.
   if (mine.length === 0) {
     value.appendChild(el('span', 'folder-value', '--'));
     value.appendChild(el('span', 'folder-history', 'no entry recorded'));

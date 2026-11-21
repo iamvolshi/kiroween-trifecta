@@ -42,7 +42,6 @@
   display: grid;
   grid-template-columns: auto 1fr;
   grid-template-areas:
-    'value label'
     'value history'
     'meter meter';
   column-gap: var(--s3);
@@ -66,20 +65,9 @@
   font-weight: 750;
 }
 
-.folder-label {
-  grid-area: label;
-  align-self: end;
-  font-size: var(--t-body-sm-size);
-  line-height: var(--t-body-sm-lh);
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--faint);
-}
-
 .folder-history {
   grid-area: history;
-  align-self: start;
+  align-self: center;
   font-family: var(--mono);
   font-size: var(--t-telemetry-data-size);
   line-height: var(--t-telemetry-data-lh);
@@ -190,9 +178,7 @@
   letter-spacing: var(--t-headline-sm-ls);
 }
 
-/* Label and history: one line each, … when they run long, full text on
-   hover. A wrapping label is what made every folder a different height. */
-.left-folders .folder-label,
+/* History: one line, … when it runs long, full text on hover. */
 .left-folders .folder-history {
   min-width: 0;
   white-space: nowrap;

@@ -151,6 +151,8 @@ describe('LeftPanel refresh: the meter moves with the record', () => {
     await tick(); await tick();
     const folder = (): HTMLElement => slot.querySelector<HTMLElement>('.subject-folder[data-subject="turn"]')!;
     expect(folder().querySelector('.folder-value')?.textContent).toBe('5');
+    // No label on the card: it said the same thing on every folder.
+    expect(folder().querySelector('.folder-label')).toBeNull();
     entries.push(makeEntry({ id: 'b', subject: 'turn', authority: 7, k_start: '2026-11-18T15:01:00.000Z' }));
     panel.refresh();
     await tick(); await tick();
