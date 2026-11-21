@@ -139,9 +139,9 @@ describe('load order', () => {
 });
 
 describe('the shell', () => {
-  it('is rail 56px / list 16rem / 1fr / 20rem with a 56px header (the widths are the drag defaults)', () => {
+  it('is rail 56px / list 17rem / 1fr / 20rem with a 56px header (the widths are the drag defaults)', () => {
     const shell = rule(shellCss, '.shell');
-    expect(shell).toContain('--lw: var(--left-width, 16rem);');
+    expect(shell).toContain('--lw: var(--left-width, 17rem);');
     expect(shell).toContain('--rw: var(--right-width, 20rem);');
     expect(shell).toContain('grid-template-columns: 56px var(--lw) minmax(0, 1fr) var(--rw);');
     expect(shell).toContain('grid-template-rows: 56px minmax(0, 1fr);');

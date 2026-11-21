@@ -66,6 +66,31 @@ export function groupOf(subject: string): string {
 }
 
 /**
+ * What a group head shows. The part of a name that is the same on every group
+ * in the record carries no information in the left column, so the head shows
+ * only what differs: the name with the shared prefix cut off. The cut stops
+ * at a '-' so a name is never cut mid-word, and a shared prefix shorter than
+ * 4 chars is not worth cutting. The full name stays on hover (title) and in
+ * `data-group`; only the visible head text changes. With one group there is
+ * nothing shared to cut.
+ */
+export function displayGroupName(name: string, all: string[]): string {
+  if (all.length < 2) return name;
+  let shared = all[0]!;
+  for (const other of all.slice(1)) {
+    let i = 0;
+    while (i < shared.length && i < other.length && shared[i] === other[i]) i++;
+    shared = shared.slice(0, i);
+    if (shared === '') break;
+  }
+  const cut = shared.lastIndexOf('-');
+  const prefix = cut >= 0 ? shared.slice(0, cut + 1) : '';
+  if (prefix.length < 4) return name;
+  const tail = name.slice(prefix.length);
+  return tail === '' ? name : tail;
+}
+
+/**
  * Subjects per group, from the record entries and the lessons, in the order
  * first seen. Nothing is named that the data did not name.
  */

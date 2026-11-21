@@ -70,6 +70,43 @@ describe('LeftPanel subject folders', () => {
     expect(history.title).toBe('6 -> 7');
   });
 
+  it('heads show the part that differs: the shared prefix is cut, the full name stays on hover', async () => {
+    const slot = await mount(
+      adapter(
+        [
+          makeEntry({ id: 'a', kid: 1, subject: 'frankenstein-chapter-1' }),
+          makeEntry({ id: 'b', kid: 10, subject: 'frankenstein-chapter-10' }),
+          makeEntry({ id: 'c', kid: 4, subject: 'frankenstein-letter-4' }),
+        ],
+        [],
+      ),
+    );
+    const heads = Array.from(slot.querySelectorAll<HTMLAnchorElement>('.folder-list > .folder > .folder-head a')).map(
+      (a) => [a.textContent, a.title],
+    );
+    expect(heads).toEqual([
+      ['chapter-1', 'frankenstein-chapter-1'],
+      ['chapter-10', 'frankenstein-chapter-10'],
+      ['letter-4', 'frankenstein-letter-4'],
+    ]);
+  });
+
+  it('heads keep the full name when the groups share nothing worth cutting', async () => {
+    const slot = await mount(
+      adapter(
+        [
+          makeEntry({ id: 'a', kid: 4, subject: 'order-1042.delivery_date' }),
+          makeEntry({ id: 'b', kid: 5, subject: 'parcel-77.status' }),
+        ],
+        [],
+      ),
+    );
+    const heads = Array.from(slot.querySelectorAll<HTMLAnchorElement>('.folder-list > .folder > .folder-head a')).map(
+      (a) => a.textContent,
+    );
+    expect(heads).toEqual(['order-1042', 'parcel-77']);
+  });
+
   it('a lesson-only subject gets a folder with "--" and no meter', async () => {
     const slot = await mount(adapter([], [L({ subject: 'acct.thing' })]));
     const f = slot.querySelector<HTMLElement>('.subject-folder[data-subject="acct.thing"]')!;

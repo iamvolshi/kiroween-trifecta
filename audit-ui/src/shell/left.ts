@@ -3,7 +3,7 @@ import type { Panel } from './panel.ts';
 import { createNav } from '../views/nav.ts';
 import { stripBase } from '../util/base.ts';
 import { compareKStart } from '../util/interval.ts';
-import { groupOf, renderFolder, renderLesson, subjectsByGroup } from './subject-folders.ts';
+import { groupOf, displayGroupName, renderFolder, renderLesson, subjectsByGroup } from './subject-folders.ts';
 
 function el<K extends keyof HTMLElementTagNameMap>(
   tag: K,
@@ -38,7 +38,7 @@ function groupHref(name: string, entries: Entry[]): string | null {
  * Left column: destinations nav; the record, one group
  * per account / project (subject prefix) with its subject folders nested
  * inside (0-9 meter, history, lessons); any lessons without a subject; and
- * the Calendar / Time Travel "going back" links. Stays mounted across
+ * the Calendar "going back" link. Stays mounted across
  * navigation; the Router refreshes it after every navigation and chat turn.
  */
 export class LeftPanel implements Panel {
@@ -125,13 +125,17 @@ export class LeftPanel implements Panel {
       return;
     }
     const ul = el('ul', 'folder-list');
-    for (const name of [...groups.keys()].sort((a, b) => a.localeCompare(b))) {
+    const names = [...groups.keys()].sort((a, b) => a.localeCompare(b));
+    for (const name of names) {
       const li = el('li', 'folder');
       li.dataset.group = name;
       const head = el('div', 'folder-head');
       const href = groupHref(name, entries);
-      // The name sits on one line and ends in …; the full name is on hover.
-      const nameNode = href ? link(href, name) : el('span', 'folder-name', name);
+      // The head shows the part that differs between groups (the shared
+      // prefix is cut); it sits on one line and ends in …; the full name is
+      // on hover.
+      const shown = displayGroupName(name, names);
+      const nameNode = href ? link(href, shown) : el('span', 'folder-name', shown);
       nameNode.title = name;
       head.appendChild(nameNode);
       const count = entries.filter((e) => groupOf(e.subject) === name).length;
