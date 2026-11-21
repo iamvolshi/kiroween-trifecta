@@ -34,7 +34,6 @@ const right = (): string => container.querySelector('.shell-right')?.textContent
 describe('no connector address: every view says so', () => {
   const routes = [
     '/actions',
-    '/time-travel',
     '/calendar',
     '/calendar/2026-11-16/14',
     '/entry/1/turn/some-id',
@@ -43,12 +42,6 @@ describe('no connector address: every view says so', () => {
   for (const path of routes) {
     it(`${path} shows the unreachable words`, async () => {
       await open(path);
-      if (path === '/time-travel') {
-        const input = container.querySelector<HTMLInputElement>('#moment-cursor')!;
-        input.value = '2026-11-16T14:00';
-        input.dispatchEvent(new Event('change'));
-        for (let i = 0; i < 6; i++) await tick();
-      }
       expect(center()).toContain(NO_ADDRESS_ERROR);
       expect(left()).toContain(NO_ADDRESS_ERROR);
       expect(right()).toContain(NO_ADDRESS_ERROR);

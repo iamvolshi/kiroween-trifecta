@@ -3,7 +3,6 @@
  */
 import { describe, it, expect } from 'vitest';
 import { ActionListView } from './action-list.ts';
-import { TimeTravelView } from './time-travel.ts';
 import { EntryDetailView } from './entry-detail.ts';
 import { NotFoundView } from './not-found.ts';
 import { RecordView } from './record.ts';
@@ -24,7 +23,6 @@ async function check(make: () => View): Promise<void> {
 describe('views do not render the nav themselves', () => {
   const ok = createRecordStub();
   it('Action List', () => check(() => new ActionListView(ok)));
-  it('Time Travel', () => check(() => new TimeTravelView(ok)));
   it('Entry Detail (found)', () => check(() => new EntryDetailView(ok, 1, 'temperature', 'entry-a1')));
   it('Entry Detail (unmatched id)', () => check(() => new EntryDetailView(ok, 1, 'temperature', 'zzz')));
   it('Not Found', () => check(() => new NotFoundView()));
@@ -39,10 +37,10 @@ describe('createNav', () => {
   const current = (nav: HTMLElement): string[] =>
     Array.from(nav.querySelectorAll('a[aria-current="page"]')).map((a) => a.getAttribute('href')!);
 
-  it('links all four destinations and nothing else', () => {
+  it('links all three destinations and nothing else', () => {
     const nav = createNav();
     const hrefs = Array.from(nav.querySelectorAll('a')).map((a) => a.getAttribute('href'));
-    expect(hrefs).toEqual(['/chat', '/actions', '/time-travel', '/calendar']);
+    expect(hrefs).toEqual(['/chat', '/actions', '/calendar']);
     expect(nav.querySelectorAll(':scope > :not(a)')).toHaveLength(0);
   });
 

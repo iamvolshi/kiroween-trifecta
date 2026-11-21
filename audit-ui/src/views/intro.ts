@@ -8,11 +8,6 @@ export const INTROS = {
     question: 'What did the agent do?',
     how: 'Every record entry, newest first. Each card shows authority and state, what changed, why, and when.',
   },
-  timeTravel: {
-    view: 'Time Travel',
-    question: 'What did it believe at that moment?',
-    how: 'Pick a moment in UTC. You see every entry that was live then, and nothing else.',
-  },
   record: {
     view: 'Record',
     question: 'What does the record hold for this account?',

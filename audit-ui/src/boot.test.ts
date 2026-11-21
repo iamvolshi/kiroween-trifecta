@@ -27,11 +27,11 @@ describe('boot', () => {
     return { before };
   }
 
-  it('keeps /time-travel and adds no history entry', () => {
-    const { before } = bootAt('/time-travel');
-    expect(window.location.pathname).toBe('/time-travel');
+  it('keeps /actions and adds no history entry', () => {
+    const { before } = bootAt('/actions');
+    expect(window.location.pathname).toBe('/actions');
     expect(window.history.length).toBe(before);
-    expect(app!.querySelector('.time-travel-view')).not.toBeNull();
+    expect(app!.querySelector('.view-body')).not.toBeNull();
   });
 
   it('keeps an /entry/... deep link and shows that entry', async () => {

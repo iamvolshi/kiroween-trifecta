@@ -52,26 +52,6 @@ describe('integration smoke tests', () => {
     document.body.removeChild(container);
   });
 
-  it('Test 2: navigate to Time Travel — datetime-local input is present', async () => {
-    adapter = createRecordStub();
-    container = document.createElement('div');
-    document.body.appendChild(container);
-
-    router = new Router(adapter, container);
-    router.navigate('/actions');
-    await tick();
-
-    router.navigate('/time-travel');
-    await tick();
-
-    const input = container.querySelector<HTMLInputElement>(
-      'input[type="datetime-local"]#moment-cursor',
-    );
-    expect(input).not.toBeNull();
-
-    document.body.removeChild(container);
-  });
-
   it('Test 3: navigate to Entry Detail — entry-primary section is present', async () => {
     adapter = createRecordStub();
     container = document.createElement('div');

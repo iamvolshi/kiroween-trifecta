@@ -70,7 +70,6 @@ export class LeftPanel implements Panel {
     const ul = el('ul', 'left-links');
     for (const [href, text] of [
       ['/calendar', 'Calendar Index'],
-      ['/time-travel', 'Time Travel'],
     ] as const) {
       const li = el('li', '');
       li.appendChild(link(href, text));

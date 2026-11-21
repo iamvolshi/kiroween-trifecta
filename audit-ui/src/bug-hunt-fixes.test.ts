@@ -179,7 +179,6 @@ describe('LOW-6: the header view label is set from the mounted view', () => {
   const routes: Array<[string, string]> = [
     ['/actions', 'Action List'],
     ['/chat', 'Chat / Observability'],
-    ['/time-travel', 'Time Travel'],
     ['/calendar/2026-11', 'Calendar'],
     ['/record/order-1042', 'Record'],
     ['/entry/1/temperature/entry-a1', 'Entry Detail'],

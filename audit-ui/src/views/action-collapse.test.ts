@@ -5,7 +5,6 @@
  */
 import { describe, it, expect, afterEach } from 'vitest';
 import { ActionListView } from './action-list.ts';
-import { TimeTravelView } from './time-travel.ts';
 import { EntryDetailView } from './entry-detail.ts';
 import { RecordView } from './record.ts';
 import { Router } from '../router/router.ts';
@@ -181,15 +180,6 @@ describe('the other card views keep the full skeleton', () => {
       expect(card.querySelector('.card-inset')).not.toBeNull();
     }
   };
-
-  it('Time Travel pool', async () => {
-    const c = await mountView((el) => new TimeTravelView(createRecordStub(ENTRIES)).mount(el));
-    const input = c.querySelector<HTMLInputElement>('#moment-cursor')!;
-    input.value = '2026-11-16T14:00';
-    input.dispatchEvent(new Event('change'));
-    for (let i = 0; i < 4; i++) await tick();
-    expectFull(c);
-  });
 
   it('Entry Detail chain', async () => {
     const c = await mountView((el) =>

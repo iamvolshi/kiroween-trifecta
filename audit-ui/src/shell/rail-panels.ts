@@ -40,7 +40,6 @@ export class AuditPanel implements Panel {
     for (const [href, text] of [
       ['/actions', 'Action List'],
       ['/calendar', 'Calendar'],
-      ['/time-travel', 'Time Travel'],
     ] as const) {
       const li = el('li', '');
       li.appendChild(link(href, text));

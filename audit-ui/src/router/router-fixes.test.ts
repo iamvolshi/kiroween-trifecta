@@ -48,41 +48,41 @@ describe('link filtering', () => {
 
   it('target=_blank link is left to the browser', () => {
     start();
-    expect(clickAnchor({ href: '/time-travel', target: '_blank' })).toBe(false);
+    expect(clickAnchor({ href: '/actions', target: '_blank' })).toBe(false);
     expect(window.location.pathname).toBe('/actions');
   });
 
   it('download link is left to the browser', () => {
     start();
-    expect(clickAnchor({ href: '/time-travel', download: '' })).toBe(false);
+    expect(clickAnchor({ href: '/actions', download: '' })).toBe(false);
     expect(window.location.pathname).toBe('/actions');
   });
 
   it('target=_self link still navigates in-app', () => {
     start();
-    expect(clickAnchor({ href: '/time-travel', target: '_self' })).toBe(true);
-    expect(window.location.pathname).toBe('/time-travel');
+    expect(clickAnchor({ href: '/actions', target: '_self' })).toBe(true);
+    expect(window.location.pathname).toBe('/actions');
   });
 });
 
 describe('path normalisation', () => {
   it('trailing slash resolves to the route', () => {
     start();
-    router.navigate('/time-travel/');
+    router.navigate('/actions/');
     expect(container.querySelector('.not-found')).toBeNull();
-    expect(container.querySelector('.time-travel-view')).not.toBeNull();
+    expect(container.querySelector('.view-body')).not.toBeNull();
   });
 
   it('query string is ignored when matching', () => {
     start();
-    router.navigate('/time-travel?x=1');
+    router.navigate('/actions?x=1');
     expect(container.querySelector('.not-found')).toBeNull();
-    expect(container.querySelector('.time-travel-view')).not.toBeNull();
+    expect(container.querySelector('.view-body')).not.toBeNull();
   });
 
   it('hash is ignored when matching', () => {
     start();
-    router.navigate('/time-travel#top');
+    router.navigate('/actions#top');
     expect(container.querySelector('.not-found')).toBeNull();
   });
 

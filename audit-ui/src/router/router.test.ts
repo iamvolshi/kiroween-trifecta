@@ -23,7 +23,7 @@ function makeAdapter(): SeamAdapter {
 }
 
 // Known routes in the route table
-const KNOWN_ROUTES = ['/actions', '/time-travel', '/entry/1/temperature/abc'] as const;
+const KNOWN_ROUTES = ['/actions', '/calendar', '/entry/1/temperature/abc'] as const;
 
 // ---------------------------------------------------------------------------
 // Property 1: Routing exclusivity
@@ -69,11 +69,11 @@ describe('Property 1: Routing exclusivity', () => {
     router.navigate('/actions');
     const afterActions = container.innerHTML;
 
-    router.navigate('/time-travel');
-    const afterTimeTravel = container.innerHTML;
+    router.navigate('/calendar');
+    const afterCalendar = container.innerHTML;
 
     // The HTML should have changed — different views
-    expect(afterTimeTravel).not.toBe(afterActions);
+    expect(afterCalendar).not.toBe(afterActions);
 
     // Container must still have content after each navigation
     expect(container.innerHTML.trim()).not.toBe('');
@@ -110,7 +110,6 @@ describe('Property 2: Unrecognized route renders not-found', () => {
       fc.stringMatching(/^\/[a-z0-9-]{1,20}$/).filter(
         (p) =>
           p !== '/actions' &&
-          p !== '/time-travel' &&
           !p.startsWith('/entry/'),
       ),
       // Paths that look like /entry but are malformed (missing segments)
@@ -141,7 +140,7 @@ describe('Property 2: Unrecognized route renders not-found', () => {
 // ---------------------------------------------------------------------------
 // Example-based test: popstate
 //
-// Navigate to /actions, then to /time-travel (pushes history), then dispatch
+// Navigate to /actions, then to /calendar (pushes history), then dispatch
 // a popstate event. The popstate listener should re-resolve location.pathname
 // and mount the correct view.
 //
@@ -167,9 +166,9 @@ describe('popstate: browser back/forward triggers view re-resolution', () => {
     router.navigate('/actions');
     expect(container.innerHTML).toContain('Action List');
 
-    // Navigate to /time-travel (pushes history entry)
-    router.navigate('/time-travel');
-    expect(container.innerHTML).toContain('Time Travel');
+    // Navigate to /calendar (pushes history entry)
+    router.navigate('/calendar');
+    expect(container.querySelector('.ktie-page')).not.toBeNull();
 
     // Simulate browser back: jsdom keeps history state, so we set pathname
     // then dispatch popstate. The router's popstate handler calls

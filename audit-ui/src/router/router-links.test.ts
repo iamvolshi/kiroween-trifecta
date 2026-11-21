@@ -28,9 +28,9 @@ afterEach(() => {
 describe('click handling', () => {
   beforeEach(() => start());
 
-  /** Click the Time Travel nav link; report whether the router consumed it. */
+  /** Click the Calendar nav link; report whether the router consumed it. */
   function click(init: MouseEventInit): { prevented: boolean } {
-    const a = container.querySelector<HTMLAnchorElement>('nav a[href="/time-travel"]')!;
+    const a = container.querySelector<HTMLAnchorElement>('nav a[href="/calendar"]')!;
     let prevented = false;
     // Registered after the router's listener: observes its decision, then stops
     // jsdom from attempting a real navigation.
@@ -47,7 +47,7 @@ describe('click handling', () => {
   it('plain left click navigates in-app', () => {
     const { prevented } = click({ button: 0 });
     expect(prevented).toBe(true);
-    expect(window.location.pathname).toBe('/time-travel');
+    expect(window.location.pathname).toBe('/calendar');
   });
 
   for (const [name, init] of [

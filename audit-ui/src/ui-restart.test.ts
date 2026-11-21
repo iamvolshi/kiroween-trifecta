@@ -66,7 +66,7 @@ describe('the rail', () => {
     expect(list().getAttribute('aria-label')).toBe('Directories');
     expect(Array.from(list().querySelectorAll('h2')).map((h) => h.textContent)).toEqual(['Record', 'Going back']);
     expect(list().querySelector('nav.main-nav')).not.toBeNull();
-    expect(Array.from(list().querySelectorAll('.left-back a')).map((a) => a.textContent)).toEqual(['Calendar Index', 'Time Travel']);
+    expect(Array.from(list().querySelectorAll('.left-back a')).map((a) => a.textContent)).toEqual(['Calendar Index']);
   });
 
   it('tapping Chat, Research or Lessons swaps the list panel only; Audit also goes to the KTIE page', async () => {
@@ -124,7 +124,7 @@ describe('the rail', () => {
     rail('audit').click();
     for (let i = 0; i < 4; i++) await tick();
     expect(Array.from(list().querySelectorAll('.list-section:first-child a')).map((a) => [a.textContent, a.getAttribute('href')])).toEqual([
-      ['Action List', '/actions'], ['Calendar', '/calendar'], ['Time Travel', '/time-travel'],
+      ['Action List', '/actions'], ['Calendar', '/calendar'],
     ]);
     expect(list().querySelector('.list-meta')?.textContent).toBe('3 entries in the record');
     const accounts = Array.from(list().querySelectorAll('.audit-accounts li')).map((li) => li.textContent);

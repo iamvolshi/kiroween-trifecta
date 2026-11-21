@@ -237,24 +237,6 @@ button:disabled {
   color: var(--muted);
 }
 
-/* ---- Time Travel ------------------------------------------------------ */
-
-.time-travel-view label {
-  display: block;
-  margin-bottom: var(--s1);
-  font-family: var(--mono);
-  font-size: var(--t-label-md-size);
-  line-height: var(--t-label-md-lh);
-  font-weight: 700;
-  letter-spacing: var(--t-label-md-ls);
-  text-transform: uppercase;
-  color: var(--muted);
-}
-
-#belief-pool {
-  margin-top: var(--s4);
-}
-
 .cursor-display {
   display: inline-block;
   /* Defined placement: one fixed width in both zones, so flipping UTC/Local

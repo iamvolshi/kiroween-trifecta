@@ -1,6 +1,5 @@
 import type { SeamAdapter } from '../adapter/seam.ts';
 import { ActionListView } from '../views/action-list.ts';
-import { TimeTravelView } from '../views/time-travel.ts';
 import { EntryDetailView } from '../views/entry-detail.ts';
 import { NotFoundView } from '../views/not-found.ts';
 import { ChatView, type ModelSource } from '../views/chat.ts';
@@ -129,10 +128,6 @@ export class Router {
     if (path.length > 1 && path.endsWith('/')) path = path.slice(0, -1);
     if (path === '/actions') {
       return new ActionListView(this.adapter);
-    }
-
-    if (path === '/time-travel') {
-      return new TimeTravelView(this.adapter);
     }
 
     if (path === '/chat') {

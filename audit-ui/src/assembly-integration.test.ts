@@ -39,11 +39,10 @@ async function settle(): Promise<void> {
   for (let i = 0; i < 5; i++) await tick();
 }
 
-describe('the shell nav links all four destinations on every route', () => {
-  const destinations = ['/actions', '/time-travel', '/chat', '/calendar'];
+describe('the shell nav links all three destinations on every route', () => {
+  const destinations = ['/actions', '/chat', '/calendar'];
   const paths = [
     '/actions',
-    '/time-travel',
     '/chat',
     '/calendar',
     '/calendar/2026-11',

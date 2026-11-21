@@ -45,7 +45,7 @@ describe('LeftPanel', () => {
     ]);
     expect(slot.querySelector('.folder-head-value')?.getAttribute('aria-label')).toBe('authority 5 of 9');
     const back = Array.from(slot.querySelectorAll('.left-back a')).map((a) => a.getAttribute('href'));
-    expect(back).toEqual(['/calendar', '/time-travel']);
+    expect(back).toEqual(['/calendar']);
   });
 
   it('a subject without a dot links to the latest entry of its chain', async () => {
