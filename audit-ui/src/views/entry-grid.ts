@@ -196,6 +196,8 @@ export function renderEntryGrid(
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'sort-button';
+    // A narrow column clips its label; the full name stays on hover.
+    button.title = text;
     const name = document.createElement('span');
     name.className = 'sort-label';
     name.textContent = text;
@@ -233,6 +235,8 @@ export function renderEntryGrid(
       try { grip.setPointerCapture(down.pointerId); } catch { /* ignore */ }
       table.classList.add('resizing');
       const move = (ev: PointerEvent): void => {
+        // The hour changed mid-drag: this table is gone, stop listening.
+        if (!table.isConnected) { up(); return; }
         state[list].widths = resizePair(start, i, (ev.clientX - x0) / chPx);
         applyWidths();
       };

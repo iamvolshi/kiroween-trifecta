@@ -208,6 +208,16 @@ describe('renderEntryGrid', () => {
     expect(header(el, 'subject').getAttribute('aria-sort')).toBe('none');
   });
 
+  it('a drag stops when its table leaves the page mid-drag', () => {
+    const el = mount();
+    const grip = header(el, 'subject').querySelector<HTMLElement>('.col-grip')!;
+    grip.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true, button: 0, clientX: 0 }));
+    el.remove(); // a new hour replaced the folder
+    window.dispatchEvent(new MouseEvent('pointermove', { clientX: 80 }));
+    window.dispatchEvent(new MouseEvent('pointermove', { clientX: 160 }));
+    expect(gridState('did').widths).toEqual([...DEFAULT_WIDTHS]);
+  });
+
   it('a drag survives a pointer capture that throws', () => {
     const el = mount();
     const grip = header(el, 'kid').querySelector<HTMLElement>('.col-grip')!;

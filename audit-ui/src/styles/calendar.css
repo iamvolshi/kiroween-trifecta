@@ -290,6 +290,7 @@
 
 .entry-grid .sort-label {
   overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .entry-grid .sort-arrow {

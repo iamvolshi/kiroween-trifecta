@@ -158,4 +158,6 @@ Verified Nov 20 in local headless Chrome against the live connector (27 seed ent
 
 Proof shots: `docs/folder-grid-proof/01`–`06`.
 
-Tests: 484 pass (463 before). `views/entry-grid.test.ts`: every column sorted both ways, KID 2 before 10, ties and unreadable times, the header row and its labels, widths in ch, cells, click sort and reverse with aria-sort and arrows, the KID link through a sort, the two lists apart and held across a new hour, a fresh load, the resize (pair sum, 4ch floor, window-level move/up, a capture that throws).
+Review (Sage, ready to merge): a drag now stops if its table leaves the page mid-drag; a clipped header label shows an ellipsis and its full name on hover. Keyboard resize was not asked for and is not built.
+
+Tests: 485 pass (463 before). `views/entry-grid.test.ts`: every column sorted both ways, KID 2 before 10, ties and unreadable times, the header row and its labels, widths in ch, cells, click sort and reverse with aria-sort and arrows, the KID link through a sort, the two lists apart and held across a new hour, a fresh load, the resize (pair sum, 4ch floor, window-level move/up, a capture that throws, a table removed mid-drag).
