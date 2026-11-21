@@ -69,12 +69,11 @@ const q = (sel: string): HTMLElement => container.querySelector<HTMLElement>(sel
 const texts = (sel: string): string[] => [...container.querySelectorAll(sel)].map((n) => n.textContent ?? '');
 
 describe('the ERIE page', () => {
-  it('header: ERIE alone, no expansion until Darren supplies it', async () => {
+  it('header: ERIE over her expansion, the poster one Darren chose', async () => {
     await mount();
-    expect(ERIE_EXPANSION).toBeNull();
+    expect(ERIE_EXPANSION).toBe('Epistemic Retrieval and Investigation Engine');
     expect(q('.erie-head h1').textContent).toBe('ERIE');
-    expect(q('.erie-head').textContent).toBe('ERIE');
-    expect(container.querySelector('.erie-expansion')).toBeNull();
+    expect(q('.erie-expansion').textContent).toBe('Epistemic Retrieval and Investigation Engine');
   });
 
   it('the three boxes in order: pool, retrieval, injection', async () => {

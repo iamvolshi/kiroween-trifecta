@@ -18,10 +18,10 @@ import { viewerTimeZone } from '../util/timezone.ts';
 
 export const ERIE_NAME = 'ERIE';
 /**
- * ERIE's expansion, in Darren's words. Not supplied yet: until it is, the
- * header shows ERIE alone. Never fill this with invented words.
+ * ERIE's expansion, in Darren's words — the poster one, chosen Nov 21:
+ * she does the investigation and comes back with provenance.
  */
-export const ERIE_EXPANSION: string | null = null;
+export const ERIE_EXPANSION: string | null = 'Epistemic Retrieval and Investigation Engine';
 
 function el<K extends keyof HTMLElementTagNameMap>(tag: K, className = '', text?: string): HTMLElementTagNameMap[K] {
   const node = document.createElement(tag);
