@@ -257,6 +257,14 @@ button:disabled {
 
 .cursor-display {
   display: inline-block;
+  /* Defined placement: one fixed width in both zones, so flipping UTC/Local
+     never moves this box or the switch beside it. The longest moment string
+     is 32 chars ("Moment (Local): 2026-11-20T17:00"); 38ch leaves room for
+     the padding and border under border-box, in either zone and at any hour.
+     Measured Nov 20: the box was 249px in UTC, 264px in Local — the only
+     header element that moved with the selection. */
+  width: 38ch;
+  white-space: nowrap;
   margin: 0 0 var(--s3);
   padding: var(--s1) var(--s3);
   border: 1px solid var(--accent);
@@ -280,6 +288,7 @@ button:disabled {
 
 .cursor-row .cursor-display {
   margin: 0;
+  flex-shrink: 0;
 }
 
 /* UTC / Local switch: the record stays UTC; the folder reads in the shown
