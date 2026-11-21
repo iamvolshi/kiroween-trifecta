@@ -1,0 +1,107 @@
+{
+  "chips": true,
+  "chat": [
+    {
+      "ok": true,
+      "error": "",
+      "turns": 1
+    },
+    {
+      "ok": true,
+      "error": "",
+      "turns": 2
+    }
+  ],
+  "at1920": {
+    "pageScroll": {
+      "h": 0,
+      "w": 0
+    },
+    "head": "ERIE",
+    "headColor": "rgb(255, 189, 88)",
+    "labels": [
+      "pool · 5 live of 5 entries · 4 subjects",
+      "retrieval · 2 turns",
+      "injection · 2 turns"
+    ],
+    "pool": {
+      "x": 301,
+      "y": 120,
+      "w": 1335,
+      "h": 462,
+      "scrolls": false
+    },
+    "retrieval": {
+      "x": 301,
+      "y": 594,
+      "w": 662,
+      "h": 462,
+      "scrolls": false
+    },
+    "injection": {
+      "x": 975,
+      "y": 594,
+      "w": 662,
+      "h": 462,
+      "scrolls": true
+    },
+    "poolRows": 5,
+    "cannot": [
+      "ERIE could not answer."
+    ],
+    "lessons": {
+      "injected": 1,
+      "held": 2
+    },
+    "promptWord": false,
+    "leftPanel": "research",
+    "search": true,
+    "path": "/research"
+  },
+  "at1024": {
+    "pageScroll": {
+      "h": 0,
+      "w": 0
+    },
+    "head": "ERIE",
+    "headColor": "rgb(255, 189, 88)",
+    "labels": [
+      "pool · 5 live of 5 entries · 4 subjects",
+      "retrieval · 2 turns",
+      "injection · 2 turns"
+    ],
+    "pool": {
+      "x": 230,
+      "y": 116,
+      "w": 569,
+      "h": 205,
+      "scrolls": true
+    },
+    "retrieval": {
+      "x": 230,
+      "y": 333,
+      "w": 569,
+      "h": 205,
+      "scrolls": true
+    },
+    "injection": {
+      "x": 230,
+      "y": 551,
+      "w": 569,
+      "h": 205,
+      "scrolls": true
+    },
+    "poolRows": 5,
+    "cannot": [
+      "ERIE could not answer."
+    ],
+    "lessons": {
+      "injected": 1,
+      "held": 2
+    },
+    "promptWord": false,
+    "leftPanel": "research",
+    "search": true,
+    "path": "/research"
+  }
+}

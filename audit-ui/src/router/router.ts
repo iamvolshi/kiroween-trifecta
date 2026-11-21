@@ -7,6 +7,7 @@ import { ChatLog } from '../views/chat-log.ts';
 import { ADDRESS_FOLLOWED, CalendarView } from '../views/calendar.ts';
 import { parseCalendarPath } from '../util/calendar.ts';
 import { RecordView } from '../views/record.ts';
+import { ResearchView } from '../views/research.ts';
 import { createShell, setViewLabel, type ShellSlots } from '../shell/shell.ts';
 import { LoadingModal } from '../shell/loading-modal.ts';
 import { stripBase, withBase } from '../util/base.ts';
@@ -45,7 +46,7 @@ export class Router {
     this.container = container;
     this.slots = createShell(container);
     // The rail and the list panel it swaps (Chat's list is the directories column).
-    // Audit's icon goes to the KTIE page through this Router (navigate), like a plain link.
+    // Audit's icon goes to the KTIE page, Research's to the ERIE page, through this Router (navigate), like a plain link.
     const left = new RailPanel(adapter, this.slots.rail, this.slots.left, (path) => this.navigate(path));
     this.leftPanel = left;
     left.mount();
@@ -142,6 +143,10 @@ export class Router {
 
     if (path === '/chat') {
       return new ChatView(this.adapter, this.chatLog, this.models);
+    }
+
+    if (path === '/research') {
+      return new ResearchView(this.adapter, this.chatLog);
     }
 
     if (path === '/calendar' || path.startsWith('/calendar/')) {

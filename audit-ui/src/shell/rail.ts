@@ -9,9 +9,9 @@ import { stripBase } from '../util/base.ts';
  * icons are the engines by category, never by name: Chat (the left column
  * as it was), Audit (the record views), Research (the knowledge), Lessons.
  * Tapping an icon swaps the list panel. Audit also takes the center to
- * the KTIE page (/calendar), through the Router, unless it is already
- * there; Chat, Research and Lessons leave the center and right columns as
- * they are.
+ * the KTIE page (/calendar) and Research to the ERIE page (/research),
+ * through the Router, unless the center is already there; Chat and Lessons
+ * leave the center and right columns as they are.
  */
 
 /** Is `path` the KTIE page (the calendar, at any level)? */
@@ -19,6 +19,12 @@ export function onKtiePage(path: string): boolean {
   return path === '/calendar' || path.startsWith('/calendar/');
 }
 export type RailKey = 'chat' | 'audit' | 'research' | 'lessons';
+
+/** Where an icon takes the center, and how to tell it is already there. */
+const PAGE: Partial<Record<RailKey, { path: string; here: (path: string) => boolean }>> = {
+  audit: { path: '/calendar', here: onKtiePage },
+  research: { path: '/research', here: (p) => p === '/research' },
+};
 
 /** The list column's caption per panel (Chat keeps the column's own name). */
 const CAPTION: Record<RailKey, string> = { chat: 'Directories', audit: 'Audit', research: 'Research', lessons: 'Lessons' };
@@ -55,7 +61,7 @@ export class RailPanel implements Panel {
   private rail: HTMLElement;
   private list: HTMLElement;
 
-  /** The Router's navigate: Audit's way to the KTIE page. None: panel only. */
+  /** The Router's navigate: Audit's way to the KTIE page, Research's to the ERIE page. None: panel only. */
   private navigate: ((path: string) => void) | null;
 
   constructor(adapter: SeamAdapter, rail: HTMLElement, list: HTMLElement, navigate: ((path: string) => void) | null = null) {
@@ -72,8 +78,8 @@ export class RailPanel implements Panel {
 
   /** `slot` is ignored: the rail owns its two columns (rail and list). */
   mount(_slot?: HTMLElement): void {
-    // A toolbar, not a nav: it swaps the list panel. Only Audit also changes
-    // the route (to the KTIE page), through the Router.
+    // A toolbar, not a nav: it swaps the list panel. Audit and Research also
+    // change the route (to their engine's page), through the Router.
     const nav = document.createElement('div');
     nav.className = 'rail-nav';
     nav.setAttribute('role', 'toolbar');
@@ -90,7 +96,8 @@ export class RailPanel implements Panel {
       b.appendChild(icon(item.icon));
       b.addEventListener('click', () => {
         this.show(item.key);
-        if (item.key === 'audit' && this.navigate && !onKtiePage(stripBase(window.location.pathname))) this.navigate('/calendar');
+        const page = PAGE[item.key];
+        if (page && this.navigate && !page.here(stripBase(window.location.pathname))) this.navigate(page.path);
       });
       nav.appendChild(b);
     }

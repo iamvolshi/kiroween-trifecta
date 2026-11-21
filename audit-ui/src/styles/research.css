@@ -1,0 +1,203 @@
+/* The ERIE page (Research): the pool she draws from, her retrieval per
+   turn, and what she injected. Everything ERIE's wears her amber
+   (--engine-erie). One view, no page scroll: each box scrolls inside
+   itself. */
+
+.erie-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.erie-head {
+  margin: 0 0 var(--s2);
+}
+
+.erie-head .erie-name {
+  margin: 0;
+  font-family: var(--display);
+  font-size: var(--t-headline-xl-size);
+  line-height: var(--t-headline-xl-lh);
+  font-weight: var(--t-headline-xl-wt);
+  letter-spacing: var(--t-headline-xl-ls);
+  color: var(--engine-erie);
+  text-shadow: 0 0 18px color-mix(in srgb, var(--engine-erie) 35%, transparent);
+}
+
+.erie-expansion {
+  margin: 2px 0 0;
+  font-family: var(--mono);
+  font-size: var(--t-label-md-size);
+  line-height: var(--t-label-md-lh);
+  font-weight: var(--t-label-md-wt);
+  letter-spacing: var(--t-label-md-ls);
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* The pool across the top; retrieval and injection side by side below. */
+.erie-view {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-areas:
+    'pool pool'
+    'retrieval injection';
+  gap: var(--s3);
+  flex: 1;
+  min-height: 0;
+}
+
+.erie-pool { grid-area: pool; }
+.erie-retrieval { grid-area: retrieval; }
+.erie-injection { grid-area: injection; }
+
+/* A narrow center stacks the three boxes. */
+@container (max-width: 760px) {
+  .erie-view {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: repeat(3, minmax(0, 1fr));
+    grid-template-areas: 'pool' 'retrieval' 'injection';
+  }
+}
+
+.erie-box {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+}
+
+/* The label's line is one fixed line: a longer count never moves the box. */
+.erie-label {
+  flex-shrink: 0;
+  margin: 0;
+  padding: var(--s1) var(--s2);
+  border-bottom: 1px solid var(--line);
+  font-family: var(--mono);
+  font-size: var(--t-label-md-size);
+  line-height: var(--t-label-md-lh);
+  font-weight: 700;
+  letter-spacing: var(--t-label-md-ls);
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--engine-erie);
+}
+
+.erie-box-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: var(--s2);
+  scrollbar-color: var(--line-strong) transparent;
+  scrollbar-width: thin;
+}
+
+.erie-box-body > .empty-state,
+.erie-box-body > .error-state,
+.erie-box-body > .prompt-state {
+  margin: 0;
+}
+
+/* One turn: its number, then its fields, each key over its verbatim value. */
+.erie-turn {
+  padding: var(--s2) 0;
+  border-bottom: 1px solid var(--line);
+  font-family: var(--mono);
+  font-size: var(--t-telemetry-data-size);
+  line-height: var(--t-telemetry-data-lh);
+}
+
+.erie-turn:first-child {
+  padding-top: 0;
+}
+
+.erie-turn:last-child {
+  border-bottom: 0;
+}
+
+.erie-turn-head {
+  margin: 0 0 var(--s1);
+  font-weight: 700;
+  color: var(--engine-erie);
+  text-transform: uppercase;
+}
+
+.erie-field {
+  display: grid;
+  grid-template-columns: 11ch minmax(0, 1fr);
+  gap: var(--s1);
+  margin: 0;
+}
+
+.erie-key,
+.erie-field dt {
+  color: var(--muted);
+}
+
+.erie-value,
+.erie-field dd {
+  margin: 0;
+  color: var(--text);
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.erie-turn[data-state='found'] .erie-state .erie-value {
+  color: var(--engine-erie);
+  font-weight: 700;
+}
+
+.erie-cannot {
+  margin: var(--s1) 0 0;
+  color: var(--warn);
+  font-weight: 700;
+}
+
+.erie-provenance {
+  margin: var(--s1) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.erie-source-item {
+  margin-top: var(--s1);
+  padding: var(--s1) var(--s2);
+  border-left: 2px solid var(--engine-erie);
+  background: var(--surface-2);
+}
+
+.erie-sub {
+  margin: var(--s1) 0;
+  color: var(--muted);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.erie-lesson {
+  margin: 0 0 var(--s1);
+  padding: var(--s1) var(--s2);
+  border-left: 2px solid var(--engine-elle);
+  background: var(--surface-2);
+}
+
+/* Held back, never injected: grey. */
+.erie-lesson.is-held {
+  border-left-color: var(--line-strong);
+  opacity: 0.6;
+}
+
+.erie-lesson.is-held dd {
+  color: var(--muted);
+}
+
+.erie-none {
+  margin: 0 0 var(--s1);
+  color: var(--muted);
+}

@@ -15,6 +15,7 @@ export function createNav(currentPath: string | null = null): HTMLElement {
     ['/chat', 'Chat'],
     ['/actions', 'Action List'],
     ['/calendar', 'Calendar'],
+    ['/research', 'Research'],
   ];
 
   for (const [href, text] of links) {

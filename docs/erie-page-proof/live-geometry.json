@@ -1,0 +1,91 @@
+{
+  "chips": true,
+  "at1920": {
+    "pageScroll": {
+      "h": 0,
+      "w": 0
+    },
+    "head": "ERIE",
+    "headColor": "rgb(255, 189, 88)",
+    "labels": [
+      "pool · 27 live of 27 entries · 27 subjects",
+      "retrieval · 0 turns",
+      "injection · 0 turns"
+    ],
+    "pool": {
+      "x": 301,
+      "y": 120,
+      "w": 1335,
+      "h": 462,
+      "scrolls": true
+    },
+    "retrieval": {
+      "x": 301,
+      "y": 594,
+      "w": 662,
+      "h": 462,
+      "scrolls": false
+    },
+    "injection": {
+      "x": 975,
+      "y": 594,
+      "w": 662,
+      "h": 462,
+      "scrolls": false
+    },
+    "poolRows": 27,
+    "cannot": [],
+    "lessons": {
+      "injected": 0,
+      "held": 0
+    },
+    "promptWord": false,
+    "leftPanel": "research",
+    "search": true,
+    "path": "/research"
+  },
+  "at1024": {
+    "pageScroll": {
+      "h": 0,
+      "w": 0
+    },
+    "head": "ERIE",
+    "headColor": "rgb(255, 189, 88)",
+    "labels": [
+      "pool · 27 live of 27 entries · 27 subjects",
+      "retrieval · 0 turns",
+      "injection · 0 turns"
+    ],
+    "pool": {
+      "x": 230,
+      "y": 116,
+      "w": 569,
+      "h": 205,
+      "scrolls": true
+    },
+    "retrieval": {
+      "x": 230,
+      "y": 333,
+      "w": 569,
+      "h": 205,
+      "scrolls": false
+    },
+    "injection": {
+      "x": 230,
+      "y": 551,
+      "w": 569,
+      "h": 205,
+      "scrolls": false
+    },
+    "poolRows": 27,
+    "cannot": [],
+    "lessons": {
+      "injected": 0,
+      "held": 0
+    },
+    "promptWord": false,
+    "leftPanel": "research",
+    "search": true,
+    "path": "/research"
+  }
+}

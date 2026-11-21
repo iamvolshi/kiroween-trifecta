@@ -10,7 +10,8 @@ import { clockTime, type TimeZone } from '../util/timezone.ts';
  * total never changes); clicking a header sorts. Sort only, no filter.
  */
 
-export type GridList = 'did' | 'believed';
+/** The KTIE folder's two lists, and the ERIE page's pool. */
+export type GridList = 'did' | 'believed' | 'pool';
 export type ColumnKey = 'time' | 'kid' | 'subject' | 'state' | 'authority' | 'evidence' | 'reason';
 export type SortDir = 'asc' | 'desc';
 export interface GridSort { col: ColumnKey; dir: SortDir }
@@ -42,11 +43,12 @@ interface ListState { sort: GridSort | null; widths: number[] }
 const state: Record<GridList, ListState> = {
   did: { sort: null, widths: [...DEFAULT_WIDTHS] },
   believed: { sort: null, widths: [...DEFAULT_WIDTHS] },
+  pool: { sort: null, widths: [...DEFAULT_WIDTHS] },
 };
 
 /** Back to record order and default widths (tests; a fresh load does this by itself). */
 export function resetGridState(): void {
-  for (const list of ['did', 'believed'] as const) {
+  for (const list of ['did', 'believed', 'pool'] as const) {
     state[list] = { sort: null, widths: [...DEFAULT_WIDTHS] };
   }
 }

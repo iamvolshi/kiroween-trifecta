@@ -20,7 +20,7 @@ const shellCss = read('./styles/shell.css');
 const systemCss = read('./styles/stitch-system.css');
 const chatCss = read('./styles/chat.css');
 const mainTs = read('./main.ts');
-const CSS_FILES = ['./style.css', ...['calendar', 'calendar-rail', 'chat', 'folders', 'record-card', 'shell', 'stitch-chat', 'stitch-system', 'telemetry'].map((f) => `./styles/${f}.css`)];
+const CSS_FILES = ['./style.css', ...['calendar', 'calendar-rail', 'chat', 'folders', 'record-card', 'research', 'shell', 'stitch-chat', 'stitch-system', 'telemetry'].map((f) => `./styles/${f}.css`)];
 
 /** The declarations of the first rule whose selector list is exactly `selector`. */
 function rule(css: string, selector: string): string {
