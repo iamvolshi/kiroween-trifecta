@@ -206,3 +206,10 @@
   text-transform: uppercase;
   color: var(--muted);
 }
+
+/* The sr-only subject headings are absolutely positioned: keep them inside
+   the left column's scroll box, or 27 subjects push the page past the
+   screen (Nov 20, 27 seed entries: a 4504px page). */
+.left-folders {
+  position: relative;
+}

@@ -135,3 +135,27 @@ to end (UTC default, flip to local and back, past-midnight moment) and the
 snapshot's local hour; the drums follow the switch (local heads and labels,
 hour links naming the UTC hour, a local spin settling on its UTC hour, the
 past-midnight day on the drums, the zone holding across mounts).
+
+## The folder log is a grid (Nov 20, Darren)
+
+Darren: the rows and columns distort because some words are longer than others; make it cells, like Excel / Explorer. Both lists (DID, BELIEVED) are now one `<table>` each (`src/views/entry-grid.ts`, called through `renderEntryLog` in `calendar-entries.ts`). Columns, in order: Time | KID | Subject | State | Authority | Evidence | Reason. `table-layout: fixed`; a value longer than its column scrolls sideways inside its cell (`.cell`: `overflow-x: auto`, `white-space: nowrap`, fixed height), so no cell, row or column moves. Headers are `<button>`s in `<th scope="col">` with `aria-sort`; click sorts, click again reverses, the sorted header shows ▲ / ▼. KID and Authority sort as numbers, Time by the start instant (an unreadable time sorts last), the rest alphabetically; ties keep record order. Each list sorts on its own. The grip on a header's right edge resizes: the column takes width from its right neighbour, the total never changes, nothing goes under 4ch; the drag listens on `window` (pointer capture is tried, and ignored if it throws). Sort only, no filter.
+
+Final widths (ch, in column order): **10, 6, 25, 10, 4, 37, 45**. These are the order's widths with Subject, Evidence and Reason each +1ch: the cell's padding is 8px (about 1.1ch at 12px mono, ch = 7.2px), and without it the longest live values (subject 23, evidence 35, reason 43 chars) clipped by under 1px. Time 10 holds HH:MM:SS, State 10 holds CANDIDATE (9), KID 6 holds a 4-digit number. The Authority header reads "AUTH" at 4ch (the label clips; the digit fits).
+
+The folder is wider than the columns at 1920: 1348px, about 187ch. The table is `width: max(100%, 137ch)`, so at 1920 it is exactly the folder's width and each column draws at 1.367× its ch width (the proportions hold; the resize converts pixels to ch at that scale). Where the folder is narrower than 137ch (1024: 569px, 79ch), the table keeps its ch widths and its wrap scrolls sideways inside the folder; the page never scrolls.
+
+Sort and widths are held in module memory per list: they last for every hour opened in the page, and a fresh load (or reload) starts over at record order and default widths. The order said sessionStorage "like the zone switch", but sessionStorage survives a reload, and A5 asks a fresh load to reset, so memory is the one that meets both. Darren can switch it to sessionStorage if a reload should keep the sort.
+
+Page-scroll fix found on the way: the left column's 27 subject folders each carry an absolutely positioned `.sr-only` heading whose containing block was `.shell`, so they pushed the document to 4504px tall at 1920. `.left-folders` is now `position: relative`, which keeps them inside the left column's scroll box (page scroll 0).
+
+Verified Nov 20 in local headless Chrome against the live connector (27 seed entries, hour 2026-11-20 23:00, believed list at 2026-11-21 00:00), `docs/folder-grid-proof/grid-geometry.mjs`, results in `geometry.json`:
+- 1920x1080: columns 98.4 / 59 / 246 / 98.4 / 39.3 / 364 / 442.8 px, table 1348 = folder 1348, no cell overflowing, rows 27px (the last row 26.5, no bottom border), page scroll 0.
+- A value made 101 chars long: it scrolls in its cell (scrollWidth 735 in 443), every column and row unchanged.
+- KID header: ascending 1..27, again descending 27..1, aria-sort follows.
+- Subject|State edge dragged 43px right: Subject 25 → 29.4ch, State 10 → 5.6ch, table 1348; dragged 800px left: Subject stops at 4ch, State 31.
+- Back to the day, open 23 again: sort and widths held. At 00:00 the believed list is still record order. Fresh load: record order, default widths.
+- 1024x768: table 986px in a 569px wrap that scrolls sideways; page scroll 0.
+
+Proof shots: `docs/folder-grid-proof/01`–`06`.
+
+Tests: 484 pass (463 before). `views/entry-grid.test.ts`: every column sorted both ways, KID 2 before 10, ties and unreadable times, the header row and its labels, widths in ch, cells, click sort and reverse with aria-sort and arrows, the KID link through a sort, the two lists apart and held across a new hour, a fresh load, the resize (pair sum, 4ch floor, window-level move/up, a capture that throws).

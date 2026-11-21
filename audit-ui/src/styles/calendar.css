@@ -199,46 +199,157 @@
   color: var(--accent);
 }
 
-/* Log lines: one entry per line, clock time first. */
-.entry-log {
+/* The log as a grid (Darren, Nov 20): fixed columns like Explorer. Every
+   column has a defined width (colgroup, in ch, set by entry-grid.ts); the
+   table is the sum of them and never changes size. A long value scrolls
+   inside its cell; the cell, the row and the columns never move. The wrap
+   scrolls sideways inside the folder when the folder is narrower. */
+.entry-grid-wrap {
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-color: var(--line-strong) transparent;
+  scrollbar-width: thin;
+}
+
+.entry-grid {
+  table-layout: fixed;
+  border-collapse: collapse;
   font-family: var(--mono);
   font-size: var(--t-telemetry-data-size);
   line-height: var(--t-telemetry-data-lh);
 }
 
-.log-line {
-  padding: var(--s1) 0;
-  border-bottom: 1px solid var(--line);
-  overflow-wrap: anywhere;
+.entry-grid th,
+.entry-grid td {
+  padding: 0;
+  overflow: hidden;
+  text-align: left;
+  vertical-align: middle;
 }
 
-.log-line:last-child {
+.entry-grid td {
+  border-bottom: 1px solid var(--line);
+}
+
+.entry-grid tbody tr:last-child td {
   border-bottom: 0;
 }
 
-.log-line .kid {
+/* One cell: one line, fixed height (room for a thin scrollbar), text that
+   is longer than the column scrolls sideways inside it. */
+.entry-grid .cell {
+  height: calc(var(--t-telemetry-data-lh) + 10px);
+  box-sizing: border-box;
+  padding: 2px var(--s1) 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: nowrap;
+  scrollbar-color: var(--line-strong) transparent;
+  scrollbar-width: thin;
+}
+
+.entry-grid .col-authority,
+.entry-grid .col-authority .sort-button {
+  text-align: right;
+  justify-content: flex-end;
+}
+
+/* Header: a sort button per column, and a grip on the right edge. */
+.entry-grid th {
+  position: relative;
+  border-bottom: 1px solid var(--line-strong);
+}
+
+.entry-grid .sort-button {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  width: 100%;
+  padding: var(--s1);
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-weight: 700;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.entry-grid .sort-button:hover,
+.entry-grid th[aria-sort='ascending'] .sort-button,
+.entry-grid th[aria-sort='descending'] .sort-button {
+  color: var(--text);
+}
+
+.entry-grid .sort-button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.entry-grid .sort-label {
+  overflow: hidden;
+}
+
+.entry-grid .sort-arrow {
+  flex-shrink: 0;
+}
+
+.entry-grid .col-grip {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 1;
+  width: 8px;
+  height: 100%;
+  cursor: col-resize;
+  touch-action: none;
+}
+
+.entry-grid .col-grip::after {
+  content: '';
+  position: absolute;
+  top: 25%;
+  right: 0;
+  width: 2px;
+  height: 50%;
+  background: var(--line-strong);
+}
+
+.entry-grid .col-grip:hover::after,
+.entry-grid.resizing .col-grip::after {
+  background: var(--accent);
+}
+
+.entry-grid.resizing {
+  cursor: col-resize;
+  user-select: none;
+}
+
+.entry-grid .kid {
   color: var(--accent);
   text-decoration: none;
 }
 
-.log-line .kid:hover {
+.entry-grid .kid:hover {
   text-decoration: underline;
 }
 
-.log-line .kid:focus-visible {
+.entry-grid .kid:focus-visible {
   outline: 2px solid var(--accent);
-  outline-offset: 2px;
+  outline-offset: -2px;
 }
 
-.log-line .subject {
+.entry-grid .cell-subject {
   font-weight: 700;
   color: var(--text);
 }
 
-.log-line .authority {
+.entry-grid .cell-authority {
   font-weight: 700;
 }
 
-.log-line .reason {
+.entry-grid .cell-reason {
   color: var(--muted);
 }

@@ -435,7 +435,7 @@ export class CalendarView implements View {
     didSec.appendChild(
       did.length === 0
         ? el('p', 'empty-state', 'Nothing was recorded in this hour.')
-        : renderEntryLog(did, 'What the agent did this hour', this.zone, this.timeZone),
+        : renderEntryLog(did, 'What the agent did this hour', 'did', this.zone, this.timeZone),
     );
     out.push(didSec);
 
@@ -444,7 +444,7 @@ export class CalendarView implements View {
     beliefSec.appendChild(
       pool.length === 0
         ? el('p', 'empty-state', 'No entries were live at this moment.')
-        : renderEntryLog(pool, 'What it believed at this moment', this.zone, this.timeZone),
+        : renderEntryLog(pool, 'What it believed at this moment', 'believed', this.zone, this.timeZone),
     );
     out.push(beliefSec);
     return out;
