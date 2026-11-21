@@ -7,6 +7,7 @@ import './styles/calendar-rail.css';
 import './styles/shell.css';
 import './styles/telemetry.css';
 import './styles/folders.css';
+import './styles/loading-modal.css';
 import './styles/stitch-system.css';
 import { createLiveAdapter } from './adapter/live.ts';
 import { CONNECTOR_URL } from './adapter/connector-url.ts';

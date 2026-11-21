@@ -8,6 +8,7 @@ import { ADDRESS_FOLLOWED, CalendarView } from '../views/calendar.ts';
 import { parseCalendarPath } from '../util/calendar.ts';
 import { RecordView } from '../views/record.ts';
 import { createShell, setViewLabel, type ShellSlots } from '../shell/shell.ts';
+import { LoadingModal } from '../shell/loading-modal.ts';
 import { stripBase, withBase } from '../util/base.ts';
 import { RailPanel } from '../shell/rail.ts';
 import { TelemetryPanel } from '../shell/telemetry.ts';
@@ -34,6 +35,7 @@ export class Router {
   private unsubscribeLog: () => void;
   /** Panel widths (drag grips) and the terminal's window state. */
   private layout: ShellLayout;
+  private loadingModal: LoadingModal | null = null;
   /** Where the chat reads its voices and models; undefined = the connector (GET /models). */
   private models: ModelSource | undefined;
 
@@ -47,6 +49,12 @@ export class Router {
     const left = new RailPanel(adapter, this.slots.rail, this.slots.left, (path) => this.navigate(path));
     this.leftPanel = left;
     left.mount();
+    // First load: the record service may be asleep, so say so until the
+    // left panel's list first settles. The chat panel owns the list at boot.
+    const folderBody = this.slots.left.querySelector('.left-folders');
+    if (folderBody instanceof HTMLElement) {
+      this.loadingModal = new LoadingModal(folderBody, container);
+    }
     this.unsubscribeLog = this.chatLog.subscribe(() => this.leftPanel.refresh());
     // Right column: Curator + ELLE telemetry. It subscribes to the log itself.
     this.layout = new ShellLayout(this.slots);
@@ -104,6 +112,8 @@ export class Router {
       this.currentView = null;
     }
     this.unsubscribeLog();
+    this.loadingModal?.hide();
+    this.loadingModal = null;
     this.leftPanel.unmount();
     this.rightPanel.unmount();
     this.layout.destroy();
