@@ -18,10 +18,10 @@ import type { ChatLog } from './chat-log.ts';
 
 export const ELLE_NAME = 'ELLE';
 /**
- * ELLE's expansion, in Darren's words. Not supplied yet: until it is, the
- * header shows ELLE alone. Never fill this with invented words.
+ * ELLE's expansion, in Darren's words, supplied Nov 21: External
+ * Learning Loop Engine.
  */
-export const ELLE_EXPANSION: string | null = null;
+export const ELLE_EXPANSION: string | null = 'External Learning Loop Engine';
 
 function el<K extends keyof HTMLElementTagNameMap>(tag: K, className = '', text?: string): HTMLElementTagNameMap[K] {
   const node = document.createElement(tag);

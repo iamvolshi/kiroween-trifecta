@@ -57,11 +57,11 @@ const texts = (sel: string): string[] => [...container.querySelectorAll(sel)].ma
 const details = (sel: string): string[] => texts(`${sel} .elle-detail`);
 
 describe('the ELLE page', () => {
-  it('header: ELLE alone, no expansion until Darren supplies it', async () => {
+  it('header: ELLE over her expansion, the one Darren supplied', async () => {
     await mount(lessonsStub([]));
-    expect(ELLE_EXPANSION).toBeNull();
-    expect(q('.elle-head').textContent).toBe('ELLE');
-    expect(container.querySelector('.elle-expansion')).toBeNull();
+    expect(ELLE_EXPANSION).toBe('External Learning Loop Engine');
+    expect(q('.elle-head').textContent).toBe('ELLEExternal Learning Loop Engine');
+    expect(q('.elle-expansion').textContent).toBe('External Learning Loop Engine');
   });
 
   it('four boxes in order: case files, grey box, answered, per turn', async () => {
