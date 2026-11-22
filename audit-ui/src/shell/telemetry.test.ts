@@ -122,6 +122,22 @@ describe('TelemetryPanel: the work column', () => {
     expect(Array.from(slot.querySelectorAll<HTMLElement>('.is-highlighted')).map((li) => li.dataset.entryId)).toEqual(['e2']);
   });
 
+  it('an ERIE found is a short report, not the found text', async () => {
+    const log = new ChatLog();
+    const chapter = `CHAPTER VII. ${'My present situation was one in which all voluntary thought was swallowed up and lost. '.repeat(60)}`;
+    log.push(turn('m', 1, {
+      erie: {
+        question: 'q', state: 'found', text: chapter,
+        provenance: [{ source: 'K-record day 20778 tick 26, Mary Shelley', content: 'e1', excerpt: 'CHAPTER VII. My present situation' }],
+      },
+    }));
+    new TelemetryPanel(fake(ok([makeEntry({ id: 'e1', kid: 11, subject: 'frankenstein-chapter-7', authority: 8 })])), log).mount(slot);
+    await tick();
+    const item = slot.querySelector<HTMLElement>('.feed-item[data-engine="ERIE"]')!;
+    expect(item.querySelector('.feed-text')?.textContent).toBe('ERIE found what this needs: located 1 reference. Provenance OK. Trust 8.');
+    expect(item.textContent).not.toContain('My present situation was one in which');
+  });
+
   it('a late refresh after unmount is dropped, and unmount stops listening', async () => {
     const late = deferred<AdapterResult<Entry[]>>();
     const log = new ChatLog();

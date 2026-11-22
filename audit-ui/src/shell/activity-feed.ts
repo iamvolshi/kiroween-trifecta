@@ -27,6 +27,22 @@ export interface FeedItem {
 const rule = (l: Lesson): string => l.rule ?? l.detail;
 
 /**
+ * The ERIE line in the telemetry is a report, not the text: what ERIE
+ * located, that the provenance holds, and the trust of what was found.
+ * No wall of transcript or prose here. The full passage lives on the
+ * ERIE page (Research), not in this column. The trust comes from the
+ * record entry the first hit points at; when the record has not been
+ * read yet, the report carries no trust rather than a guessed one.
+ */
+function erieReport(ask: NonNullable<ChatTurn['engines']['erie']>, entries: Entry[]): string {
+  const refs = ask.provenance.length;
+  if (refs === 0) return 'ERIE found what this needs.';
+  const first = entries.find((e) => e.id === ask.provenance[0].content);
+  const trust = first !== undefined ? ` Trust ${first.authority}.` : '';
+  return `ERIE found what this needs: located ${refs} ${refs === 1 ? 'reference' : 'references'}. Provenance OK.${trust}`;
+}
+
+/**
  * Events of one turn in the order they happen: lessons read into the prompt,
  * the retrieval, the record write, then the lessons ELLE recorded or promoted
  * from the turn.
@@ -46,7 +62,7 @@ function eventsOf(t: ChatTurn, entries: Entry[]): Array<Omit<FeedItem, 'id' | 'f
       ask.state === 'found'
         ? {
             engine: 'ERIE',
-            text: `ERIE found what this needs: ${ask.text}`,
+            text: erieReport(ask, entries),
             sources: ask.provenance.map((p) => ({ source: p.source, excerpt: p.excerpt })),
           }
         : { engine: 'ERIE', text: `ERIE found nothing for '${ask.question}'`, sources: [] },

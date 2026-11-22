@@ -162,7 +162,7 @@ describe('a box opens its engine\'s feed for that turn', () => {
     await start();
     await say('all');
     box(0, 'ERIE').click();
-    expect(right().querySelector('.engine-detail .feed-text')?.textContent).toBe('ERIE found what this needs: stub thunderstorms');
+    expect(right().querySelector('.engine-detail .feed-text')?.textContent).toBe('ERIE found what this needs: located 1 reference. Provenance OK. Trust 5.');
     expect(right().querySelector('.engine-detail .feed-source')?.textContent).toBe('stub source stub excerpt');
     box(0, 'ELLE').click();
     expect(right().querySelector('.engine-detail .feed-text')?.textContent).toBe('ELLE promoted a lesson: stub speaker loves thunderstorms');
