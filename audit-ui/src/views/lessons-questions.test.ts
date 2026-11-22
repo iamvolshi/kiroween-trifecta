@@ -185,3 +185,32 @@ describe('the questions are read on every turn', () => {
     expect(container.querySelector('.elle-grey')!.textContent).not.toContain('Nothing is held.');
   });
 });
+
+describe('the reasoning under the folders', () => {
+  const withReasoning = (reasoning: string | null, lessons: Lesson[] = []): SeamAdapter =>
+    createRecordStub([makeEntry({ id: 'x' })], {
+      fetchLessons: async () => ({ ok: true, data: lessons }),
+      fetchQuestions: async () => ({ ok: true, data: { questions: [question(1), question(2)], reasoning } }),
+    });
+
+  it('shows the last sectioned request verbatim, under the folders', async () => {
+    const sent = '[QUESTION elle-question-1]\nIs it so?\n\n[QUESTION elle-question-2]\nAnd this?';
+    await mount(withReasoning(sent, [lesson('ev-9', 'Darren writes at night', 'candidate')]));
+    const pre = q('.elle-grey .elle-reasoning-text');
+    expect(pre.tagName).toBe('PRE');
+    expect(pre.textContent).toBe(sent);
+    const kids = [...q('.elle-grey .elle-box-body').children];
+    const at = kids.indexOf(q('.elle-grey .elle-reasoning'));
+    const folders = kids.filter((n) => n.classList.contains('elle-question'));
+    expect(folders.every((f) => kids.indexOf(f) < at)).toBe(true);
+    expect(folders).toHaveLength(2);
+    // The held lesson still shows, after the reasoning.
+    expect(at).toBe(kids.length - 2);
+    expect(kids[kids.length - 1].textContent).toContain('Darren writes at night');
+  });
+
+  it('no reasoning from the connector shows none', async () => {
+    await mount(withReasoning(null));
+    expect(container.querySelector('.elle-reasoning')).toBeNull();
+  });
+});

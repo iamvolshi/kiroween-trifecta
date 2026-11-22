@@ -271,7 +271,16 @@ export class LessonsView {
     if (qs !== null && !qs.ok) greyParts.push(el('p', 'error-state', qs.error));
     // With nothing held at all, the one lessons line says it for both.
     else if (qs !== null && folders.length === 0 && open.length > 0) greyParts.push(el('p', 'empty-state elle-no-questions', 'No question is open.'));
-    greyParts.push(...folders.map(renderQuestion), ...loose.map((l) => renderLesson(l)));
+    greyParts.push(...folders.map(renderQuestion));
+    // Under the folders: the last sectioned request as the model received it
+    // (Darren, Q2), verbatim. Never the model's reply; nothing when none.
+    if (qs !== null && qs.ok && qs.data.reasoning !== null) {
+      const part = el('section', 'elle-reasoning');
+      part.appendChild(el('p', 'elle-reasoning-head', 'Reasoning sent to the model'));
+      part.appendChild(el('pre', 'elle-reasoning-text', qs.data.reasoning));
+      greyParts.push(part);
+    }
+    greyParts.push(...loose.map((l) => renderLesson(l)));
     if (open.length === 0) {
       greyParts.push(el('p', 'empty-state', 'Nothing is held. No lesson is waiting to be promoted.'));
     }

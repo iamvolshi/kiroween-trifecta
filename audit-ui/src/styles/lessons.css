@@ -275,3 +275,21 @@
   color: var(--text);
   overflow-wrap: anywhere;
 }
+
+.elle-reasoning {
+  margin: var(--s2) 0 0;
+}
+
+.elle-reasoning-head {
+  margin: 0;
+  color: var(--muted);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.elle-reasoning-text {
+  margin: var(--s1) 0 0;
+  color: var(--text);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
