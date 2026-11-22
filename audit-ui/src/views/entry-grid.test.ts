@@ -38,7 +38,7 @@ afterEach(() => {
 
 describe('sortEntries', () => {
   // Expected ascending order per column; descending is its reverse.
-  const ASC: Record<ColumnKey, string[]> = {
+  const ASC: Record<Exclude<ColumnKey, 'inspect'>, string[]> = {
     time: ['b', 'c', 'a'],
     kid: ['b', 'c', 'a'], // 2, 9, 10: numbers, not text
     subject: ['a', 'b', 'c'], // chapter-10 < chapter-2 < letter-1 (alphabetical)

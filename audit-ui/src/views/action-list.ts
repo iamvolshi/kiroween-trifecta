@@ -1,6 +1,7 @@
 import type { View } from '../router/router.ts';
 import type { SeamAdapter } from '../adapter/seam.ts';
-import { fillCollapsibleCard, srOnly } from './record-card.ts';
+import { renderCardDetails, srOnly } from './record-card.ts';
+import { createEntryGrid } from './entry-grid.ts';
 import { createIntro } from './intro.ts';
 import { compareKStart } from '../util/interval.ts';
 import {
@@ -62,19 +63,18 @@ export class ActionListView implements View {
     // Newest first, by parsed k_start
     const sorted = [...entries].sort((a, b) => compareKStart(b, a));
 
-    const ul = document.createElement('ul');
-    ul.className = 'action-list';
-    const rows: HTMLLIElement[] = [];
-
-    for (const [i, entry] of sorted.entries()) {
-      const li = document.createElement('li');
-      fillCollapsibleCard(li, entry, {
-        href: `/entry/${entry.kid}/${encodeURIComponent(entry.subject)}/${encodeURIComponent(entry.id)}`,
-        detailsId: `action-details-${i}`,
-      });
-      ul.appendChild(li);
-      rows.push(li);
-    }
+    // Explorer columns (Darren, Nov 22): KID | Subject | State | Authority |
+    // Inspect. Each column holds its width, so the state sits straight down
+    // the page whatever the subject's length. A row click opens its details.
+    const grid = createEntryGrid(sorted, {
+      label: 'Action List',
+      list: 'actions',
+      kidLink: false,
+      details: renderCardDetails,
+      idPrefix: 'action',
+    });
+    const ul = grid.element;
+    ul.classList.add('action-list');
 
     // Filters: rows are built once and only shown or hidden, so each row
     // keeps its own expanded/collapsed state while filters change.
@@ -87,12 +87,7 @@ export class ActionListView implements View {
     noMatch.className = 'empty-state filter-empty';
 
     const apply = (f: FilterState): void => {
-      let shown = 0;
-      sorted.forEach((entry, i) => {
-        const show = matches(entry, f);
-        rows[i]!.hidden = !show;
-        if (show) shown++;
-      });
+      const shown = grid.setVisible((entry) => matches(entry, f));
       count.textContent = `Showing ${shown} of ${sorted.length} entries`;
       noMatch.hidden = shown > 0;
       noMatch.replaceChildren(

@@ -218,124 +218,97 @@ a.record-card:focus-visible {
   content: ' \2192'; content: ' \2192' / '';
 }
 
-/* ---- Collapsible card (Action List only) ----------------------------- */
+/* ---- Grid rows that open (Action List, Record, Chain) ----------------
+   The lists are Explorer grids (views/entry-grid.ts, calendar.css). A row
+   opens to its details in the row under it; the toggle is the Subject (or
+   State) cell's own text, so the columns stay put. */
 
-.action-list > li {
-  margin: 0 0 2px;
-}
-
-.record-card.card-collapsible {
-  gap: 0;
+/* The toggle reads as the cell's text, with an open/closed chevron. */
+.entry-grid .card-toggle {
+  display: block;
+  width: 100%;
   padding: 0;
-}
-
-.record-card.card-collapsible:hover,
-.record-card.card-collapsible.is-open {
-  border-color: var(--line-strong);
-}
-
-/* Title row: [toggle: KID | headline | authority] [Inspect]. */
-.card-row {
-  display: flex;
-  align-items: stretch;
-  min-width: 0;
-}
-
-.card-toggle {
-  flex: 1;
-  min-width: 0;
-  display: grid;
-  grid-template-columns: minmax(0, 11rem) minmax(0, 1fr) auto;
-  align-items: center;
-  gap: var(--s3);
-  padding: var(--s1) var(--s3);
   border: 0;
-  border-radius: var(--radius);
   background: transparent;
   color: var(--text);
   font: inherit;
   letter-spacing: normal;
   text-align: left;
   text-transform: none;
+  white-space: nowrap;
   cursor: pointer;
 }
 
-.card-toggle:hover {
-  background: var(--surface-2);
-}
-
-.card-toggle:focus-visible {
-  outline-offset: -2px;
-}
-
-/* Open/closed cue: a plain chevron, drawn in CSS from aria-expanded. */
-.card-toggle .kid::before {
+.entry-grid .card-toggle::before {
   content: '\25B8'; content: '\25B8' / '';
   display: inline-block;
-  width: 1em;
-  margin-right: var(--s1);
-  font-size: var(--t-body-md-size);
-  line-height: var(--t-body-md-lh);
-  font-weight: var(--t-body-md-wt);
+  width: 1.2em;
   color: var(--muted);
 }
 
-.card-toggle[aria-expanded='true'] .kid::before {
+.entry-grid .card-toggle[aria-expanded='true']::before {
   content: '\25BE'; content: '\25BE' / '';
   color: var(--accent);
 }
 
-.card-toggle .kid {
-  font-family: var(--mono);
-  font-size: var(--t-telemetry-data-size);
-  line-height: var(--t-telemetry-data-lh);
-  font-weight: var(--t-telemetry-data-wt);
-  letter-spacing: var(--t-telemetry-data-ls);
-  color: var(--muted);
-  /* Never cut the highlight: a long KID label wraps. */
-  overflow-wrap: break-word;
+.entry-grid .card-toggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
 }
 
-.card-toggle .label {
-  font-size: var(--t-body-md-size);
-  line-height: var(--t-body-md-lh);
-  font-weight: var(--t-body-md-wt);
-  /* Never cut the highlight: on a narrow column the headline wraps. */
-  overflow-wrap: break-word;
+/* A row that opens: the whole row is the target, like Explorer. */
+.entry-grid tr.log-line:has(.card-toggle) {
+  cursor: pointer;
 }
 
-.card-row .card-action {
+.entry-grid tr.log-line:has(.card-toggle):hover td,
+.entry-grid tr.log-line.is-open td {
+  background: var(--surface-2);
+}
+
+/* A link column's header: the sort buttons' look, nothing to press. */
+.entry-grid .col-head {
   display: flex;
-  align-items: center;
-  margin: 0;
-  padding: 0 var(--s3);
-  border-left: 1px solid var(--line);
+  padding: var(--s1);
+  color: var(--muted);
+  font-weight: 700;
+  letter-spacing: var(--t-label-lg-ls);
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.entry-grid .card-action {
   text-decoration: none;
   white-space: nowrap;
 }
 
-.card-row .card-action:hover {
-  background: var(--surface-2);
+.entry-grid .card-action:hover {
+  text-decoration: underline;
 }
 
-.card-row .card-action:focus-visible {
+.entry-grid .card-action:focus-visible {
+  outline: 2px solid var(--accent);
   outline-offset: -2px;
 }
 
-.card-toggle .authority {
-  line-height: 1.4;
+/* Details: the fields the columns leave out, under their row. */
+.entry-grid .grid-details-row > td {
+  padding: 0;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+  white-space: normal;
 }
 
-/* Details: the rest of the skeleton, under the title row. */
 .card-details {
   display: flex;
   flex-direction: column;
   gap: var(--s2);
   padding: var(--s2) var(--s3) var(--s3);
-  border-top: 1px solid var(--line);
 }
 
-.card-details[hidden] {
+.card-details[hidden],
+.entry-grid tr[hidden] {
   display: none;
 }
 
@@ -418,7 +391,6 @@ a.record-card:focus-visible {
   color: var(--muted);
 }
 
-.action-list > li[hidden],
 .action-list[hidden],
 .filter-empty[hidden] {
   display: none;

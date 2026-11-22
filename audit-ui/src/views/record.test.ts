@@ -31,18 +31,24 @@ describe('RecordView', () => {
 
     expect(root.querySelector('h1')?.textContent).toContain('order-1042');
     expect(root.querySelector('h2')?.textContent).toBe(subject);
-    const links = Array.from(root.querySelectorAll('.record-entries a'));
+    // An Explorer grid: the KID links to Entry Detail, oldest first.
+    const links = Array.from(root.querySelectorAll('.record-entries tbody a.kid'));
     expect(links.map((a) => a.getAttribute('href'))).toEqual([
       `/entry/1/${encodeURIComponent(subject)}/early`,
       `/entry/1/${encodeURIComponent(subject)}/late`,
     ]);
-    const first = links[0]!;
-    expect(first.querySelector('.kid')?.textContent).toBe('1');
-    expect(first.querySelector('.state')?.textContent).toBe('confirmed');
-    expect(first.querySelector('.authority')?.textContent).toBe('5');
-    expect(first.querySelector('.evidence')?.textContent).toBe('ev-early');
-    expect(first.querySelector('.k-start')?.textContent).toBe('2026-11-16T09:00:00.000Z');
-    expect(first.querySelector('.k-time')?.textContent).toBe(early.k_time);
+    const first = root.querySelector('.record-entries tbody tr.log-line')!;
+    const cell = (k: string) => first.querySelector(`.cell-${k}`)?.textContent;
+    expect(cell('time')).toBe('2026-11-16 09:00:00');
+    expect(cell('kid')).toBe('1');
+    expect(cell('subject')).toBe(subject);
+    expect(cell('state')).toBe('confirmed');
+    expect(cell('authority')).toBe('5');
+    expect(cell('evidence')).toBe('ev-early');
+    // Its details row keeps the full times.
+    const details = first.nextElementSibling!;
+    expect(details.querySelector('.k-start')?.textContent).toBe('2026-11-16T09:00:00.000Z');
+    expect(details.querySelector('.k-time')?.textContent).toBe(early.k_time);
   });
 
   it('unknown account shows the empty state', async () => {

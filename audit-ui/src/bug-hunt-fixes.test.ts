@@ -61,15 +61,18 @@ describe('MED-2: card fields, chat lines and the no-match box carry real text la
     const root = host();
     new ActionListView(createRecordStub([makeEntry({ id: 'a' })])).mount(root);
     await settle();
-    const li = root.querySelector('.action-list > li')!;
+    // The Action List is a grid: its columns are named by their headers,
+    // and the details row keeps a spoken label in front of each value.
+    const table = root.querySelector('.action-list table')!;
+    expect([...table.querySelectorAll('thead th[scope="col"]')].map((th) => th.textContent)).toEqual(
+      ['KID', 'Subject', 'State', 'Authority', 'Inspect'],
+    );
+    const li = table.querySelector('tbody tr.grid-details-row')!;
     const spoken = (cls: string) => {
       const v = li.querySelector(`.${cls}`)!;
       const prev = v.previousElementSibling;
       return prev?.classList.contains('sr-only') ? prev.textContent : null;
     };
-    expect(spoken('kid')).toBe('KID: ');
-    expect(spoken('authority')).toBe('Authority: ');
-    expect(spoken('state')).toBe('State: ');
     expect(spoken('reason')).toBe('Why: ');
     expect(spoken('evidence')).toBe('Evidence: ');
     expect(spoken('k-start')).toBe('Live from: ');
@@ -77,7 +80,7 @@ describe('MED-2: card fields, chat lines and the no-match box carry real text la
     expect(spoken('e-time')).toBe('Event time: ');
     expect(spoken('k-time')).toBe('Live until: ');
     // Values stay pure, as every older test expects.
-    expect(li.querySelector('.authority')!.textContent).toBe('5');
+    expect(table.querySelector('tbody .cell-authority')!.textContent).toBe('5');
   });
 
   it('chat lines say who spoke', async () => {

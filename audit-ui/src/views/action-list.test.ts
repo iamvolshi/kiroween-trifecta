@@ -11,6 +11,19 @@ import { createRecordStub, createFailingStub } from '../test-helpers.ts';
 import type { Entry, SeamAdapter, KidMap } from '../adapter/seam';
 import { assemblyNotUsed } from '../test-helpers';
 
+/**
+ * The Action List is an Explorer grid: one row per entry, its details in
+ * the row under it. A row here is the pair, read as one.
+ */
+function rowsOf(el: Element): Array<{ querySelector(sel: string): Element | null }> {
+  return Array.from(el.querySelectorAll<HTMLTableRowElement>('.action-list tbody tr.log-line')).map((tr) => ({
+    querySelector: (sel: string) => {
+      const next = tr.nextElementSibling;
+      return tr.querySelector(sel) ?? (next?.classList.contains('grid-details-row') ? next.querySelector(sel) : null);
+    },
+  }));
+}
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -106,7 +119,7 @@ describe('ActionListView – example-based', () => {
     const el = await mountAndLoad(view);
 
     expect(el.querySelector('.empty-state')).not.toBeNull();
-    expect(el.querySelector('ul')).toBeNull();
+    expect(el.querySelector('table')).toBeNull();
   });
 
   it('error result → <p class="error-state"> present, no <ul> (Req 3.7)', async () => {
@@ -114,14 +127,14 @@ describe('ActionListView – example-based', () => {
     const el = await mountAndLoad(view);
 
     expect(el.querySelector('.error-state')).not.toBeNull();
-    expect(el.querySelector('ul')).toBeNull();
+    expect(el.querySelector('table')).toBeNull();
   });
 
-  it('renders a <ul class="action-list"> when entries are present', async () => {
+  it('renders the Action List grid (a table) when entries are present', async () => {
     const view = new ActionListView(createRecordStub());
     const el = await mountAndLoad(view);
 
-    expect(el.querySelector('ul.action-list')).not.toBeNull();
+    expect(el.querySelector('.action-list table.entry-grid')).not.toBeNull();
   });
 
   it('fixture entry – all field values appear verbatim (Req 9.1)', async () => {
@@ -142,8 +155,8 @@ describe('ActionListView – example-based', () => {
 
     // kid number appears in .kid span
     expect(el.querySelector('.kid')?.textContent).toContain('42');
-    // authority appears in .authority span
-    expect(el.querySelector('.authority')?.textContent).toBe('5');
+    // authority appears in its column
+    expect(el.querySelector('.cell-authority')?.textContent).toBe('5');
     // timestamps appear verbatim
     expect(el.querySelector('.k-start')?.textContent).toBe('2024-03-01T12:00:00.000Z');
     expect(el.querySelector('.t-time')?.textContent).toBe('2024-03-01T12:01:00.000Z');
@@ -199,7 +212,7 @@ describe('Property 4: Action List field completeness', () => {
         const view = new ActionListView(adapterFromEntries(entries));
         const el = await mountAndLoad(view);
 
-        const lis = Array.from(el.querySelectorAll('li'));
+        const lis = rowsOf(el);
         expect(lis.length).toBe(entries.length);
 
         for (const li of lis) {
@@ -210,7 +223,7 @@ describe('Property 4: Action List field completeness', () => {
           expect(/\d/.test(kidText)).toBe(true);
 
           // authority: integer value
-          const authorityText = li.querySelector('.authority')?.textContent ?? '';
+          const authorityText = li.querySelector('.cell-authority')?.textContent ?? '';
           expect(/^\d+$/.test(authorityText)).toBe(true);
 
           // All four timestamps present and non-empty
@@ -238,17 +251,17 @@ describe('Property 5: Label derivation integrity', () => {
    *
    * **Validates: Requirements 3.4, 3.5**
    */
-  it('.label span contains only text derivable from subject and state', async () => {
+  it('the subject and state columns hold the entry\'s own subject and state', async () => {
     await fc.assert(
       fc.asyncProperty(nonEmptyEntries, async (entries) => {
         const view = new ActionListView(adapterFromEntries(entries));
         const el = await mountAndLoad(view);
 
-        const lis = Array.from(el.querySelectorAll('li'));
+        const lis = rowsOf(el);
 
         for (let i = 0; i < lis.length; i++) {
           // Match the rendered li back to its source entry via the href id segment.
-          const anchor = lis[i].querySelector('a');
+          const anchor = lis[i]!.querySelector('a');
           const href = anchor?.getAttribute('href') ?? '';
           // href is /entry/${kid}/${subject}/${id}
           const hrefParts = href.split('/');
@@ -256,7 +269,8 @@ describe('Property 5: Label derivation integrity', () => {
           const matchingEntry = entries.find(e => e.id === entryId);
           if (!matchingEntry) continue; // shouldn't happen in well-formed data
 
-          const labelText = lis[i].querySelector('.label')?.textContent ?? '';
+          // The subject is the row's toggle; the state is its own column.
+          const labelText = `${lis[i]!.querySelector('.card-toggle')?.textContent ?? ''} ${lis[i]!.querySelector('.cell-state')?.textContent ?? ''}`;
 
           // The label must be a substring or derivation from subject + state.
           // Specifically, every part of the label must be found in subject or state.
@@ -286,7 +300,7 @@ describe('Property 6: Entry navigability', () => {
         const view = new ActionListView(adapterFromEntries(entries));
         const el = await mountAndLoad(view);
 
-        const lis = Array.from(el.querySelectorAll('li'));
+        const lis = rowsOf(el);
 
         for (const li of lis) {
           const anchor = li.querySelector('a');
@@ -312,7 +326,7 @@ describe('Property 6: Entry navigability', () => {
         const view = new ActionListView(adapterFromEntries(entries));
         const el = await mountAndLoad(view);
 
-        const lis = Array.from(el.querySelectorAll('li'));
+        const lis = rowsOf(el);
 
         for (const li of lis) {
           const anchor = li.querySelector('a');

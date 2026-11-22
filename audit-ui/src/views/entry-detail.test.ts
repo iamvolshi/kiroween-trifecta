@@ -205,10 +205,11 @@ describe('Property 11: Chain ordering and completeness', () => {
           const view = new EntryDetailView(adapter, first.kid, first.subject, first.id);
           await mountAndFlush(view, container);
 
-          const ol = container.querySelector('ol.chain-list');
+          const ol = container.querySelector('.chain-list table.entry-grid');
           expect(ol, 'chain-list missing').not.toBeNull();
 
-          const items = ol!.querySelectorAll('li.chain-entry');
+          // The chain is a grid: each entry's details row holds its live-from.
+          const items = ol!.querySelectorAll('tbody tr.grid-details-row');
           expect(items.length).toBe(chain.length);
 
           // Collect rendered k_start values from each list item
@@ -419,7 +420,7 @@ describe('EntryDetailView — example-based', () => {
       const view = new EntryDetailView(adapter, FIXTURE_ENTRY.kid, FIXTURE_ENTRY.subject, 'e1');
       await mountAndFlush(view, container);
 
-      const items = container.querySelectorAll('ol.chain-list li.chain-entry');
+      const items = container.querySelectorAll('.chain-list tbody tr.grid-details-row');
       expect(items.length).toBe(3);
 
       const kStarts = Array.from(items).map(li => li.querySelector('.k-start')!.textContent);

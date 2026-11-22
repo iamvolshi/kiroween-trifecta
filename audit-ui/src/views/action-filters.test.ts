@@ -34,7 +34,7 @@ async function mount(entries: Entry[] = E): Promise<HTMLElement> {
 afterEach(() => c?.remove());
 
 const visibleIds = (root: HTMLElement): string[] =>
-  Array.from(root.querySelectorAll<HTMLLIElement>('.action-list > li'))
+  Array.from(root.querySelectorAll<HTMLTableRowElement>('.action-list tbody tr.log-line'))
     .filter((li) => !li.hidden)
     .map((li) => decodeURIComponent(li.querySelector('a.card-action')!.getAttribute('href')!.split('/').pop()!));
 
@@ -208,18 +208,23 @@ describe('controls and row state', () => {
 
   it('rows stay collapsed, and an expanded row keeps its state across filtering', async () => {
     const r = await mount();
-    const li = Array.from(r.querySelectorAll<HTMLLIElement>('.action-list > li')).find((x) =>
+    const rowsOf = (): HTMLTableRowElement[] => Array.from(r.querySelectorAll<HTMLTableRowElement>('.action-list tbody tr.log-line'));
+    // A row's details sit in the row under it (the grid's details row).
+    const detailsOf = (x: Element): HTMLElement =>
+      document.getElementById(x.querySelector('.card-toggle')!.getAttribute('aria-controls')!)!;
+    const li = rowsOf().find((x) =>
       x.querySelector('a.card-action')!.getAttribute('href')!.endsWith('/r7'),
     )!;
-    expect(li.querySelector<HTMLElement>('.card-details')!.hidden).toBe(true);
+    expect(detailsOf(li).hidden).toBe(true);
     li.querySelector<HTMLButtonElement>('.card-toggle')!.click();
     press(r, 'state', 'confirmed');
     expect(li.hidden).toBe(true);
     press(r, 'clear', 'all');
     expect(li.hidden).toBe(false);
     expect(li.querySelector('.card-toggle')!.getAttribute('aria-expanded')).toBe('true');
-    const others = Array.from(r.querySelectorAll<HTMLLIElement>('.action-list > li')).filter((x) => x !== li);
-    expect(others.every((x) => x.querySelector<HTMLElement>('.card-details')!.hidden)).toBe(true);
+    expect(detailsOf(li).hidden).toBe(false);
+    const others = rowsOf().filter((x) => x !== li);
+    expect(others.every((x) => detailsOf(x).hidden)).toBe(true);
   });
 
   it('an authority of 0 falls in no band', async () => {

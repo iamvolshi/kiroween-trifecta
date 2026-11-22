@@ -1,7 +1,8 @@
 import type { View } from '../router/router.ts';
 import type { SeamAdapter, Entry } from '../adapter/seam.ts';
 import { compareKStart } from '../util/interval.ts';
-import { fillRecordCard } from './record-card.ts';
+import { createEntryGrid } from './entry-grid.ts';
+import { renderCardDetails } from './record-card.ts';
 import { createIntro } from './intro.ts';
 
 export class EntryDetailView implements View {
@@ -138,22 +139,18 @@ export class EntryDetailView implements View {
     h2.textContent = 'Chain History';
     section.appendChild(h2);
 
-    const ol = document.createElement('ol');
-    ol.className = 'chain-list';
-
-    // Ascending order: oldest first by k_start
+    // Ascending order: oldest first by k_start. Explorer columns (Darren,
+    // Nov 22); each KID links to its own Entry Detail.
     const sorted = [...chain].sort(compareKStart);
-
-    for (const e of sorted) {
-      const li = document.createElement('li');
-      li.className = 'chain-entry';
-      fillRecordCard(li, e, {
-        fields: ['authority', 'state', 'k-start', 'reason', 'evidence', 'k-time'],
-      });
-      ol.appendChild(li);
-    }
-
-    section.appendChild(ol);
+    const grid = createEntryGrid(sorted, {
+      label: 'Chain History',
+      list: 'chain',
+      timeFormat: 'stamp',
+      details: renderCardDetails,
+      idPrefix: 'chain',
+    }).element;
+    grid.classList.add('chain-list');
+    section.appendChild(grid);
     return section;
   }
 }

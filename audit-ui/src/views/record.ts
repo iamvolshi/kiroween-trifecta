@@ -1,6 +1,7 @@
 import type { View } from '../router/router.ts';
 import type { SeamAdapter, Entry } from '../adapter/seam.ts';
-import { fillRecordCard } from './record-card.ts';
+import { createEntryGrid } from './entry-grid.ts';
+import { renderCardDetails } from './record-card.ts';
 import { createIntro } from './intro.ts';
 import { compareKStart } from '../util/interval.ts';
 import { compareNatural } from '../util/natural.ts';
@@ -59,23 +60,17 @@ export class RecordView implements View {
     for (const subject of subjects) {
       const section = el('section', 'record-subject');
       section.appendChild(el('h2', '', subject));
-      const ul = el('ul', 'record-entries');
       const entries: Entry[] = [...recordResult.data.fields[subject]!].sort(compareKStart);
-      for (const e of entries) {
-        const li = el('li', '');
-        const a = el('a', '');
-        a.setAttribute(
-          'href',
-          `/entry/${e.kid}/${encodeURIComponent(e.subject)}/${encodeURIComponent(e.id)}`,
-        );
-        fillRecordCard(a, e, {
-          fields: ['authority', 'state', 'kid', 'k-start', 'evidence', 'k-time'],
-          link: true,
-        });
-        li.appendChild(a);
-        ul.appendChild(li);
-      }
-      section.appendChild(ul);
+      // Explorer columns (Darren, Nov 22); the KID links to Entry Detail.
+      const grid = createEntryGrid(entries, {
+        label: `Record: ${subject}`,
+        list: 'record',
+        timeFormat: 'stamp',
+        details: renderCardDetails,
+        idPrefix: `record-${subjects.indexOf(subject)}`,
+      }).element;
+      grid.classList.add('record-entries');
+      section.appendChild(grid);
       nodes.push(section);
     }
     body.replaceChildren(...nodes);
