@@ -125,9 +125,12 @@ export class LessonsView {
     body.append(this.files.section, this.grey.section, this.answered.section, this.turns.section);
     page.append(head, body);
     container.appendChild(page);
+    // A new turn re-renders; the lessons are read again only when that
+    // turn says ELLE recorded or promoted one.
     this.unsubscribe = this.log.subscribe(() => {
       this.render();
-      void this.load();
+      const last = this.log.turns().at(-1);
+      if (last && (last.engines.elle !== null || last.engines.elle_promoted !== null)) void this.load();
     });
     this.render();
     void this.load();

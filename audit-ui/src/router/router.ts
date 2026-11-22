@@ -57,7 +57,8 @@ export class Router {
     if (folderBody instanceof HTMLElement) {
       this.loadingModal = new LoadingModal(folderBody, container);
       // A rail tap before the first settle swaps that list away, so it would
-      // never settle: the new panel says its own loading state instead.
+      // never settle: the new panel says its own loading state instead. A
+      // Chat list mounted again later is not re-watched: the modal is boot-only.
       const swapped = new MutationObserver(() => {
         if (!folderBody.isConnected) {
           swapped.disconnect();

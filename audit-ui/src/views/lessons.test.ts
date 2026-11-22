@@ -139,6 +139,9 @@ describe('the ELLE page', () => {
   it('a promoted copy replaces its candidate, in first-seen order', () => {
     const later = { ...MUSIC_2, status: 'promoted' as const };
     expect(unique([[MUSIC_2, ORDER], [later]])).toEqual([later, ORDER]);
+    // Promotion is the later event: its fields win, subject included.
+    const moved = { ...MUSIC_2, status: 'promoted' as const, subject: 'jazz' };
+    expect(unique([[MUSIC_2], [moved]])).toEqual([moved]);
     expect(unique([[later], [MUSIC_2]])).toEqual([later]);
     expect(caseFiles([LOOSE, ORDER]).map(([s]) => s)).toEqual(['order-1042', null]);
   });
@@ -153,6 +156,19 @@ describe('the ELLE page', () => {
       expect(text, banned).not.toContain(banned);
     }
     expect(container.querySelector('.view-intro, .how-line, .helper-line, .teaching')).toBeNull();
+  });
+
+  it('re-reads the lessons only when a turn says ELLE acted', async () => {
+    let reads = 0;
+    const adapter = createRecordStub([], { fetchLessons: async () => { reads++; return { ok: true, data: [] }; } });
+    const log = await mount(adapter);
+    expect(reads).toBe(1);
+    log.push(turn('quiet', null, null));
+    await tick();
+    expect(reads).toBe(1);
+    log.push(turn('learned', null, MUSIC_1));
+    await tick();
+    expect(reads).toBe(2);
   });
 
   it('unmount stops listening to the log', async () => {
