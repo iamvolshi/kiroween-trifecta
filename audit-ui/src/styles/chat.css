@@ -98,6 +98,11 @@
   color: var(--text);
 }
 
+/* The wait while a reply is coming: plain words, muted, on the reply side. */
+.chat-thinking {
+  color: var(--muted);
+}
+
 .bubble-name {
   margin: 0 0 2px;
   font-family: var(--mono);

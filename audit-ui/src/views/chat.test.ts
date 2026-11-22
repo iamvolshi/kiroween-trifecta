@@ -355,6 +355,37 @@ describe('talking', () => {
     expect(sendBtn().disabled).toBe(false);
   });
 
+  it('the user bubble and a thinking row show at once, before the reply lands', async () => {
+    const d = deferred<AdapterResult<ChatTurn>>();
+    const { adapter } = fake(() => d.promise);
+    await open(adapter);
+    pick('book');
+    send('hello there');
+    // Before the reply: the message is on screen, the composer is empty, the wait shows.
+    expect(container.querySelector('.bubble-row-user .chat-user')?.textContent).toContain('hello there');
+    expect(container.querySelector('.chat-thinking')?.textContent).toBe('Thinking…');
+    expect(input().value).toBe('');
+    d.resolve({ ok: true, data: turn1() });
+    await tick();
+    // After the reply: the thinking row is gone, the real turn stands.
+    expect(container.querySelector('.chat-thinking')).toBeNull();
+    expect(container.querySelector('.bubble-row-reply .chat-reply')?.textContent).toContain('Your order arrives');
+  });
+
+  it('a failed turn clears the thinking row and puts the message back to retry', async () => {
+    const log = new ChatLog();
+    const { adapter } = fake(async () => ({ ok: false, error: 'the connector is down' }));
+    await open(adapter, log);
+    pick('book');
+    send('hello there');
+    expect(container.querySelector('.chat-thinking')).not.toBeNull();
+    await tick();
+    expect(container.querySelector('.chat-thinking')).toBeNull();
+    expect(container.querySelectorAll('.chat-turn')).toHaveLength(0);
+    expect(input().value).toBe('hello there');
+    expect(container.querySelector('.chat-error .error-state')?.textContent).toBe('the connector is down');
+  });
+
   it('a reply after unmount does not render, but the turn is still logged with its voice', async () => {
     const d = deferred<AdapterResult<ChatTurn>>();
     const log = new ChatLog();

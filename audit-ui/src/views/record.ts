@@ -3,6 +3,7 @@ import type { SeamAdapter, Entry } from '../adapter/seam.ts';
 import { fillRecordCard } from './record-card.ts';
 import { createIntro } from './intro.ts';
 import { compareKStart } from '../util/interval.ts';
+import { compareNatural } from '../util/natural.ts';
 
 function el<K extends keyof HTMLElementTagNameMap>(
   tag: K,
@@ -48,7 +49,7 @@ export class RecordView implements View {
     }
     const subjects = Object.keys(recordResult.data.fields)
       .filter((s) => recordResult.data.fields[s]!.length > 0)
-      .sort();
+      .sort(compareNatural);
     if (subjects.length === 0) {
       body.replaceChildren(el('p', 'empty-state', 'No record entries for this account.'));
       return;

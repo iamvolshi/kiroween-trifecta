@@ -1,6 +1,7 @@
 import type { AdapterResult, AskResult, Entry, Lesson, SeamAdapter } from '../adapter/seam.ts';
 import type { Panel } from './panel.ts';
 import { compareKStart } from '../util/interval.ts';
+import { compareNatural } from '../util/natural.ts';
 import { groupOf, renderLesson } from './subject-folders.ts';
 
 /**
@@ -90,7 +91,7 @@ function renderRecords(entries: Entry[]): HTMLElement[] {
   }
   if (counts.size === 0) return [total];
   const ul = el('ul', 'left-links audit-accounts');
-  for (const name of [...counts.keys()].sort((a, b) => a.localeCompare(b))) {
+  for (const name of [...counts.keys()].sort(compareNatural)) {
     const mine = counts.get(name)!;
     const li = el('li', '');
     // An account with dotted subjects has a record view; a lone subject opens its latest entry.

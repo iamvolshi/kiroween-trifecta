@@ -91,6 +91,29 @@ describe('LeftPanel subject folders', () => {
     ]);
   });
 
+  it('numbered folders sort by the number: chapter-2 before chapter-10', async () => {
+    const slot = await mount(
+      adapter(
+        [
+          makeEntry({ id: 'a', kid: 1, subject: 'frankenstein-chapter-1' }),
+          makeEntry({ id: 'b', kid: 10, subject: 'frankenstein-chapter-10' }),
+          makeEntry({ id: 'c', kid: 2, subject: 'frankenstein-chapter-2' }),
+          makeEntry({ id: 'd', kid: 20, subject: 'frankenstein-chapter-20' }),
+        ],
+        [],
+      ),
+    );
+    const heads = Array.from(slot.querySelectorAll<HTMLAnchorElement>('.folder-list > .folder > .folder-head a')).map(
+      (a) => a.title,
+    );
+    expect(heads).toEqual([
+      'frankenstein-chapter-1',
+      'frankenstein-chapter-2',
+      'frankenstein-chapter-10',
+      'frankenstein-chapter-20',
+    ]);
+  });
+
   it('heads keep the full name when the groups share nothing worth cutting', async () => {
     const slot = await mount(
       adapter(

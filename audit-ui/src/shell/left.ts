@@ -3,6 +3,7 @@ import type { Panel } from './panel.ts';
 import { createNav } from '../views/nav.ts';
 import { stripBase } from '../util/base.ts';
 import { compareKStart } from '../util/interval.ts';
+import { compareNatural } from '../util/natural.ts';
 import { groupOf, displayGroupName, renderFolder, renderLesson, subjectsByGroup } from './subject-folders.ts';
 
 function el<K extends keyof HTMLElementTagNameMap>(
@@ -125,7 +126,7 @@ export class LeftPanel implements Panel {
       return;
     }
     const ul = el('ul', 'folder-list');
-    const names = [...groups.keys()].sort((a, b) => a.localeCompare(b));
+    const names = [...groups.keys()].sort(compareNatural);
     for (const name of names) {
       const li = el('li', 'folder');
       li.dataset.group = name;

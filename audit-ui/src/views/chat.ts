@@ -52,6 +52,8 @@ export class ChatView implements View {
   private submitHandler: ((e: Event) => void) | null = null;
   /** True while a chat call is in flight (Send stays disabled). */
   private pending = false;
+  /** The message sent and waiting on a reply: shown at once, with a thinking row, until the turn lands. */
+  private pendingMessage: string | null = null;
   /** Incremented per submit and on unmount; stale replies are dropped. */
   private requestToken = 0;
   private models: ModelSource;
@@ -186,13 +188,25 @@ export class ChatView implements View {
     const box = this.transcript;
     if (!box) return;
     // No turns: nothing at all (no greeting, no placeholder words).
-    box.replaceChildren(
-      ...this.log.turns().flatMap((t, i) => {
-        if (!isChatTurn(t)) return [];
-        // The engine boxes sit beside the reply (renderChatTurn), keyed by the turn's index.
-        return [renderChatTurn(t, this.log.voiceAt(i), i)];
-      }),
-    );
+    const nodes = this.log.turns().flatMap((t, i) => {
+      if (!isChatTurn(t)) return [];
+      // The engine boxes sit beside the reply (renderChatTurn), keyed by the turn's index.
+      return [renderChatTurn(t, this.log.voiceAt(i), i)];
+    });
+    // A sent message shows at once, with a thinking row, until its turn lands.
+    if (this.pendingMessage !== null) nodes.push(...this.renderPending(this.pendingMessage));
+    box.replaceChildren(...nodes);
+  }
+
+  /** The pending message as its own user bubble, plus the thinking row. */
+  private renderPending(message: string): HTMLElement[] {
+    const userRow = el('div', 'bubble-row bubble-row-user');
+    const user = el('p', 'bubble chat-user');
+    user.append(el('span', 'sr-only', 'You said: '), document.createTextNode(message));
+    userRow.appendChild(user);
+    const thinkingRow = el('div', 'bubble-row bubble-row-reply');
+    thinkingRow.appendChild(el('p', 'chat-thinking', 'Thinking…'));
+    return [userRow, thinkingRow];
   }
 
   private async onSubmit(): Promise<void> {
@@ -211,6 +225,11 @@ export class ChatView implements View {
     this.pending = true;
     btn.disabled = true;
     this.errorSlot?.replaceChildren();
+    // The message shows at once, with a thinking row, instead of waiting on the reply.
+    this.pendingMessage = message;
+    input.value = '';
+    this.renderTranscript();
+    this.transcript?.lastElementChild?.scrollIntoView?.({ block: 'end' });
 
     let result: Awaited<ReturnType<SeamAdapter['chat']>>;
     try {
@@ -238,9 +257,14 @@ export class ChatView implements View {
     }
     if (token !== this.requestToken || this.container !== root) return;
 
+    // The wait is over: the thinking row goes with the reply (or the error).
+    this.pendingMessage = null;
     btn.disabled = input.disabled; // locked with the composer
     if (!result.ok) {
+      // The thinking row goes; the message goes back in the composer to retry.
+      input.value = message;
       this.renderControls();
+      this.renderTranscript();
       this.errorSlot?.replaceChildren(el('p', 'error-state', result.error));
       return;
     }
@@ -254,6 +278,7 @@ export class ChatView implements View {
     this.requestToken++;
     this.statusRead++;
     this.pending = false;
+    this.pendingMessage = null;
     if (this.form && this.submitHandler) {
       this.form.removeEventListener('submit', this.submitHandler);
     }
