@@ -5,7 +5,7 @@ import { stripBase } from '../util/base.ts';
 import { compareKStart } from '../util/interval.ts';
 import { compareNatural } from '../util/natural.ts';
 import { groupOf, displayGroupName, renderFolder, renderLesson, subjectsByGroup } from './subject-folders.ts';
-import { isFolder } from '../util/curator.ts';
+import { isWorkspace } from '../util/curator.ts';
 
 function el<K extends keyof HTMLElementTagNameMap>(
   tag: K,
@@ -121,7 +121,7 @@ export class LeftPanel implements Panel {
 
   private render(body: HTMLElement, entries: Entry[], lessons: Lesson[]): void {
     // Curator's own folder entries are the folders, not subjects to fold.
-    const groups = subjectsByGroup(entries.filter((e) => !isFolder(e)), lessons);
+    const groups = subjectsByGroup(entries.filter((e) => !isWorkspace(e)), lessons);
     if (groups.size === 0) {
       body.replaceChildren(
         el('p', 'empty-state', 'No subjects yet. Folders appear as the conversation records them.'),

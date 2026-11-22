@@ -1,4 +1,5 @@
-import type { Lesson, SeamAdapter } from '../adapter/seam.ts';
+import type { AdapterResult, Lesson, Question, QuestionsResult, SeamAdapter } from '../adapter/seam.ts';
+import { renderKid } from '../util/kid-display.ts';
 import type { ChatLog } from './chat-log.ts';
 
 /**
@@ -6,8 +7,10 @@ import type { ChatLog } from './chat-log.ts';
  *
  * (a) case files: her lessons grouped by subject (a lesson with no
  *     subject is unfiled, never forced into a folder),
- * (b) grey box: the candidate and held lessons, grey, not yet promoted:
- *     the open questions she is working on (the weight is the flag),
+ * (b) grey box: her open questions, one folder each (Darren, Nov 22),
+ *     named after the question, holding its observations, concerns,
+ *     scratch pad and ideas, with the state the connector sent (none when
+ *     it sent none); then any candidate lesson not yet promoted, grey,
  * (c) answered: the promoted lessons, learned, with the turn that
  *     promoted them when the chat log carries it,
  * (d) per turn: what she recorded and promoted on each chat turn.
@@ -91,6 +94,48 @@ export function caseFiles(lessons: Lesson[]): Array<[string | null, Lesson[]]> {
   return [...files.entries()].sort(([a], [b]) => (a === null ? 1 : 0) - (b === null ? 1 : 0));
 }
 
+/** The folder's working material, in the order Darren named it. */
+const MATERIAL: ReadonlyArray<[keyof Pick<Question, 'observations' | 'concerns' | 'scratch' | 'ideas'>, string]> = [
+  ['observations', 'Observations'],
+  ['concerns', 'Concerns'],
+  ['scratch', 'Scratch pad'],
+  ['ideas', 'Ideas'],
+];
+
+/**
+ * One open question as a folder: its name is the question; inside is the
+ * place to work it. A section, not a row: no table, no columns.
+ */
+export function renderQuestion(q: Question): HTMLElement {
+  const folder = el('section', 'elle-question');
+  folder.dataset.subject = q.subject;
+  if (q.state) folder.dataset.state = q.state;
+  folder.appendChild(el('h3', 'elle-question-name', q.question));
+  const meta = el('p', 'elle-question-meta');
+  if (q.state) meta.appendChild(el('span', 'elle-question-state', q.state));
+  if (q.kid !== null) {
+    const a = el('a', 'kid', renderKid(q.kid));
+    a.setAttribute('href', `/entry/${q.kid}/${encodeURIComponent(q.subject)}/${encodeURIComponent(q.event_id)}`);
+    meta.append(el('span', 'elle-question-key', 'KID'), a);
+  }
+  if (q.versions > 1) meta.appendChild(el('span', 'elle-question-versions', `worked ${q.versions - 1} ${q.versions === 2 ? 'time' : 'times'}`));
+  folder.appendChild(meta);
+  let worked = false;
+  for (const [key, label] of MATERIAL) {
+    const items = q[key];
+    if (items.length === 0) continue;
+    worked = true;
+    const part = el('div', `elle-question-part elle-question-${key}`);
+    part.appendChild(el('p', 'elle-question-part-head', label));
+    const ul = el('ul', '');
+    for (const item of items) ul.appendChild(el('li', '', item));
+    part.appendChild(ul);
+    folder.appendChild(part);
+  }
+  if (!worked) folder.appendChild(el('p', 'elle-none', 'Not worked yet.'));
+  return folder;
+}
+
 export class LessonsView {
   private adapter: SeamAdapter;
   private log: ChatLog;
@@ -101,6 +146,8 @@ export class LessonsView {
   private turns: ReturnType<typeof box> | null = null;
   /** The last lessons read: null until the first read settles. */
   private read: { ok: true; data: Lesson[] } | { ok: false; error: string } | null = null;
+  /** The last question folders read: null until the first read settles. */
+  private questions: AdapterResult<QuestionsResult> | null = null;
   private unsubscribe: (() => void) | null = null;
   private token = 0;
 
@@ -138,14 +185,15 @@ export class LessonsView {
 
   private async load(): Promise<void> {
     const token = ++this.token;
-    let r: { ok: true; data: Lesson[] } | { ok: false; error: string };
-    try {
-      r = await this.adapter.fetchLessons();
-    } catch (e) {
-      r = { ok: false, error: `The lessons read failed: ${e instanceof Error ? e.message : String(e)}` };
-    }
+    const failed = (what: string) => (e: unknown) =>
+      ({ ok: false as const, error: `The ${what} read failed: ${e instanceof Error ? e.message : String(e)}` });
+    const [r, q] = await Promise.all([
+      this.adapter.fetchLessons().catch(failed('lessons')),
+      this.adapter.fetchQuestions().catch(failed('questions')),
+    ]);
     if (token !== this.token || this.container === null) return;
     this.read = r;
+    this.questions = q;
     this.render();
   }
 
@@ -175,6 +223,11 @@ export class LessonsView {
     ]);
     const all = unique([read.data, fromLog]);
     const open = all.filter((l) => l.status !== 'promoted');
+    const qs = this.questions;
+    const folders = qs !== null && qs.ok ? qs.data.questions.filter((x) => x.open) : [];
+    // A candidate the connector already opened a question for is that folder.
+    const asked = new Set(folders.map((x) => x.source.toLowerCase()));
+    const loose = open.filter((l) => !asked.has(l.detail.toLowerCase()));
     const learned = all.filter((l) => l.status === 'promoted');
 
     // (a) case files.
@@ -193,13 +246,16 @@ export class LessonsView {
           })),
     );
 
-    // (b) grey box: held, not yet promoted.
-    grey.label.textContent = `grey box · ${plural(open.length, 'open question', 'open questions')}`;
-    grey.body.replaceChildren(
-      ...(open.length === 0
-        ? [el('p', 'empty-state', 'Nothing is held. No lesson is waiting to be promoted.')]
-        : open.map((l) => renderLesson(l))),
-    );
+    // (b) grey box: the open questions as folders, then the loose candidates.
+    const count = folders.length + loose.length;
+    grey.label.textContent = `grey box · ${plural(count, 'open question', 'open questions')}`;
+    const greyParts: HTMLElement[] = [];
+    if (qs !== null && !qs.ok) greyParts.push(el('p', 'error-state', qs.error));
+    greyParts.push(...folders.map(renderQuestion), ...loose.map((l) => renderLesson(l)));
+    if (count === 0 && (qs === null || qs.ok)) {
+      greyParts.push(el('p', 'empty-state', 'Nothing is held. No lesson is waiting to be promoted.'));
+    }
+    grey.body.replaceChildren(...greyParts);
 
     // (c) answered: promoted, with the turn that promoted it.
     const promotedOn = new Map<string, number>();
@@ -254,6 +310,7 @@ export class LessonsView {
     this.unsubscribe = null;
     this.files = this.grey = this.answered = this.turns = null;
     this.read = null;
+    this.questions = null;
     if (this.container) {
       this.container.innerHTML = '';
       this.container = null;

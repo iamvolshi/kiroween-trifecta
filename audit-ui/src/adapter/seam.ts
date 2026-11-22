@@ -33,6 +33,45 @@ export interface Provenance {
 }
 
 /** Curator's catalog answer (mirrors POST /curator/ask): ERIE over the folders only. */
+/**
+ * ELLE's question states, Darren's flow (Nov 22), "confirmed" between
+ * consideration and answer. A question's state is the model's word from its
+ * own reasoning section, or null when no section has named one.
+ */
+export const QUESTION_STATES = ['rumor', 'suspicion', 'opinion', 'consideration', 'confirmed', 'answer'] as const;
+export type QuestionState = (typeof QUESTION_STATES)[number];
+
+/** One question folder (mirrors one item of GET /questions). */
+export interface Question {
+  /** The folder's KID number (the newest folder entry's). */
+  kid: number | null;
+  /** The newest folder entry's event id. */
+  event_id: string;
+  /** The folder entry's subject, elle-question-<n>. */
+  subject: string;
+  /** The folder's name: the question itself. */
+  question: string;
+  state: QuestionState | null;
+  /** The held candidate the question was opened from, and its rule. */
+  source: string;
+  rule: string;
+  observations: string[];
+  concerns: string[];
+  scratch: string[];
+  ideas: string[];
+  /** False once it left the open pile (answered or superseded). */
+  open: boolean;
+  closed: string | null;
+  /** How many folder entries the question has (a change supersedes). */
+  versions: number;
+}
+
+/** GET /questions: the folders, and the last sectioned request as the model received it. */
+export interface QuestionsResult {
+  questions: Question[];
+  reasoning: string | null;
+}
+
 export interface CuratorAnswer extends AskResult {
   found: boolean;
 }
@@ -183,6 +222,8 @@ export interface SeamAdapter {
   update(req: UpdateRequest): Promise<AdapterResult<UpdateResult>>;
   /** ELLE lessons so far (GET /lessons). */
   fetchLessons(): Promise<AdapterResult<Lesson[]>>;
+  /** ELLE's question folders (GET /questions). */
+  fetchQuestions(): Promise<AdapterResult<QuestionsResult>>;
   /** Entries for one account, grouped by subject (GET /record/{account_id}). */
   fetchRecord(accountId: string): Promise<AdapterResult<RecordResult>>;
 }

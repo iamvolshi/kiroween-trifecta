@@ -3,7 +3,7 @@ import type { Panel } from './panel.ts';
 import { compareKStart } from '../util/interval.ts';
 import { compareNatural } from '../util/natural.ts';
 import { groupOf, renderLesson } from './subject-folders.ts';
-import { isFolder } from '../util/curator.ts';
+import { isWorkspace } from '../util/curator.ts';
 
 /**
  * The list panels the rail swaps in besides Chat (the left column, see
@@ -87,7 +87,7 @@ function renderRecords(entries: Entry[]): HTMLElement[] {
   const total = el('p', 'list-meta', `${entries.length} ${entries.length === 1 ? 'entry' : 'entries'} in the record`);
   const counts = new Map<string, Entry[]>();
   for (const e of entries) {
-    if (isFolder(e)) continue; // Curator's folders are listed on the Curator page
+    if (isWorkspace(e)) continue; // listed on the Curator and Lessons pages
     const g = groupOf(e.subject);
     counts.set(g, [...(counts.get(g) ?? []), e]);
   }

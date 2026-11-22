@@ -1,0 +1,82 @@
+{
+  "at1920": {
+    "pageScroll": {
+      "h": 0,
+      "w": 0
+    },
+    "label": "grey box · 3 open questions",
+    "folders": [
+      {
+        "name": "Is it so: Audit UI loves thunderstorms at night?",
+        "state": "suspicion",
+        "parts": [
+          "Observations",
+          "Concerns",
+          "Scratch pad",
+          "Ideas"
+        ]
+      },
+      {
+        "name": "Is it so: Audit UI hates cold coffee?",
+        "state": "opinion",
+        "parts": [
+          "Observations",
+          "Concerns",
+          "Scratch pad",
+          "Ideas"
+        ]
+      },
+      {
+        "name": "Is it so: Audit UI prefers the book to the film?",
+        "state": "consideration",
+        "parts": [
+          "Observations",
+          "Concerns",
+          "Scratch pad",
+          "Ideas"
+        ]
+      }
+    ],
+    "grid": false
+  },
+  "at1024": {
+    "pageScroll": {
+      "h": 0,
+      "w": 0
+    },
+    "label": "grey box · 3 open questions",
+    "folders": [
+      {
+        "name": "Is it so: Audit UI loves thunderstorms at night?",
+        "state": "suspicion",
+        "parts": [
+          "Observations",
+          "Concerns",
+          "Scratch pad",
+          "Ideas"
+        ]
+      },
+      {
+        "name": "Is it so: Audit UI hates cold coffee?",
+        "state": "opinion",
+        "parts": [
+          "Observations",
+          "Concerns",
+          "Scratch pad",
+          "Ideas"
+        ]
+      },
+      {
+        "name": "Is it so: Audit UI prefers the book to the film?",
+        "state": "consideration",
+        "parts": [
+          "Observations",
+          "Concerns",
+          "Scratch pad",
+          "Ideas"
+        ]
+      }
+    ],
+    "grid": false
+  }
+}

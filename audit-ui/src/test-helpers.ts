@@ -41,7 +41,7 @@ export function deferred<T>(): { promise: Promise<T>; resolve: (v: T) => void } 
  */
 export function assemblyNotUsed(): Pick<
   SeamAdapter,
-  'ask' | 'curatorAsk' | 'chat' | 'update' | 'fetchLessons' | 'fetchRecord'
+  'ask' | 'curatorAsk' | 'chat' | 'update' | 'fetchLessons' | 'fetchQuestions' | 'fetchRecord'
 > {
   const err = { ok: false as const, error: 'not used in this test' };
   return {
@@ -50,6 +50,7 @@ export function assemblyNotUsed(): Pick<
     chat: async () => err,
     update: async () => err,
     fetchLessons: async () => err,
+    fetchQuestions: async () => err,
     fetchRecord: async () => err,
   };
 }
@@ -142,6 +143,7 @@ export function createFailingStub(error = 'stub failure'): SeamAdapter {
     chat: async () => err,
     update: async () => err,
     fetchLessons: async () => err,
+    fetchQuestions: async () => err,
     fetchRecord: async () => err,
   };
 }

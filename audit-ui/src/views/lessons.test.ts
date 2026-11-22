@@ -19,7 +19,10 @@ const MUSIC_2 = lesson('ev-2', 'Darren may dislike jazz', 'candidate', 'music');
 const ORDER = lesson('ev-3', 'Order 1042 ships late', 'candidate', 'order-1042');
 const LOOSE = lesson('ev-4', 'Darren writes at night', 'promoted');
 
-const lessonsStub = (lessons: Lesson[]): SeamAdapter => createRecordStub([], { fetchLessons: async () => ({ ok: true, data: lessons }) });
+const lessonsStub = (lessons: Lesson[]): SeamAdapter => createRecordStub([], {
+  fetchLessons: async () => ({ ok: true, data: lessons }),
+  fetchQuestions: async () => ({ ok: true, data: { questions: [], reasoning: null } }),
+});
 
 function turn(message: string, elle: Lesson | null, promoted: Lesson | null): ChatTurn {
   return {

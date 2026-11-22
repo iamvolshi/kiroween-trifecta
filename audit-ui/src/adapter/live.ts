@@ -12,6 +12,7 @@ import type {
   AdapterResult,
   AskResult,
   CuratorAnswer,
+  QuestionsResult,
   ChatOptions,
   ChatTurn,
   Entry,
@@ -116,6 +117,7 @@ export function createLiveAdapter(baseUrl: string, fetchImpl?: FetchLike): SeamA
         : { ok: false, error: 'Connector reply to /chat is not a ChatTurn (see docs/assembly-parts.md)' };
     },
     fetchLessons: (): Promise<AdapterResult<Lesson[]>> => call('/lessons'),
+    fetchQuestions: (): Promise<AdapterResult<QuestionsResult>> => call('/questions'),
     fetchRecord: (accountId: string): Promise<AdapterResult<RecordResult>> =>
       call(`/record/${encodeURIComponent(accountId)}`),
   };

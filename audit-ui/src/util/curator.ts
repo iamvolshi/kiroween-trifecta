@@ -8,6 +8,14 @@ import type { Entry } from '../adapter/seam.ts';
  */
 export const FOLDER_PREFIX = 'curator-folder-';
 
+/** ELLE's question folders: hers, listed on the Lessons page. */
+export const QUESTION_PREFIX = 'elle-question-';
+
+/** A workspace entry (a Curator folder or an ELLE question), never a subject. */
+export function isWorkspace(e: Entry): boolean {
+  return e.subject.startsWith(FOLDER_PREFIX) || e.subject.startsWith(QUESTION_PREFIX);
+}
+
 export function isFolder(e: Entry): boolean {
   return e.subject.startsWith(FOLDER_PREFIX);
 }

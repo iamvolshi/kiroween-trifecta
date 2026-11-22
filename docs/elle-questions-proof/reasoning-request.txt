@@ -1,0 +1,34 @@
+Reply format, once per section, inside that section's markers:
+=== <id> ===
+STATE: one of rumor, suspicion, opinion, consideration, confirmed, answer
+OBSERVATIONS: ...
+CONCERNS: ...
+SCRATCH PAD: ...
+IDEAS: ...
+=== END <id> ===
+
+=== SECTION q1 ===
+QUESTION: Is it so: Audit UI loves thunderstorms at night?
+WHERE IT CAME FROM: the preference rule held 'Audit UI loves thunderstorms at night' under the threshold
+STATE NOW: suspicion
+OBSERVATIONS SO FAR: stub observation for q1
+CONCERNS SO FAR: stub concern for q1
+SCRATCH PAD SO FAR: stub scratch note for q1
+IDEAS SO FAR: stub idea for q1
+=== END SECTION q1 ===
+
+=== SECTION q2 ===
+QUESTION: Is it so: Audit UI hates cold coffee?
+WHERE IT CAME FROM: the preference rule held 'Audit UI hates cold coffee' under the threshold
+STATE NOW: opinion
+OBSERVATIONS SO FAR: stub observation for q2
+CONCERNS SO FAR: stub concern for q2
+SCRATCH PAD SO FAR: stub scratch note for q2
+IDEAS SO FAR: stub idea for q2
+=== END SECTION q2 ===
+
+=== SECTION q3 ===
+QUESTION: Is it so: Audit UI prefers the book to the film?
+WHERE IT CAME FROM: the preference rule held 'Audit UI prefers the book to the film' under the threshold
+STATE NOW: none yet
+=== END SECTION q3 ===
