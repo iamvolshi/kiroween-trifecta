@@ -221,7 +221,7 @@ describe('the way to the ELLE page', () => {
   it('the nav ends Research / Lessons, and Lessons lands on /lessons', async () => {
     await start('/chat');
     const links = [...container.querySelectorAll<HTMLAnchorElement>('nav.main-nav a')];
-    expect(links.map((a) => a.textContent)).toEqual(['Chat', 'Action List', 'Calendar', 'Research', 'Lessons']);
+    expect(links.map((a) => a.textContent)).toEqual(['Chat', 'Action List', 'Calendar', 'Research', 'Lessons', 'Curator']);
     links[4]!.click();
     for (let i = 0; i < 6; i++) await tick();
     expect(window.location.pathname).toBe('/lessons');

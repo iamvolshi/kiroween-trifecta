@@ -1,0 +1,74 @@
+{
+  "at1920": {
+    "pageScroll": {
+      "h": 0,
+      "w": 0
+    },
+    "head": "Curator",
+    "leftHead": "Curator",
+    "leftHasFolderSubjects": false,
+    "label": "folders · 27 subjects",
+    "folders": 27,
+    "firstFolder": "frankenstein-letter-1KID281 entry",
+    "catalog": {
+      "y": 120,
+      "w": 1335,
+      "h": 554,
+      "scrolls": true
+    },
+    "chat": {
+      "y": 686,
+      "w": 1335,
+      "h": 370,
+      "scrolls": false
+    },
+    "answers": [
+      [
+        "found",
+        "frankenstein letter",
+        "Curator folder: frankenstein-letter-4"
+      ],
+      [
+        "not_found",
+        "zorbleflux",
+        "The catalog does not say."
+      ]
+    ]
+  },
+  "at1024": {
+    "pageScroll": {
+      "h": 0,
+      "w": 0
+    },
+    "head": "Curator",
+    "leftHead": "Curator",
+    "leftHasFolderSubjects": false,
+    "label": "folders · 27 subjects",
+    "folders": 27,
+    "firstFolder": "frankenstein-letter-1KID281 entry",
+    "catalog": {
+      "y": 116,
+      "w": 569,
+      "h": 377,
+      "scrolls": true
+    },
+    "chat": {
+      "y": 505,
+      "w": 569,
+      "h": 251,
+      "scrolls": true
+    },
+    "answers": [
+      [
+        "found",
+        "frankenstein letter",
+        "Curator folder: frankenstein-letter-4"
+      ],
+      [
+        "not_found",
+        "zorbleflux",
+        "The catalog does not say."
+      ]
+    ]
+  }
+}

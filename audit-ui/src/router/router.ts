@@ -9,6 +9,7 @@ import { parseCalendarPath } from '../util/calendar.ts';
 import { RecordView } from '../views/record.ts';
 import { ResearchView } from '../views/research.ts';
 import { LessonsView } from '../views/lessons.ts';
+import { CuratorView } from '../views/curator.ts';
 import { createShell, setViewLabel, type ShellSlots } from '../shell/shell.ts';
 import { LoadingModal } from '../shell/loading-modal.ts';
 import { stripBase, withBase } from '../util/base.ts';
@@ -162,6 +163,10 @@ export class Router {
 
     if (path === '/lessons') {
       return new LessonsView(this.adapter, this.chatLog);
+    }
+
+    if (path === '/curator') {
+      return new CuratorView(this.adapter);
     }
 
     if (path === '/calendar' || path.startsWith('/calendar/')) {

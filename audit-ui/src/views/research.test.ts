@@ -249,7 +249,7 @@ describe('the way to the ERIE page', () => {
     await start('/chat');
     const links = [...container.querySelectorAll<HTMLAnchorElement>('nav.main-nav a')];
     expect(links.map((a) => [a.textContent, a.getAttribute('href')])).toEqual([
-      ['Chat', '/chat'], ['Action List', '/actions'], ['Calendar', '/calendar'], ['Research', '/research'], ['Lessons', '/lessons'],
+      ['Chat', '/chat'], ['Action List', '/actions'], ['Calendar', '/calendar'], ['Research', '/research'], ['Lessons', '/lessons'], ['Curator', '/curator'],
     ]);
     links[3]!.click();
     for (let i = 0; i < 6; i++) await tick();

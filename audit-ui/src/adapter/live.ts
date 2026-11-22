@@ -11,6 +11,7 @@
 import type {
   AdapterResult,
   AskResult,
+  CuratorAnswer,
   ChatOptions,
   ChatTurn,
   Entry,
@@ -106,6 +107,7 @@ export function createLiveAdapter(baseUrl: string, fetchImpl?: FetchLike): SeamA
     },
 
     ask: (question: string): Promise<AdapterResult<AskResult>> => call('/ask', post({ question })),
+    curatorAsk: (question: string): Promise<AdapterResult<CuratorAnswer>> => call('/curator/ask', post({ question })),
     chat: async (message: string, options?: ChatOptions): Promise<AdapterResult<ChatTurn>> => {
       const r = await call<unknown>('/chat', post(chatBody(message, options)));
       if (!r.ok) return r;

@@ -64,7 +64,7 @@ describe('the rail', () => {
   it('Chat is the left column as it was: Directories, Record, Going back', async () => {
     await start('/chat');
     expect(list().getAttribute('aria-label')).toBe('Directories');
-    expect(Array.from(list().querySelectorAll('h2')).map((h) => h.textContent)).toEqual(['Record', 'Going back']);
+    expect(Array.from(list().querySelectorAll('h2')).map((h) => h.textContent)).toEqual(['Curator', 'Going back']);
     expect(list().querySelector('nav.main-nav')).not.toBeNull();
     expect(Array.from(list().querySelectorAll('.left-back a')).map((a) => a.textContent)).toEqual(['Calendar Index']);
   });

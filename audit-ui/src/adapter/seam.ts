@@ -32,6 +32,11 @@ export interface Provenance {
   excerpt: string; // the supporting text
 }
 
+/** Curator's catalog answer (mirrors POST /curator/ask): ERIE over the folders only. */
+export interface CuratorAnswer extends AskResult {
+  found: boolean;
+}
+
 /** ERIE retrieval result (mirrors POST /ask). */
 export interface AskResult {
   question: string;
@@ -167,6 +172,8 @@ export interface SeamAdapter {
 
   /** ERIE retrieval + provenance (POST /ask). */
   ask(question: string): Promise<AdapterResult<AskResult>>;
+  /** Ask Curator's catalog (POST /curator/ask): no model, no persona. */
+  curatorAsk(question: string): Promise<AdapterResult<CuratorAnswer>>;
   /**
    * One chat turn (POST /chat). `options` carries the persona name (and the
    * Frankenstein register); the live adapter sends it with every call.
