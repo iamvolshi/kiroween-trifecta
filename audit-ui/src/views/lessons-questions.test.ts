@@ -141,3 +141,47 @@ describe('the record lists ELLE question folders as hers', () => {
     expect(container.querySelector('.left-folders')!.textContent).not.toContain('elle-question');
   });
 });
+
+describe('the questions are read on every turn', () => {
+  const quietTurn = (message: string) => ({
+    message, known: true, step: null, total_steps: 0,
+    engines: {
+      arche: { reply: 'a reply' }, erie: null, elle: null, elle_promoted: null,
+      lessons_in_prompt: { subjects: [], injected: [], held: [] }, katie: [],
+    },
+  });
+
+  it('a new turn re-reads the questions, even when ELLE recorded or promoted nothing', async () => {
+    let reads = 0;
+    let lessonReads = 0;
+    const states: Array<Question['state']> = ['rumor', 'suspicion'];
+    const adapter = createRecordStub([], {
+      fetchLessons: async () => { lessonReads++; return { ok: true, data: [] }; },
+      fetchQuestions: async () => {
+        const state = states[Math.min(reads, states.length - 1)];
+        reads++;
+        return { ok: true, data: { questions: [question(1, { state })], reasoning: null } };
+      },
+    });
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    const log = new ChatLog();
+    view = new LessonsView(adapter, log);
+    view.mount(container);
+    for (let i = 0; i < 4; i++) await tick();
+    expect(reads).toBe(1);
+    expect(q('.elle-question-state').textContent).toBe('rumor');
+    log.push(quietTurn('quiet') as never);
+    for (let i = 0; i < 4; i++) await tick();
+    expect(reads).toBe(2);
+    expect(lessonReads).toBe(1);
+    expect(q('.elle-question-state').textContent).toBe('suspicion');
+  });
+
+  it('no open question says so in words, apart from the lessons line', async () => {
+    await mount(stub([question(1, { open: false, closed: 'answered' })], [lesson('ev-1', 'Darren likes tea', 'candidate')]));
+    expect(q('.elle-grey .elle-no-questions').textContent).toBe('No question is open.');
+    expect(container.querySelector('.elle-grey .elle-question')).toBeNull();
+    expect(container.querySelector('.elle-grey')!.textContent).not.toContain('Nothing is held.');
+  });
+});

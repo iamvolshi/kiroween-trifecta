@@ -136,6 +136,9 @@ export function renderQuestion(q: Question): HTMLElement {
   return folder;
 }
 
+const failed = (what: string) => (e: unknown) =>
+  ({ ok: false as const, error: `The ${what} read failed: ${e instanceof Error ? e.message : String(e)}` });
+
 export class LessonsView {
   private adapter: SeamAdapter;
   private log: ChatLog;
@@ -150,6 +153,10 @@ export class LessonsView {
   private questions: AdapterResult<QuestionsResult> | null = null;
   private unsubscribe: (() => void) | null = null;
   private token = 0;
+  /** The question read's own token: it runs on every turn, apart from the lessons. */
+  private qtoken = 0;
+  /** Turns seen so far: a new one re-reads the questions. */
+  private seen = 0;
 
   constructor(adapter: SeamAdapter, log: ChatLog) {
     this.adapter = adapter;
@@ -172,27 +179,38 @@ export class LessonsView {
     body.append(this.files.section, this.grey.section, this.answered.section, this.turns.section);
     page.append(head, body);
     container.appendChild(page);
-    // A new turn re-renders; the lessons are read again only when that
-    // turn says ELLE recorded or promoted one.
+    // A new turn re-renders. The lessons are read again only when that
+    // turn says ELLE recorded or promoted one. The questions are read again
+    // on every new turn: the connector works them each turn, and the /chat
+    // reply carries no signal when a question changes.
+    this.seen = this.log.turns().length;
     this.unsubscribe = this.log.subscribe(() => {
       this.render();
-      const last = this.log.turns().at(-1);
+      const turns = this.log.turns();
+      const last = turns.at(-1);
       if (last && (last.engines.elle !== null || last.engines.elle_promoted !== null)) void this.load();
+      if (turns.length > this.seen) {
+        this.seen = turns.length;
+        void this.loadQuestions();
+      }
     });
     this.render();
     void this.load();
+    void this.loadQuestions();
   }
 
   private async load(): Promise<void> {
     const token = ++this.token;
-    const failed = (what: string) => (e: unknown) =>
-      ({ ok: false as const, error: `The ${what} read failed: ${e instanceof Error ? e.message : String(e)}` });
-    const [r, q] = await Promise.all([
-      this.adapter.fetchLessons().catch(failed('lessons')),
-      this.adapter.fetchQuestions().catch(failed('questions')),
-    ]);
+    const r = await this.adapter.fetchLessons().catch(failed('lessons'));
     if (token !== this.token || this.container === null) return;
     this.read = r;
+    this.render();
+  }
+
+  private async loadQuestions(): Promise<void> {
+    const token = ++this.qtoken;
+    const q = await this.adapter.fetchQuestions().catch(failed('questions'));
+    if (token !== this.qtoken || this.container === null) return;
     this.questions = q;
     this.render();
   }
@@ -251,8 +269,10 @@ export class LessonsView {
     grey.label.textContent = `grey box · ${plural(count, 'open question', 'open questions')}`;
     const greyParts: HTMLElement[] = [];
     if (qs !== null && !qs.ok) greyParts.push(el('p', 'error-state', qs.error));
+    // With nothing held at all, the one lessons line says it for both.
+    else if (qs !== null && folders.length === 0 && open.length > 0) greyParts.push(el('p', 'empty-state elle-no-questions', 'No question is open.'));
     greyParts.push(...folders.map(renderQuestion), ...loose.map((l) => renderLesson(l)));
-    if (count === 0 && (qs === null || qs.ok)) {
+    if (open.length === 0) {
       greyParts.push(el('p', 'empty-state', 'Nothing is held. No lesson is waiting to be promoted.'));
     }
     grey.body.replaceChildren(...greyParts);
@@ -306,6 +326,7 @@ export class LessonsView {
 
   unmount(): void {
     this.token++;
+    this.qtoken++;
     this.unsubscribe?.();
     this.unsubscribe = null;
     this.files = this.grey = this.answered = this.turns = null;
