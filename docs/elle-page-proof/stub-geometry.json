@@ -1,0 +1,127 @@
+{
+  "chips": true,
+  "chat": [
+    {
+      "ok": true,
+      "error": "",
+      "turns": 1
+    },
+    {
+      "ok": true,
+      "error": "",
+      "turns": 2
+    }
+  ],
+  "at1920": {
+    "pageScroll": {
+      "h": 0,
+      "w": 0
+    },
+    "head": "ELLE",
+    "headColor": "rgb(61, 220, 151)",
+    "labels": [
+      "case files · 2 subjects · 4 lessons",
+      "grey box · 2 open questions",
+      "answered · 2 lessons learned",
+      "per turn · 2 turns"
+    ],
+    "files": {
+      "x": 301,
+      "y": 120,
+      "w": 662,
+      "h": 462,
+      "scrolls": true
+    },
+    "grey": {
+      "x": 975,
+      "y": 120,
+      "w": 662,
+      "h": 462,
+      "scrolls": false
+    },
+    "answered": {
+      "x": 301,
+      "y": 594,
+      "w": 662,
+      "h": 462,
+      "scrolls": false
+    },
+    "turns": {
+      "x": 975,
+      "y": 594,
+      "w": 662,
+      "h": 462,
+      "scrolls": false
+    },
+    "fileHeads": [
+      "stub-subject-a · 2",
+      "stub-subject-b · 1",
+      "unfiled · 1"
+    ],
+    "greyLessons": 2,
+    "answeredNotes": [
+      "promoted on turn 1"
+    ],
+    "noAction": [],
+    "banned": false,
+    "leftPanel": "lessons",
+    "list": true,
+    "path": "/lessons"
+  },
+  "at1024": {
+    "pageScroll": {
+      "h": 0,
+      "w": 0
+    },
+    "head": "ELLE",
+    "headColor": "rgb(61, 220, 151)",
+    "labels": [
+      "case files · 2 subjects · 4 lessons",
+      "grey box · 2 open questions",
+      "answered · 2 lessons learned",
+      "per turn · 2 turns"
+    ],
+    "files": {
+      "x": 230,
+      "y": 116,
+      "w": 569,
+      "h": 151,
+      "scrolls": true
+    },
+    "grey": {
+      "x": 230,
+      "y": 279,
+      "w": 569,
+      "h": 151,
+      "scrolls": true
+    },
+    "answered": {
+      "x": 230,
+      "y": 442,
+      "w": 569,
+      "h": 151,
+      "scrolls": true
+    },
+    "turns": {
+      "x": 230,
+      "y": 605,
+      "w": 569,
+      "h": 151,
+      "scrolls": true
+    },
+    "fileHeads": [
+      "stub-subject-a · 2",
+      "stub-subject-b · 1",
+      "unfiled · 1"
+    ],
+    "greyLessons": 2,
+    "answeredNotes": [
+      "promoted on turn 1"
+    ],
+    "noAction": [],
+    "banned": false,
+    "leftPanel": "lessons",
+    "list": true,
+    "path": "/lessons"
+  }
+}

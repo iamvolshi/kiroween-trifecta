@@ -9,9 +9,10 @@ import { stripBase } from '../util/base.ts';
  * icons are the engines by category, never by name: Chat (the left column
  * as it was), Audit (the record views), Research (the knowledge), Lessons.
  * Tapping an icon swaps the list panel. Audit also takes the center to
- * the KTIE page (/calendar) and Research to the ERIE page (/research),
- * through the Router, unless the center is already there; Chat and Lessons
- * leave the center and right columns as they are.
+ * the KTIE page (/calendar), Research to the ERIE page (/research) and
+ * Lessons to the ELLE page (/lessons), through the Router, unless the
+ * center is already there; Chat leaves the center and right columns as
+ * they are.
  */
 
 /** Is `path` the KTIE page (the calendar, at any level)? */
@@ -24,6 +25,7 @@ export type RailKey = 'chat' | 'audit' | 'research' | 'lessons';
 const PAGE: Partial<Record<RailKey, { path: string; here: (path: string) => boolean }>> = {
   audit: { path: '/calendar', here: onKtiePage },
   research: { path: '/research', here: (p) => p === '/research' },
+  lessons: { path: '/lessons', here: (p) => p === '/lessons' },
 };
 
 /** The list column's caption per panel (Chat keeps the column's own name). */
@@ -78,8 +80,8 @@ export class RailPanel implements Panel {
 
   /** `slot` is ignored: the rail owns its two columns (rail and list). */
   mount(_slot?: HTMLElement): void {
-    // A toolbar, not a nav: it swaps the list panel. Audit and Research also
-    // change the route (to their engine's page), through the Router.
+    // A toolbar, not a nav: it swaps the list panel. Audit, Research and
+    // Lessons also change the route (to their engine's page), through the Router.
     const nav = document.createElement('div');
     nav.className = 'rail-nav';
     nav.setAttribute('role', 'toolbar');

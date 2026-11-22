@@ -103,6 +103,20 @@ describe('LoadingModal at boot', () => {
     expect(app.querySelector('.loading-modal')).toBeNull();
   });
 
+  it('hides when a rail tap swaps the list away before it settles', async () => {
+    const entriesGate = deferred<Awaited<ReturnType<SeamAdapter['fetchAllEntries']>>>();
+    window.history.replaceState({}, '', '/chat');
+    app = document.createElement('div');
+    document.body.appendChild(app);
+    router = boot(createRecordStub([], { fetchAllEntries: () => entriesGate.promise }), app);
+    await sleep(400);
+    expect(app.querySelector('.loading-modal.loading-hidden')).toBeNull(); // up
+    app.querySelector<HTMLButtonElement>('.rail-button[data-rail="lessons"]')!.click();
+    await tick();
+    expect(app.querySelector('.loading-modal')).toBeNull();
+    entriesGate.resolve({ ok: true, data: [] });
+  });
+
   it('hides when the record read fails (the error state is the answer)', async () => {
     window.history.replaceState({}, '', '/chat');
     app = document.createElement('div');

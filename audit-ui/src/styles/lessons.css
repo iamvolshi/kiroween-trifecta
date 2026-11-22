@@ -1,0 +1,205 @@
+/* The ELLE page (Lessons): her case files, her grey box, what she has
+   answered, and what she did each turn. Everything ELLE's wears her green
+   (--engine-elle). One view, no page scroll: each box scrolls inside
+   itself. */
+
+.elle-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.elle-head {
+  margin: 0 0 var(--s2);
+}
+
+.elle-head .elle-name {
+  margin: 0;
+  font-family: var(--display);
+  font-size: var(--t-headline-xl-size);
+  line-height: var(--t-headline-xl-lh);
+  font-weight: var(--t-headline-xl-wt);
+  letter-spacing: var(--t-headline-xl-ls);
+  color: var(--engine-elle);
+  text-shadow: 0 0 18px color-mix(in srgb, var(--engine-elle) 35%, transparent);
+}
+
+.elle-expansion {
+  margin: 2px 0 0;
+  font-family: var(--mono);
+  font-size: var(--t-label-md-size);
+  line-height: var(--t-label-md-lh);
+  font-weight: var(--t-label-md-wt);
+  letter-spacing: var(--t-label-md-ls);
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* Case files and the grey box on top; answered and per turn below. */
+.elle-view {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-areas:
+    'files grey'
+    'answered turns';
+  gap: var(--s3);
+  flex: 1;
+  min-height: 0;
+}
+
+.elle-files { grid-area: files; }
+.elle-grey { grid-area: grey; }
+.elle-answered { grid-area: answered; }
+.elle-turns { grid-area: turns; }
+
+/* A narrow center stacks the four boxes. */
+@container (max-width: 760px) {
+  .elle-view {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: repeat(4, minmax(0, 1fr));
+    grid-template-areas: 'files' 'grey' 'answered' 'turns';
+  }
+}
+
+.elle-box {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+}
+
+/* The label is one fixed line: a longer count never moves the box. */
+.elle-label {
+  flex-shrink: 0;
+  margin: 0;
+  padding: var(--s1) var(--s2);
+  border-bottom: 1px solid var(--line);
+  font-family: var(--mono);
+  font-size: var(--t-label-md-size);
+  line-height: var(--t-label-md-lh);
+  font-weight: 700;
+  letter-spacing: var(--t-label-md-ls);
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--engine-elle);
+}
+
+.elle-grey .elle-label {
+  color: var(--muted);
+}
+
+.elle-box-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: var(--s2);
+  font-family: var(--mono);
+  font-size: var(--t-telemetry-data-size);
+  line-height: var(--t-telemetry-data-lh);
+  scrollbar-color: var(--line-strong) transparent;
+  scrollbar-width: thin;
+}
+
+.elle-box-body > .empty-state,
+.elle-box-body > .error-state,
+.elle-box-body > .prompt-state {
+  margin: 0;
+}
+
+/* A case file: the subject, then its lessons. */
+.elle-file {
+  padding: var(--s2) 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.elle-file:first-child {
+  padding-top: 0;
+}
+
+.elle-file:last-child {
+  border-bottom: 0;
+}
+
+.elle-file-head {
+  margin: 0 0 var(--s1);
+  font-weight: 700;
+  color: var(--text);
+}
+
+.elle-file.is-unfiled .elle-file-head {
+  color: var(--muted);
+}
+
+.elle-lesson {
+  margin: 0 0 var(--s1);
+  padding: var(--s1) var(--s2);
+  border-left: 2px solid var(--engine-elle);
+  background: var(--surface-2);
+}
+
+/* Not yet promoted: grey. */
+.elle-lesson.is-grey {
+  border-left-color: var(--line-strong);
+  opacity: 0.6;
+}
+
+.elle-lesson.is-grey dd {
+  color: var(--muted);
+}
+
+.elle-field {
+  display: grid;
+  grid-template-columns: 11ch minmax(0, 1fr);
+  gap: var(--s1);
+  margin: 0;
+}
+
+.elle-field dt {
+  color: var(--muted);
+}
+
+.elle-field dd {
+  margin: 0;
+  color: var(--text);
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.elle-turn {
+  padding: var(--s2) 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.elle-turn:first-child {
+  padding-top: 0;
+}
+
+.elle-turn:last-child {
+  border-bottom: 0;
+}
+
+.elle-turn-head {
+  margin: 0 0 var(--s1);
+  font-weight: 700;
+  color: var(--engine-elle);
+  text-transform: uppercase;
+}
+
+.elle-sub {
+  margin: var(--s1) 0;
+  color: var(--muted);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.elle-none {
+  margin: 0;
+  color: var(--muted);
+}

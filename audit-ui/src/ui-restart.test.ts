@@ -69,13 +69,13 @@ describe('the rail', () => {
     expect(Array.from(list().querySelectorAll('.left-back a')).map((a) => a.textContent)).toEqual(['Calendar Index']);
   });
 
-  it('tapping Chat or Lessons swaps the list panel only; Audit and Research also go to their pages', async () => {
+  it('tapping Chat swaps the list panel only; Audit, Research and Lessons also go to their pages', async () => {
     await start('/chat');
     const center = container.querySelector('.shell-center')!;
     const right = container.querySelector('.shell-right')!;
     const view = center.firstElementChild;
     const feed = right.innerHTML;
-    for (const [key, caption] of [['lessons', 'Lessons'], ['chat', 'Directories']] as const) {
+    for (const [key, caption] of [['chat', 'Directories']] as const) {
       rail(key).click();
       for (let i = 0; i < 4; i++) await tick();
       expect(list().dataset.panel).toBe(key);

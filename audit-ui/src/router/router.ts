@@ -8,6 +8,7 @@ import { ADDRESS_FOLLOWED, CalendarView } from '../views/calendar.ts';
 import { parseCalendarPath } from '../util/calendar.ts';
 import { RecordView } from '../views/record.ts';
 import { ResearchView } from '../views/research.ts';
+import { LessonsView } from '../views/lessons.ts';
 import { createShell, setViewLabel, type ShellSlots } from '../shell/shell.ts';
 import { LoadingModal } from '../shell/loading-modal.ts';
 import { stripBase, withBase } from '../util/base.ts';
@@ -46,7 +47,7 @@ export class Router {
     this.container = container;
     this.slots = createShell(container);
     // The rail and the list panel it swaps (Chat's list is the directories column).
-    // Audit's icon goes to the KTIE page, Research's to the ERIE page, through this Router (navigate), like a plain link.
+    // Audit's icon goes to the KTIE page, Research's to the ERIE page, Lessons' to the ELLE page, through this Router (navigate), like a plain link.
     const left = new RailPanel(adapter, this.slots.rail, this.slots.left, (path) => this.navigate(path));
     this.leftPanel = left;
     left.mount();
@@ -55,6 +56,15 @@ export class Router {
     const folderBody = this.slots.left.querySelector('.left-folders');
     if (folderBody instanceof HTMLElement) {
       this.loadingModal = new LoadingModal(folderBody, container);
+      // A rail tap before the first settle swaps that list away, so it would
+      // never settle: the new panel says its own loading state instead.
+      const swapped = new MutationObserver(() => {
+        if (!folderBody.isConnected) {
+          swapped.disconnect();
+          this.loadingModal?.hide();
+        }
+      });
+      swapped.observe(this.slots.left, { childList: true });
     }
     this.unsubscribeLog = this.chatLog.subscribe(() => this.leftPanel.refresh());
     // Right column: Curator + ELLE telemetry. It subscribes to the log itself.
@@ -147,6 +157,10 @@ export class Router {
 
     if (path === '/research') {
       return new ResearchView(this.adapter, this.chatLog);
+    }
+
+    if (path === '/lessons') {
+      return new LessonsView(this.adapter, this.chatLog);
     }
 
     if (path === '/calendar' || path.startsWith('/calendar/')) {

@@ -37,10 +37,10 @@ describe('createNav', () => {
   const current = (nav: HTMLElement): string[] =>
     Array.from(nav.querySelectorAll('a[aria-current="page"]')).map((a) => a.getAttribute('href')!);
 
-  it('links all four destinations and nothing else', () => {
+  it('links all five destinations and nothing else', () => {
     const nav = createNav();
     const hrefs = Array.from(nav.querySelectorAll('a')).map((a) => a.getAttribute('href'));
-    expect(hrefs).toEqual(['/chat', '/actions', '/calendar', '/research']);
+    expect(hrefs).toEqual(['/chat', '/actions', '/calendar', '/research', '/lessons']);
     expect(nav.querySelectorAll(':scope > :not(a)')).toHaveLength(0);
   });
 

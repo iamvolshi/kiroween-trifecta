@@ -1,0 +1,103 @@
+{
+  "chips": true,
+  "at1920": {
+    "pageScroll": {
+      "h": 0,
+      "w": 0
+    },
+    "head": "ELLE",
+    "headColor": "rgb(61, 220, 151)",
+    "labels": [
+      "case files · 0 subjects · 0 lessons",
+      "grey box · 0 open questions",
+      "answered · 0 lessons learned",
+      "per turn · 0 turns"
+    ],
+    "files": {
+      "x": 301,
+      "y": 120,
+      "w": 662,
+      "h": 462,
+      "scrolls": false
+    },
+    "grey": {
+      "x": 975,
+      "y": 120,
+      "w": 662,
+      "h": 462,
+      "scrolls": false
+    },
+    "answered": {
+      "x": 301,
+      "y": 594,
+      "w": 662,
+      "h": 462,
+      "scrolls": false
+    },
+    "turns": {
+      "x": 975,
+      "y": 594,
+      "w": 662,
+      "h": 462,
+      "scrolls": false
+    },
+    "fileHeads": [],
+    "greyLessons": 0,
+    "answeredNotes": [],
+    "noAction": [],
+    "banned": false,
+    "leftPanel": "lessons",
+    "list": true,
+    "path": "/lessons"
+  },
+  "at1024": {
+    "pageScroll": {
+      "h": 0,
+      "w": 0
+    },
+    "head": "ELLE",
+    "headColor": "rgb(61, 220, 151)",
+    "labels": [
+      "case files · 0 subjects · 0 lessons",
+      "grey box · 0 open questions",
+      "answered · 0 lessons learned",
+      "per turn · 0 turns"
+    ],
+    "files": {
+      "x": 230,
+      "y": 116,
+      "w": 569,
+      "h": 151,
+      "scrolls": false
+    },
+    "grey": {
+      "x": 230,
+      "y": 279,
+      "w": 569,
+      "h": 151,
+      "scrolls": false
+    },
+    "answered": {
+      "x": 230,
+      "y": 442,
+      "w": 569,
+      "h": 151,
+      "scrolls": false
+    },
+    "turns": {
+      "x": 230,
+      "y": 605,
+      "w": 569,
+      "h": 151,
+      "scrolls": false
+    },
+    "fileHeads": [],
+    "greyLessons": 0,
+    "answeredNotes": [],
+    "noAction": [],
+    "banned": false,
+    "leftPanel": "lessons",
+    "list": true,
+    "path": "/lessons"
+  }
+}
