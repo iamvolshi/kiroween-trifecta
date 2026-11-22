@@ -15,7 +15,8 @@ export class NotFoundView implements View {
         <p><a href="/actions">Back to Action List</a></p>
     `;
     container.appendChild(section);
-    section.querySelector('h1')?.after(createIntro('notFound'));
+    const intro = createIntro('notFound');
+    if (intro) section.querySelector('h1')?.after(intro);
   }
 
   unmount(): void {

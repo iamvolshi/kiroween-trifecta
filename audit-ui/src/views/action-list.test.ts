@@ -104,12 +104,13 @@ const nonEmptyEntries = fc.array(arbitraryEntry, { minLength: 1, maxLength: 20 }
 // ---------------------------------------------------------------------------
 
 describe('ActionListView – example-based', () => {
-  it('header asks the question and shows no teaching line', async () => {
+  it('header shows no question and no teaching line', async () => {
     const adapter = adapterFromEntries([]);
     const view = new ActionListView(adapter);
     const el = await mountAndLoad(view);
 
-    expect(el.querySelector('.view-question')?.textContent).toBe('What did the agent do?');
+    expect(el.querySelector('.view-intro')).toBeNull();
+    expect(el.querySelector('.view-question')).toBeNull();
     expect(el.querySelector('.view-how')).toBeNull();
   });
 

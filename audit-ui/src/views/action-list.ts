@@ -28,9 +28,13 @@ export class ActionListView implements View {
     const h1 = document.createElement('h1');
     h1.textContent = 'Action List';
     container.appendChild(h1);
-    container.appendChild(createIntro('actions'));
+    const intro = createIntro('actions');
+    if (intro) container.appendChild(intro);
     this.body = document.createElement('div');
     this.body.className = 'view-body';
+    // The intro used to carry data-view="Action List"; with no intro the
+    // body carries it, so the header strip still reads "View: Action List".
+    this.body.dataset.view = 'Action List';
     container.appendChild(this.body);
     void this.load(container);
   }

@@ -1,21 +1,20 @@
 /**
- * The question a view answers, shown under its h1 (presentation only).
+ * The intro block under a view's h1 (presentation only).
  * `view` names the view; the header strip reads it to show where you are.
- * `how` is optional: a view with nothing to teach shows no how-line.
+ * `question` is a headline for the view; most views have none now, the h1
+ * is the title. `how` is optional: a view with nothing to teach shows no
+ * how-line. A view with neither shows no intro block at all.
  */
 export const INTROS = {
   actions: {
     view: 'Action List',
-    question: 'What did the agent do?',
   },
   record: {
     view: 'Record',
-    question: 'What does the record hold for this account?',
     how: 'Every entry per subject, oldest first.',
   },
   entry: {
     view: 'Entry Detail',
-    question: 'What exactly was recorded?',
     how: 'One entry with all its fields, then the full chain for its KID and subject.',
   },
   notFound: {
@@ -27,19 +26,22 @@ export const INTROS = {
 
 export type IntroKey = keyof typeof INTROS;
 
-export function createIntro(key: IntroKey): HTMLElement {
+export function createIntro(key: IntroKey): HTMLElement | null {
   const intro = INTROS[key];
-  const { view, question } = intro;
-  // `how` exists on every entry but actions; the `in` check narrows the union.
+  const { view } = intro;
+  // `question`/`how` exist on only some entries; the `in` check narrows the union.
+  const question = 'question' in intro ? intro.question : undefined;
   const how = 'how' in intro ? intro.how : undefined;
+  if (!question && !how) return null;
   const box = document.createElement('div');
   box.className = 'view-intro';
   box.dataset.view = view;
-  const q = document.createElement('p');
-  q.className = 'view-question';
-  q.textContent = question;
-  box.append(q);
-  // A view with no how-line teaches nothing; the paragraph simply isn't there.
+  if (question) {
+    const q = document.createElement('p');
+    q.className = 'view-question';
+    q.textContent = question;
+    box.append(q);
+  }
   if (how) {
     const h = document.createElement('p');
     h.className = 'view-how';

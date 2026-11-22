@@ -33,7 +33,8 @@ export class RecordView implements View {
     this.container = container;
     container.innerHTML = '';
     container.appendChild(el('h1', '', `Record: ${this.accountId}`));
-    container.appendChild(createIntro('record'));
+    const intro = createIntro('record');
+    if (intro) container.appendChild(intro);
     const body = el('div', 'view-body record-view');
     this.body = body;
     container.appendChild(body);

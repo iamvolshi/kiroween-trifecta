@@ -28,7 +28,8 @@ export class EntryDetailView implements View {
     const h1 = document.createElement('h1');
     h1.textContent = 'Entry Detail';
     container.appendChild(h1);
-    container.appendChild(createIntro('entry'));
+    const intro = createIntro('entry');
+    if (intro) container.appendChild(intro);
     this.body = document.createElement('div');
     this.body.className = 'view-body';
     container.appendChild(this.body);

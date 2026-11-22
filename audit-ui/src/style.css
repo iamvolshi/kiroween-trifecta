@@ -210,7 +210,7 @@ button:disabled {
   cursor: default;
 }
 
-/* ---- View intro: every view leads with its question ----------------- */
+/* ---- View intro: the block under a view's h1 ------------------------ */
 
 .view-intro {
   margin: 0 0 var(--s4);
