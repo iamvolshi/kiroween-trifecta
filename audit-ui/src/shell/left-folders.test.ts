@@ -114,6 +114,29 @@ describe('LeftPanel subject folders', () => {
     ]);
   });
 
+  it('one unrelated group does not break the cut for the rest: turn stays turn, chapters stay chapters', async () => {
+    const slot = await mount(
+      adapter(
+        [
+          makeEntry({ id: 'a', kid: 1, subject: 'frankenstein-chapter-1' }),
+          makeEntry({ id: 'b', kid: 2, subject: 'frankenstein-chapter-2' }),
+          makeEntry({ id: 'c', kid: 4, subject: 'frankenstein-letter-4' }),
+          makeEntry({ id: 'd', kid: 28, subject: 'turn' }),
+        ],
+        [],
+      ),
+    );
+    const heads = Array.from(slot.querySelectorAll<HTMLAnchorElement>('.folder-list > .folder > .folder-head a')).map(
+      (a) => [a.textContent, a.title],
+    );
+    expect(heads).toEqual([
+      ['chapter-1', 'frankenstein-chapter-1'],
+      ['chapter-2', 'frankenstein-chapter-2'],
+      ['letter-4', 'frankenstein-letter-4'],
+      ['turn', 'turn'],
+    ]);
+  });
+
   it('heads keep the full name when the groups share nothing worth cutting', async () => {
     const slot = await mount(
       adapter(

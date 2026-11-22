@@ -72,11 +72,23 @@ export function groupOf(subject: string): string {
  * 4 chars is not worth cutting. The full name stays on hover (title) and in
  * `data-group`; only the visible head text changes. With one group there is
  * nothing shared to cut.
+ *
+ * A group that shares nothing worth cutting with any other group (a turn
+ * recorded under 'turn') keeps its full name, and it does not hold the cut
+ * back for the rest: the shared prefix is taken across the groups that do
+ * share, so the chapters still read 'chapter-1' instead of the whole name.
  */
 export function displayGroupName(name: string, all: string[]): string {
   if (all.length < 2) return name;
-  let shared = all[0]!;
-  for (const other of all.slice(1)) {
+  const sharedLen = (a: string, b: string): number => {
+    let i = 0;
+    while (i < a.length && i < b.length && a[i] === b[i]) i++;
+    return i;
+  };
+  const kept = all.filter((n) => all.some((o) => o !== n && sharedLen(n, o) >= 4));
+  if (!kept.includes(name)) return name;
+  let shared = kept[0]!;
+  for (const other of kept.slice(1)) {
     let i = 0;
     while (i < shared.length && i < other.length && shared[i] === other[i]) i++;
     shared = shared.slice(0, i);
