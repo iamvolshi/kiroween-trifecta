@@ -51,16 +51,19 @@ export const DEFAULT_WIDTHS: readonly number[] = [10, 6, 25, 10, 4, 37, 45];
 export const MIN_WIDTH = 4;
 
 /**
- * Each list's columns and default widths (ch). Subject 30 holds the longest
- * live subject a person reads (frankenstein-chapter-23); a Curator folder's
- * longer name scrolls inside its cell. State 11 holds CANDIDATE.
+ * Each list's columns and default widths (ch). Subject 43 holds the longest
+ * live subjects a person reads (frankenstein-biography-young-frankenstein,
+ * 41 chars; the subject cell's ▸ marker takes about 2ch of it), and a
+ * Curator folder's longer name scrolls inside its cell with a clear gap
+ * before the next column, so it never reads as one word with the state.
+ * State 11 holds CANDIDATE.
  */
 const LISTS: Record<GridList, { columns: readonly ColumnKey[]; widths: readonly number[] }> = {
   did: { columns: COLUMNS.map((c) => c.key), widths: DEFAULT_WIDTHS },
   believed: { columns: COLUMNS.map((c) => c.key), widths: DEFAULT_WIDTHS },
   pool: { columns: COLUMNS.map((c) => c.key), widths: DEFAULT_WIDTHS },
-  actions: { columns: ['kid', 'subject', 'state', 'authority', 'inspect'], widths: [6, 30, 11, 5, 9] },
-  record: { columns: ['time', 'kid', 'subject', 'state', 'authority', 'evidence'], widths: [21, 6, 30, 11, 5, 37] },
+  actions: { columns: ['kid', 'subject', 'state', 'authority', 'inspect'], widths: [5, 43, 11, 5, 9] },
+  record: { columns: ['time', 'kid', 'subject', 'state', 'authority', 'evidence'], widths: [21, 5, 43, 11, 5, 37] },
   chain: { columns: ['time', 'kid', 'state', 'authority', 'evidence', 'reason'], widths: [21, 6, 11, 5, 30, 45] },
 };
 

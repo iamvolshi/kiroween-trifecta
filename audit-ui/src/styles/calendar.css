@@ -353,6 +353,12 @@
   padding-right: calc(var(--s1) + 1ch);
 }
 
+/* A subject that runs long ends a full character before the next column,
+   so a clipped subject never reads as one word with the state. */
+.entry-grid .cell-subject {
+  padding-right: calc(var(--s1) + 1ch);
+}
+
 .entry-grid .cell-reason {
   color: var(--muted);
 }
