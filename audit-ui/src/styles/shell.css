@@ -299,7 +299,10 @@
 
 @media (max-width: 1100px) {
   .shell {
-    --lw: var(--left-width, 11.5rem);
+    /* Wide enough that a chapter head shows its number: the rail is the
+       only place a folder's name lives, and a clipped number reads as a
+       different folder. */
+    --lw: var(--left-width, 14rem);
     --rw: var(--right-width, 15.5rem);
   }
 

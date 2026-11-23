@@ -8,7 +8,7 @@
  * Widths live in two inline CSS variables on the shell (--left-width,
  * --right-width) that shell.css feeds into grid-template-columns. They are
  * set only once a panel has been resized: until then shell.css's own
- * defaults apply (16 / 20rem, or 11.5 / 15.5rem at 1100px and under). A
+ * defaults apply (16 / 20rem, or 14 / 15.5rem at 1100px and under). A
  * width never squeezes the center column under MIN_CENTER_REM, and is
  * re-clamped when the window resizes. The terminal state lives in
  * data-terminal on the shell.
@@ -35,7 +35,7 @@ const RAIL_PX = 56;
 /** The widths shell.css draws before any resize (they shrink at 1100px and under). */
 function drawnDefault(side: Side): number {
   const compact = typeof window.matchMedia === 'function' && window.matchMedia('(max-width: 1100px)').matches;
-  return side === 'left' ? (compact ? 11.5 : RANGES.left.def) : compact ? 15.5 : RANGES.right.def;
+  return side === 'left' ? (compact ? 14 : RANGES.left.def) : compact ? 15.5 : RANGES.right.def;
 }
 const GRIP_LABEL: Record<Side, string> = { left: 'Resize left panel', right: 'Resize right panel' };
 
@@ -148,8 +148,8 @@ export class ShellLayout {
 
   /**
    * Set a panel's width in rem, clamped to its range. `floor` lowers the
-   * range's minimum for a step that starts under it (the compact 11.5rem
-   * default), so narrowing from there never widens the panel.
+   * range's minimum for a step that starts under it, so narrowing from
+   * there never widens the panel.
    */
   setWidth(side: Side, rem: number, floor = RANGES[side].min): void {
     const r = RANGES[side];
@@ -252,7 +252,8 @@ export class ShellLayout {
       if (set === null) this.shell.style.removeProperty(VAR[side]);
       else this.shell.style.setProperty(VAR[side], `${set}rem`);
       const now = this.width(side);
-      // Before any resize the compact default (11.5rem) can sit under the drag range's floor.
+      // The compact default (14rem) is inside the drag range's floor, so
+      // the grip's minimum is the range's own.
       this.grips[side].setAttribute('aria-valuemin', String(Math.min(RANGES[side].min, now)));
       // The max the window allows beside the other panel as drawn, not the range's alone.
       const other: Side = side === 'left' ? 'right' : 'left';

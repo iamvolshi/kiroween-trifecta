@@ -73,6 +73,12 @@ export function groupOf(subject: string): string {
  * `data-group`; only the visible head text changes. With one group there is
  * nothing shared to cut.
  *
+ * A prefix shared with only some groups still hides what differs between
+ * those groups: two biographies both read "biography-…". So a second pass
+ * cuts a prefix shared with any other group too, but only when what is left
+ * is a real word, at least 4 chars with a letter in it, so a numbered group
+ * never collapses to its number ("chapter-1" stays "chapter-1", never "1").
+ *
  * A group that shares nothing worth cutting with any other group (a turn
  * recorded under 'turn') keeps its full name, and it does not hold the cut
  * back for the rest: the shared prefix is taken across the groups that do
@@ -87,18 +93,39 @@ export function displayGroupName(name: string, all: string[]): string {
   };
   const kept = all.filter((n) => all.some((o) => o !== n && sharedLen(n, o) >= 4));
   if (!kept.includes(name)) return name;
-  let shared = kept[0]!;
-  for (const other of kept.slice(1)) {
+  // The prefix shared by every kept group, cut at a '-'.
+  const globalTail = (n: string): string => {
+    let shared = kept[0]!;
+    for (const other of kept.slice(1)) {
+      let i = 0;
+      while (i < shared.length && i < other.length && shared[i] === other[i]) i++;
+      shared = shared.slice(0, i);
+      if (shared === '') break;
+    }
+    const cut = shared.lastIndexOf('-');
+    const prefix = cut >= 0 ? shared.slice(0, cut + 1) : '';
+    if (prefix.length < 4) return n;
+    const tail = n.slice(prefix.length);
+    return tail === '' ? n : tail;
+  };
+  let tail = globalTail(name);
+  // Second pass: a prefix shared with only some groups.
+  let best = '';
+  for (const other of kept) {
+    if (other === name) continue;
+    const ot = globalTail(other);
     let i = 0;
-    while (i < shared.length && i < other.length && shared[i] === other[i]) i++;
-    shared = shared.slice(0, i);
-    if (shared === '') break;
+    while (i < tail.length && i < ot.length && tail[i] === ot[i]) i++;
+    const shared = tail.slice(0, i);
+    if (shared.length > best.length) best = shared;
   }
-  const cut = shared.lastIndexOf('-');
-  const prefix = cut >= 0 ? shared.slice(0, cut + 1) : '';
-  if (prefix.length < 4) return name;
-  const tail = name.slice(prefix.length);
-  return tail === '' ? name : tail;
+  const cut = best.lastIndexOf('-');
+  const prefix = cut >= 0 ? best.slice(0, cut + 1) : '';
+  if (prefix.length >= 4) {
+    const rest = tail.slice(prefix.length);
+    if (rest.length >= 4 && /[a-zA-Z]/.test(rest)) tail = rest;
+  }
+  return tail;
 }
 
 /**

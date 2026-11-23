@@ -91,6 +91,31 @@ describe('LeftPanel subject folders', () => {
     ]);
   });
 
+  it('a prefix shared with only some groups is cut too, but a numbered group never collapses to its number', async () => {
+    const slot = await mount(
+      adapter(
+        [
+          makeEntry({ id: 'a', kid: 1, subject: 'frankenstein-biography-movie' }),
+          makeEntry({ id: 'b', kid: 2, subject: 'frankenstein-biography-young-frankenstein' }),
+          makeEntry({ id: 'c', kid: 3, subject: 'frankenstein-chapter-1' }),
+          makeEntry({ id: 'd', kid: 4, subject: 'frankenstein-chapter-2' }),
+          makeEntry({ id: 'e', kid: 5, subject: 'turn' }),
+        ],
+        [],
+      ),
+    );
+    const heads = Array.from(slot.querySelectorAll<HTMLAnchorElement>('.folder-list > .folder > .folder-head a')).map(
+      (a) => [a.textContent, a.title],
+    );
+    expect(heads).toEqual([
+      ['movie', 'frankenstein-biography-movie'],
+      ['young-frankenstein', 'frankenstein-biography-young-frankenstein'],
+      ['chapter-1', 'frankenstein-chapter-1'],
+      ['chapter-2', 'frankenstein-chapter-2'],
+      ['turn', 'turn'],
+    ]);
+  });
+
   it('numbered folders sort by the number: chapter-2 before chapter-10', async () => {
     const slot = await mount(
       adapter(

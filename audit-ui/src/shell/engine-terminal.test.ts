@@ -327,7 +327,7 @@ describe('the layout: drag grips and the terminal window', () => {
     try {
       const compact = await start();
       expect(compact.style.getPropertyValue('--left-width')).toBe('');
-      expect(grip('left').getAttribute('aria-valuenow')).toBe('11.5');
+      expect(grip('left').getAttribute('aria-valuenow')).toBe('14');
       expect(grip('right').getAttribute('aria-valuenow')).toBe('15.5');
     } finally {
       window.matchMedia = mm;
@@ -379,7 +379,7 @@ describe('the layout: drag grips and the terminal window', () => {
     try {
       const shell = await start();
       grip('left').dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', shiftKey: true, bubbles: true, cancelable: true }));
-      expect(shell.style.getPropertyValue('--left-width')).toBe('11.5rem');
+      expect(shell.style.getPropertyValue('--left-width')).toBe('12rem');
     } finally {
       window.matchMedia = mm;
     }
