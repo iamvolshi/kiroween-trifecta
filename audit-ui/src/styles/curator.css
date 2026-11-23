@@ -151,6 +151,24 @@
   color: var(--muted);
 }
 
+/* What the catalog covers, under the chat label and under an empty answer:
+   the folders Curator filed, not the whole record. Muted, so it reads as
+   scope, not as an answer. */
+.curator-scope {
+  flex-shrink: 0;
+  margin: 0;
+  padding: var(--s1) var(--s2) 0;
+  font-family: var(--mono);
+  font-size: var(--t-telemetry-data-size);
+  line-height: var(--t-telemetry-data-lh);
+  color: var(--muted);
+}
+
+.curator-scope-note {
+  margin: var(--s1) 0 0;
+  color: var(--muted);
+}
+
 .curator-provenance {
   margin: var(--s1) 0 0;
   padding: 0;

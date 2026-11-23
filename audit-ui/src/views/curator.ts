@@ -59,6 +59,9 @@ export function renderAnswer(question: string, r: AdapterResult<CuratorAnswer>):
   if (!r.data.found) {
     turn.dataset.state = 'not_found';
     turn.appendChild(el('p', 'curator-cannot', 'The catalog does not say.'));
+    // The empty answer is scoped, not broken: the catalog only covers the
+    // folders Curator filed, so a question about anything else has no answer.
+    turn.appendChild(el('p', 'curator-scope-note', 'It only covers the folders Curator filed.'));
     return turn;
   }
   turn.dataset.state = 'found';
@@ -103,6 +106,7 @@ export class CuratorView {
 
     const chat = el('section', 'curator-box curator-chat');
     chat.appendChild(el('p', 'curator-label', 'ask the catalog'));
+    chat.appendChild(el('p', 'curator-scope', 'Only the folders Curator filed — not the whole record.'));
     this.transcript = el('div', 'curator-box-body curator-transcript');
     this.transcript.setAttribute('aria-live', 'polite');
     const form = el('form', 'curator-composer');

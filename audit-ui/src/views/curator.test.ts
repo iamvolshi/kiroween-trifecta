@@ -124,6 +124,14 @@ describe('the Curator page', () => {
     expect(t.dataset.state).toBe('not_found');
     expect(t.querySelector('.curator-cannot')!.textContent).toBe('The catalog does not say.');
     expect(t.querySelector('.curator-answer')).toBeNull();
+    // The empty answer reads as scoped, not broken: it names what the
+    // catalog covers.
+    expect(t.querySelector('.curator-scope-note')!.textContent).toBe('It only covers the folders Curator filed.');
+  });
+
+  it('the chat box says what the catalog covers before anyone asks', async () => {
+    await mount();
+    expect(q('.curator-chat .curator-scope').textContent).toBe('Only the folders Curator filed — not the whole record.');
   });
 
   it('an empty question asks nothing; a failed ask says so', async () => {
