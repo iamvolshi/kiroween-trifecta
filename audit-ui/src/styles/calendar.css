@@ -349,6 +349,8 @@
 
 .entry-grid .cell-authority {
   font-weight: 700;
+  /* Right-aligned digit sits 4px from the Inspect column; open the gap. */
+  padding-right: calc(var(--s1) + 1ch);
 }
 
 .entry-grid .cell-reason {
