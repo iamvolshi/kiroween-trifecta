@@ -11,6 +11,7 @@ import './styles/loading-modal.css';
 import './styles/research.css';
 import './styles/lessons.css';
 import './styles/curator.css';
+import './styles/inspector.css';
 import './styles/stitch-system.css';
 import { createLiveAdapter } from './adapter/live.ts';
 import { CONNECTOR_URL } from './adapter/connector-url.ts';

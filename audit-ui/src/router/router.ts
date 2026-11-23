@@ -11,6 +11,8 @@ import { ResearchView } from '../views/research.ts';
 import { LessonsView } from '../views/lessons.ts';
 import { CuratorView } from '../views/curator.ts';
 import { createShell, setViewLabel, type ShellSlots } from '../shell/shell.ts';
+import { Inspector } from '../inspector/drawer.ts';
+import { createTrifactaClient, type TrifactaClient } from '../inspector/trifacta.ts';
 import { LoadingModal } from '../shell/loading-modal.ts';
 import { stripBase, withBase } from '../util/base.ts';
 import { RailPanel } from '../shell/rail.ts';
@@ -41,12 +43,19 @@ export class Router {
   private loadingModal: LoadingModal | null = null;
   /** Where the chat reads its voices and models; undefined = the connector (GET /models). */
   private models: ModelSource | undefined;
+  /** The PEEP / RATR inspector drawer. */
+  readonly inspector: Inspector;
 
-  constructor(adapter: SeamAdapter, container: HTMLElement, models?: ModelSource) {
+  constructor(adapter: SeamAdapter, container: HTMLElement, models?: ModelSource, trifacta?: TrifactaClient) {
     this.adapter = adapter;
     this.models = models;
     this.container = container;
     this.slots = createShell(container);
+    // PEEP and RATR: two small header buttons and their drawer, on every
+    // view. A second data source (TRIFACTA), read only when opened.
+    this.inspector = new Inspector(trifacta ?? createTrifactaClient());
+    const header = this.slots.shell.querySelector<HTMLElement>('.shell-brand');
+    if (header) this.inspector.mount(header, this.slots.shell);
     // The rail and the list panel it swaps (Chat's list is the directories column).
     // Audit's icon goes to the KTIE page, Research's to the ERIE page, Lessons' to the ELLE page, through this Router (navigate), like a plain link.
     const left = new RailPanel(adapter, this.slots.rail, this.slots.left, (path) => this.navigate(path));
@@ -130,6 +139,7 @@ export class Router {
     this.leftPanel.unmount();
     this.rightPanel.unmount();
     this.layout.destroy();
+    this.inspector.unmount();
     this.container.innerHTML = '';
   }
 

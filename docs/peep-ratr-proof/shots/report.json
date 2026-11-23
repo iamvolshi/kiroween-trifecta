@@ -1,0 +1,42 @@
+{
+  "peep-1920": {
+    "ok": true,
+    "hits": [
+      "acct-001.city@1-2authority 5CANDIDATE",
+      "acct-001.city@2-3authority 3CANDIDATE",
+      "acct-001.city@3-liveauthority 8CONFIRMED",
+      "acct-001.cust_name@1-liveauthority 8CONFIRMED"
+    ],
+    "error": null
+  },
+  "ratr-1920": {
+    "ok": true,
+    "rows": 13,
+    "meta": "GET /record/acct-001 · 13 intervals",
+    "error": null,
+    "drawer": [
+      780,
+      1024
+    ]
+  },
+  "peep-1024": {
+    "ok": true,
+    "hits": [
+      "acct-001.city@1-2authority 5CANDIDATE",
+      "acct-001.city@2-3authority 3CANDIDATE",
+      "acct-001.city@3-liveauthority 8CONFIRMED",
+      "acct-001.cust_name@1-liveauthority 8CONFIRMED"
+    ],
+    "error": null
+  },
+  "ratr-1024": {
+    "ok": true,
+    "rows": 13,
+    "meta": "GET /record/acct-001 · 13 intervals",
+    "error": null,
+    "drawer": [
+      780,
+      712
+    ]
+  }
+}
