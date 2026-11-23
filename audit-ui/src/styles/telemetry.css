@@ -36,6 +36,15 @@
   min-width: 0;
 }
 
+/* A narrow column drops the "— Machine state" suffix rather than wrapping:
+   "Telemetry" fits on one line at 1024, and the full heading shows where
+   there is room. */
+@media (max-width: 1100px) {
+  .telemetry-head .telemetry-heading-rest {
+    display: none;
+  }
+}
+
 /* ---- The feed: lines, not cards --------------------------------------- */
 
 .activity-feed {

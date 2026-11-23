@@ -114,7 +114,14 @@ export class TelemetryPanel implements Panel {
     this.slot = slot;
     this.root = el('div', 'telemetry');
     this.head = el('div', 'telemetry-head');
-    this.head.appendChild(el('h2', 'telemetry-heading', WORK_HEADING));
+    // The heading is two spans, so a narrow column can drop the "— Machine
+    // state" suffix and still show "Telemetry" on one line; the heading's
+    // text stays WORK_HEADING either way.
+    const [main, rest] = WORK_HEADING.split(' — ');
+    const h = el('h2', 'telemetry-heading');
+    h.appendChild(el('span', 'telemetry-heading-main', main));
+    if (rest !== undefined) h.appendChild(el('span', 'telemetry-heading-rest', ` — ${rest}`));
+    this.head.appendChild(h);
     if (this.layout) this.head.appendChild(this.layout.controls);
     this.body = el('div', 'telemetry-body');
     this.body.tabIndex = -1; // the focus target of last resort (back with nothing drawn yet)
