@@ -1,0 +1,66 @@
+/* Watson, the mouth: his conclusion beside an ERIE answer, never in it. */
+
+.watson-conclusion {
+  margin: var(--s2) 0 0;
+  padding: var(--s2) var(--s3);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--tertiary-dim);
+  background: var(--surface);
+  color: var(--text);
+}
+
+.watson-head {
+  display: flex;
+  gap: var(--s2);
+  align-items: baseline;
+  margin: 0 0 var(--s1);
+  font-family: var(--mono);
+  font-size: var(--t-label-sm-size);
+  letter-spacing: var(--t-label-sm-ls);
+}
+
+.watson-name {
+  color: var(--tertiary-dim);
+  font-weight: 700;
+}
+
+.watson-confidence {
+  color: var(--muted);
+}
+
+.watson-summary {
+  margin: 0 0 var(--s1);
+  overflow-wrap: anywhere;
+}
+
+.watson-claims {
+  margin: 0;
+  padding-left: var(--s3);
+}
+
+.watson-claim {
+  margin: 2px 0;
+  overflow-wrap: anywhere;
+}
+
+.watson-claim-status,
+.watson-claim-kids {
+  margin-left: var(--s2);
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: var(--t-label-sm-size);
+}
+
+.watson-claim-kids {
+  color: var(--accent);
+}
+
+/* In the narrow rail, long book passages are cut to a few lines. */
+.research-results .watson-summary,
+.research-results .watson-claim-text {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  line-clamp: 4;
+  overflow: hidden;
+}

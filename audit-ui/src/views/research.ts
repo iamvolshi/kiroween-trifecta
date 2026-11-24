@@ -2,6 +2,8 @@ import type { AskResult, ChatTurn, Entry, Lesson, SeamAdapter } from '../adapter
 import type { ChatLog } from './chat-log.ts';
 import { renderEntryGrid } from './entry-grid.ts';
 import { viewerTimeZone } from '../util/timezone.ts';
+import { WatsonCaller } from '../watson/conclusion.ts';
+import { createWatsonBridge, type WatsonBridge } from '../watson/bridge.ts';
 
 /**
  * The ERIE page (Research): what ERIE gets and what she injects.
@@ -123,11 +125,14 @@ export class ResearchView {
   private injectionLabel: HTMLElement | null = null;
   private unsubscribe: (() => void) | null = null;
   private token = 0;
+  /** Watson's conclusion beside each turn's ERIE answer (never in it). */
+  private watson: WatsonCaller;
 
-  constructor(adapter: SeamAdapter, log: ChatLog, timeZone?: string) {
+  constructor(adapter: SeamAdapter, log: ChatLog, timeZone?: string, bridge: WatsonBridge = createWatsonBridge()) {
     this.adapter = adapter;
     this.log = log;
     this.timeZone = timeZone ?? viewerTimeZone();
+    this.watson = new WatsonCaller(adapter, bridge);
   }
 
   mount(container: HTMLElement): void {
@@ -189,7 +194,12 @@ export class ResearchView {
       this.injection.replaceChildren(el('p', 'empty-state', 'No chat turns in this session yet.'));
       return;
     }
-    this.retrieval.replaceChildren(...turns.map((t, i) => renderRetrieval(t.engines.erie, i + 1, t.message)));
+    const shown = turns.map((t, i) => renderRetrieval(t.engines.erie, i + 1, t.message));
+    this.retrieval.replaceChildren(...shown);
+    // Watson speaks after the answer is on screen; a failure shows nothing.
+    turns.forEach((t, i) => {
+      if (t.engines.erie) void this.watson.attach(shown[i]!, t.engines.erie);
+    });
     this.injection.replaceChildren(...turns.map((t, i) => renderInjection(t, i + 1)));
   }
 

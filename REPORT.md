@@ -1,52 +1,60 @@
-# REPORT: OCME-004, PEEP and RATR inspector drawer
+# REPORT: OCME-002-hack, Watson speaks
 
-Branch `feat/peep-ratr` off main `5e5e0a1`. Not merged; the merge is Darren's.
+App branch `feat/watson-mouth` (iamvolshi/kiroween-trifecta, off main
+`bce0320`). Bridge branch `watson-bridge-host` (iamvolshi/scribe, off
+`watson-bridge` `2b28116`). Neither is merged; Darren merges.
 
 ## What changed
 
-| File | Change |
+| Where | Change |
 |---|---|
-| `audit-ui/src/inspector/trifacta.ts` | TRIFACTA client: demo key read once from `GET /config`, sent as `X-API-Key`; `ask`, `record`, `lessons`, `insights`; every reply shape-checked |
-| `audit-ui/src/inspector/drawer.ts` | The two header buttons and the drawer, tabs PEEP and RATR, Esc closes |
-| `audit-ui/src/inspector/peep.ts` | PEEP: the trace of one query |
-| `audit-ui/src/inspector/ratr.ts` | RATR: the witness log |
-| `audit-ui/src/styles/inspector.css` | The quiet pair, the drawer |
-| `audit-ui/src/router/router.ts` | Mounts the inspector in the header on every view |
-| `audit-ui/src/inspector/inspector.test.ts` | 13 tests, against a stub fetch |
-| `docs/peep-ratr-proof/` | The shot script and the shots |
+| `audit-ui/src/watson/bridge.ts` (new) | Calls the bridge's `POST /report`. The address comes from `VITE_WATSON_URL`. It never throws: on any failure it answers null |
+| `audit-ui/src/watson/conclusion.ts` (new) | Resolves each citation's KID, renders Watson's box, and keeps one call per answer |
+| `audit-ui/src/shell/rail-panels.ts` | Rail Research search (connector `/ask`): Watson's box goes after the hits |
+| `audit-ui/src/views/research.ts` | ERIE page retrieval, the chat's ERIE answer per turn: Watson's box goes after the answer |
+| `audit-ui/src/styles/watson.css` (new), `main.ts` | The box's look |
+| `audit-ui/src/watson/watson.test.ts` (new) | 9 tests |
+| scribe `watson/apps/watson-bridge/src/server.ts` | CORS, so the page can call it from the browser. `WATSON_CORS_ORIGINS` (unset means any origin). No key exists to leak |
+| scribe `.../render.yaml`, `build-for-host.mjs` (new) | Render blueprint, and a build of the bridge's 17 packages in dependency order |
+| scribe `.../tests/report.test.ts` | 2 CORS tests |
 
-The connector seam is untouched. The drawer is a second data source.
+The answer is never changed. Watson's box is added after it, or nothing is
+added. Both backends are untouched: the connector, TRIFACTA, KIDs 1-29, the
+record and the filing rule. There is no LLM analyzer and no twelfth app.
 
-## What the drawer shows
+## How the KIDs get through
 
-- **Buttons:** `PEEP` `RATR`, side by side, at the right of the header, 9px, 35% opacity until hovered.
-- **PEEP:** a question (pre-filled "What city does Darren live in?"), Ask, then the call (`POST /ask`, question, state, text, docket, count touched) and each entry touched: its key, the authority and state read from `GET /record`, the source, the excerpt, the KID and entry hash. No commentary.
-- **RATR:** account picker (acct-001 to acct-005, default acct-001), `GET /record/{account}` as a flat list in k order: k_start, k_end, field, value, state, authority, KID, entry_hash, reason. Then `GET /insights` counts and `GET /lessons` events as sent.
-- **Errors:** an unreachable API or a wrong-shaped reply shows its error in words, and no entry.
-
-## Live proof (2026-11-23)
-
-- `GET /health`: 200, `ok: true`, engines `erie, katie, elle, arche`. `GET /config`: 200, `api_key` present.
-- PEEP, Darren city trace: 4 entries touched. `city@1-2` Raleigh authority 5, `city@2-3` Charlotte authority 3 (crm import), `city@3-live` Chapel Hill authority 8 CONFIRMED with the correction reason, `cust_name@1-live` authority 8.
-- RATR acct-001: 13 intervals.
-- Shots at 1920x1080 and 1024x768, both tabs: `docs/peep-ratr-proof/shots/`.
+In the caller. The connector's `/ask` provenance names each hit by entry id
+(`content`). The page reads `GET /entries`, the same read every view uses,
+and maps that id to its KID. Each citation is sent with `kid`. An entry the
+record does not know goes without a KID ("no KID"), never an invented one.
+No backend change was needed, so volshi-ai/trifecta is not touched.
 
 ## Tests
 
-555 passed (floor 542). `tsc` clean, `npm run build` clean.
+- **App:** 564 passed (546 on main), and tsc and build are clean. They prove the KIDs carried from an answer into Watson's box. They prove the answer still shows when the bridge throws, returns 500, replies in the wrong shape, has no address, or is slow. A not-found answer is never sent.
+- **Bridge:** 11 passed (9 before).
+- **Bots:** the Curator and dog tests pass, 32 of them. Nothing in bots changed.
 
-## Unproven and flags
+## Live round trip (2026-11-24)
 
-1. **PEEP's ask is not write-free.** TRIFACTA logs every `POST /ask` as an
-   ELLE event. `GET /lessons` went from 1 to 4 events during this build
-   (one probe, two proof shots). PEEP asks only when Ask is pressed.
-2. **Authority on a PEEP entry** comes from `GET /record`, matched on the
-   provenance key (`acct-001.city@2-3`). `/ask` itself carries authority
-   only inside the excerpt text. A key that matches no interval says so.
-3. **The TRIFACTA address** defaults to `https://trifacta-api.onrender.com`
-   in `trifacta.ts` (`VITE_TRIFACTA_URL` overrides it). It is a public URL,
-   not a key, but it is an address written in code.
-4. **The drawer sits above the boot loading modal**, so it works while the
-   connector is still waking.
-5. `.kiro/steering/tech.md` still describes a mock seam; the app is
-   live-only. Not changed here.
+The live connector `/ask`, "a female of another sex, as hideous as myself",
+found 3 hits. Their KIDs, 20, 27 and 24, were resolved from live `/entries`.
+They went to the bridge built from `watson-bridge-host` and running on
+127.0.0.1. Watson answered confidence 0.90, 3 claims, all supported, with
+KIDs 20, 27 and 24 back. The built app showed the same thing at 1920 and
+1024: `docs/watson-proof/`.
+
+## Hosting: not done
+
+There is no Render access on this machine. To host the bridge: Render >
+New > Blueprint > iamvolshi/scribe, branch `watson-bridge-host`, file
+`watson/apps/watson-bridge/render.yaml`. Then build the app with
+`VITE_WATSON_URL=<the bridge URL>`. Until then, no Watson box shows, and
+every answer stands as before.
+
+## Unproven
+
+- **The bridge on a public URL,** and the Render build on a clean machine. The build was proven locally only.
+- **The chat path, live.** It is covered by tests only, because recording a live chat turn was not allowed.
+- **Watson's summary on book passages.** The deterministic extractor echoes them, so the rail cuts them to 4 lines. The wording would get better with the LLM analyzer, which is out of scope.

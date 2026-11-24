@@ -1,0 +1,26 @@
+{
+  "1024": {
+    "ok": true,
+    "hits": 3,
+    "error": null,
+    "confidence": "confidence 0.90",
+    "claims": 3,
+    "kids": [
+      "KID 20",
+      "KID 27",
+      "KID 24"
+    ]
+  },
+  "1920": {
+    "ok": true,
+    "hits": 3,
+    "error": null,
+    "confidence": "confidence 0.90",
+    "claims": 3,
+    "kids": [
+      "KID 20",
+      "KID 27",
+      "KID 24"
+    ]
+  }
+}

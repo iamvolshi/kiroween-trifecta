@@ -4,6 +4,8 @@ import { compareKStart } from '../util/interval.ts';
 import { compareNatural } from '../util/natural.ts';
 import { groupOf, renderLesson } from './subject-folders.ts';
 import { isWorkspace } from '../util/curator.ts';
+import { WatsonCaller, renderConclusion } from '../watson/conclusion.ts';
+import { createWatsonBridge, type WatsonBridge } from '../watson/bridge.ts';
 
 /**
  * The list panels the rail swaps in besides Chat (the left column, see
@@ -115,8 +117,11 @@ export class ResearchPanel implements Panel {
   private last: { question: string; result: AdapterResult<AskResult> } | null = null;
 
   private adapter: SeamAdapter;
+  /** Watson's conclusion beside each answer (never in it). */
+  private watson: WatsonCaller;
 
-  constructor(adapter: SeamAdapter) {
+  constructor(adapter: SeamAdapter, bridge: WatsonBridge = createWatsonBridge()) {
+    this.watson = new WatsonCaller(adapter, bridge);
     this.adapter = adapter;
   }
 
@@ -146,6 +151,7 @@ export class ResearchPanel implements Panel {
     if (this.last) {
       input.value = this.last.question;
       renderHits(this.results, this.last.result);
+      this.speak(this.results, this.last.result);
     }
   }
 
@@ -160,11 +166,21 @@ export class ResearchPanel implements Panel {
         if (token === this.token) this.last = { question, result: r };
         if (token !== this.token || this.results !== out) return;
         renderHits(out, r);
+        this.speak(out, r);
       },
       (e: unknown) => {
         if (token === this.token && this.results === out) out.replaceChildren(el('p', 'error-state', failed('knowledge', e)));
       },
     );
+  }
+
+  /** Watson's conclusion after the hits; a failure shows nothing and touches nothing. */
+  private speak(out: HTMLElement, r: AdapterResult<AskResult>): void {
+    if (!r.ok) return;
+    const token = this.token;
+    void this.watson.conclude(r.data).then((c) => {
+      if (c && token === this.token && this.results === out) out.appendChild(renderConclusion(c));
+    });
   }
 
   refresh(): void {}
