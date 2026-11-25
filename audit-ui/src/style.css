@@ -329,7 +329,7 @@ button:disabled {
 .entry-primary dt,
 .entry-primary dd {
   margin: 0;
-  padding: var(--s2) var(--s3);
+  padding: var(--s1) var(--s3);
   border-top: 1px solid var(--line);
 }
 
@@ -413,6 +413,19 @@ button:disabled {
   font-weight: 700;
   letter-spacing: var(--t-label-md-ls);
   text-transform: uppercase;
+}
+
+/* A one-line empty state: the words alone, no header and no box. */
+.empty-state.empty-line {
+  margin: 0;
+  padding: var(--s1) 0;
+  border: 0;
+  background: none;
+  color: var(--muted);
+}
+
+.empty-state.empty-line::before {
+  display: none;
 }
 
 .empty-state::before {

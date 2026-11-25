@@ -95,19 +95,36 @@ function renderRecords(entries: Entry[]): HTMLElement[] {
   }
   if (counts.size === 0) return [total];
   const ul = el('ul', 'left-links audit-accounts');
-  for (const name of [...counts.keys()].sort(compareNatural)) {
+  const latestOf = (name: string): Entry => [...counts.get(name)!].sort((a, b) => compareKStart(b, a))[0]!;
+  // Newest first: the few most recent show, the rest wait behind one control.
+  const names = [...counts.keys()].sort((a, b) => compareKStart(latestOf(b), latestOf(a)) || compareNatural(a, b));
+  names.forEach((name, i) => {
     const mine = counts.get(name)!;
-    const li = el('li', '');
+    const li = el('li', i < RECORDS_SHOWN ? '' : 'is-more');
+    if (i >= RECORDS_SHOWN) li.hidden = true;
     // An account with dotted subjects has a record view; a lone subject opens its latest entry.
-    const latest = [...mine].sort((a, b) => compareKStart(b, a))[0]!;
+    const latest = latestOf(name);
     const href = mine.some((e) => e.subject.includes('.'))
       ? `/record/${encodeURIComponent(name)}`
       : `/entry/${latest.kid}/${encodeURIComponent(latest.subject)}/${encodeURIComponent(latest.id)}`;
     li.append(link(href, name), el('span', 'folder-count', ` (${mine.length})`));
     ul.appendChild(li);
-  }
-  return [total, ul];
+  });
+  if (names.length <= RECORDS_SHOWN) return [total, ul];
+  const more = el('button', 'list-more', `Show all ${names.length}`);
+  more.type = 'button';
+  more.setAttribute('aria-expanded', 'false');
+  more.addEventListener('click', () => {
+    const open = more.getAttribute('aria-expanded') !== 'true';
+    more.setAttribute('aria-expanded', String(open));
+    more.textContent = open ? 'Show fewer' : `Show all ${names.length}`;
+    for (const li of ul.querySelectorAll<HTMLElement>('.is-more')) li.hidden = !open;
+  });
+  return [total, ul, more];
 }
+
+/** How many records the Audit list shows before its Show all control. */
+const RECORDS_SHOWN = 5;
 
 /** Research: ERIE's retrieval over the live record (POST /ask), each hit with its source name. */
 export class ResearchPanel implements Panel {

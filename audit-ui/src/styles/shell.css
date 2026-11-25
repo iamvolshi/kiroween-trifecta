@@ -253,6 +253,10 @@
 }
 
 .folder-list .folder-head:hover,
+.left-links li[hidden] {
+  display: none;
+}
+
 .left-links li:hover {
   background: var(--surface);
 }

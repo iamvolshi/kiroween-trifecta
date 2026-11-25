@@ -27,10 +27,16 @@
 /* The catalog on top, the chat below it with its composer at the foot. */
 .curator-view {
   display: grid;
-  grid-template-rows: minmax(0, 3fr) minmax(0, 2fr);
+  grid-template-rows: minmax(0, auto) minmax(0, auto);
+  align-content: start;
   gap: var(--s3);
   flex: 1;
   min-height: 0;
+}
+
+/* An empty transcript is a short strip, not a tall box. */
+.curator-transcript {
+  min-height: 3rem;
 }
 
 .curator-box {

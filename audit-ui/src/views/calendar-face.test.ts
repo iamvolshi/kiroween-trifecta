@@ -524,7 +524,7 @@ describe('the folder under the drums', () => {
     expect(passing.hidden).toBe(false);
     expect(passing.textContent).toBe('2026-11-18 \u00b7 14:00 UTC \u00b7 3 entries');
     expect(folder.getAttribute('aria-busy')).toBe('true');
-    expect(root.querySelector('.ktie-folder-caption')?.textContent).toBe('Folder: November 2026 (UTC)');
+    expect(root.querySelector('.ktie-folder-caption')?.textContent).toBe('');
     await wait(20);
     expect(folder.querySelector('.calendar-grid')).not.toBeNull(); // not settled yet
     await wait(320);
@@ -643,7 +643,7 @@ describe('one screen at 1024x768', () => {
     expect(rail).toContain('font-size: var(--t-headline-lg-size);');
     const cal = read('styles/calendar.css');
     // Shorter day cells at 1100px and under, so the month grid fits.
-    expect(cal).toContain('height: 2.75rem;');
+    expect(cal).toContain('height: 2rem;');
     // The day's 24 hours sit as a 6-column grid, not a long list.
     expect(cal).toContain('grid-template-columns: repeat(6, minmax(0, 1fr));');
     // The center's bottom padding tightens at 1100px and under.

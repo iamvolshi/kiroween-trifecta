@@ -61,10 +61,11 @@ export const MIN_WIDTH = 4;
 const LISTS: Record<GridList, { columns: readonly ColumnKey[]; widths: readonly number[] }> = {
   did: { columns: COLUMNS.map((c) => c.key), widths: DEFAULT_WIDTHS },
   believed: { columns: COLUMNS.map((c) => c.key), widths: DEFAULT_WIDTHS },
-  pool: { columns: COLUMNS.map((c) => c.key), widths: DEFAULT_WIDTHS },
+  // The pool: every row shares one ingest time, so Time is left out; Authority gets room for its name.
+  pool: { columns: ['kid', 'subject', 'state', 'authority', 'evidence', 'reason'], widths: [6, 34, 10, 10, 46, 40] },
   actions: { columns: ['kid', 'subject', 'state', 'authority', 'inspect'], widths: [5, 43, 11, 11, 9] },
   record: { columns: ['time', 'kid', 'subject', 'state', 'authority', 'evidence'], widths: [21, 5, 43, 11, 11, 37] },
-  chain: { columns: ['time', 'kid', 'state', 'authority', 'evidence', 'reason'], widths: [21, 6, 11, 11, 30, 45] },
+  chain: { columns: ['time', 'kid', 'state', 'authority', 'evidence', 'reason'], widths: [19, 5, 10, 9, 50, 45] },
 };
 
 /** The columns a list shows, in order. */
