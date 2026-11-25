@@ -22,7 +22,9 @@ export function isEntry(v: unknown): v is Entry {
     e.authority >= 0 && e.authority <= 9 &&
     STRING_FIELDS.every((f) => typeof e[f] === 'string') &&
     Number.isFinite(parseMs(e.k_start as string)) &&
-    Number.isFinite(parseMs(e.t_time as string))
+    Number.isFinite(parseMs(e.t_time as string)) &&
+    (e.case_file === undefined ||
+      (Array.isArray(e.case_file) && e.case_file.every((x) => typeof x === 'string')))
   );
 }
 

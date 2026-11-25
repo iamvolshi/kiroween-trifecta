@@ -1,11 +1,11 @@
-import type { SeamAdapter, Entry, Lesson } from '../adapter/seam.ts';
+import type { SeamAdapter, Entry } from '../adapter/seam.ts';
 import type { Panel } from './panel.ts';
 import { createNav } from '../views/nav.ts';
 import { stripBase } from '../util/base.ts';
 import { compareKStart } from '../util/interval.ts';
 import { compareNatural } from '../util/natural.ts';
-import { groupOf, displayGroupName, renderFolder, renderLesson, subjectsByGroup } from './subject-folders.ts';
-import { isWorkspace } from '../util/curator.ts';
+import { groupOf } from './subject-folders.ts';
+import { catalog, type CuratorFolder } from '../util/curator.ts';
 
 function el<K extends keyof HTMLElementTagNameMap>(
   tag: K,
@@ -29,7 +29,7 @@ function entryHref(e: Entry): string {
 }
 
 /** Where a group's folder link goes: the account record, or the lone subject's latest entry. */
-function groupHref(name: string, entries: Entry[]): string | null {
+export function groupHref(name: string, entries: Entry[]): string | null {
   const mine = entries.filter((e) => groupOf(e.subject) === name);
   if (mine.length === 0) return null;
   if (mine.some((e) => e.subject.includes('.'))) return `/record/${encodeURIComponent(name)}`;
@@ -37,11 +37,33 @@ function groupHref(name: string, entries: Entry[]): string | null {
 }
 
 /**
- * Left column: destinations nav; the record, one group
- * per account / project (subject prefix) with its subject folders nested
- * inside (0-9 meter, history, lessons); any lessons without a subject; and
- * the Calendar "going back" link. Stays mounted across
- * navigation; the Router refreshes it after every navigation and chat turn.
+ * Where a Curator folder row goes. The folder name's destination: its
+ * subject's record, or the lone subject's latest entry (groupHref). A
+ * folder whose case file is turns the Curator read it from goes to the
+ * newest of them; a folder with nothing in the record goes to its own entry.
+ */
+export function folderHref(f: CuratorFolder): string {
+  const named = groupHref(f.subject, f.caseFile);
+  if (named) return named;
+  // The newest: latest k_start, and on a tie the later in record order.
+  const latest = f.caseFile.reduce<Entry | undefined>((best, e) => (!best || compareKStart(e, best) >= 0 ? e : best), undefined);
+  return entryHref(latest ?? f.folder);
+}
+
+/** A folder's 0-9 value: the authority of the latest entry in its case file, else the folder's own. */
+function folderAuthority(f: CuratorFolder): number {
+  const latest = [...f.caseFile].sort(compareKStart).at(-1);
+  return (latest ?? f.folder).authority;
+}
+
+/**
+ * Left column: destinations nav; the Curator's folders, one compact row
+ * each (subject, entry count, latest authority), the whole row a link; and
+ * the Calendar "going back" link. Only subjects the Curator filed show: a
+ * subject is in because a curator-folder-<subject> marker is in the record
+ * (Darren, Nov 25), so the seed corpus never shows here. The full folder
+ * cards live on the Curator page. Stays mounted across navigation; the
+ * Router refreshes it after every navigation and chat turn.
  */
 export class LeftPanel implements Panel {
   private adapter: SeamAdapter;
@@ -93,23 +115,14 @@ export class LeftPanel implements Panel {
     this.navHost.replaceChildren(createNav(stripBase(window.location.pathname)));
 
     const token = ++this.requestToken;
-    void Promise.all([this.adapter.fetchAllEntries(), this.adapter.fetchLessons()]).then(
-      ([entries, lessons]) => {
+    void this.adapter.fetchAllEntries().then(
+      (entries) => {
         if (token !== this.requestToken || this.folderBody !== folderBody) return;
-        const lessonData = lessons.ok ? lessons.data : [];
         if (!entries.ok) {
-          // The whole-record read can be unavailable (on the live path it is not
-          // in the connector contract yet). Folders still come from the lessons.
-          if (lessonData.length === 0) {
-            folderBody.replaceChildren(el('p', 'error-state', entries.error));
-            return;
-          }
-          this.render(folderBody, [], lessonData);
-          folderBody.prepend(el('p', 'prompt-state', `Record entries not available: ${entries.error}`));
+          folderBody.replaceChildren(el('p', 'error-state', entries.error));
           return;
         }
-        // Lessons are optional here: a failed read leaves the folders without them.
-        this.render(folderBody, entries.data, lessonData);
+        this.render(folderBody, entries.data);
       },
       (e: unknown) => {
         // A read that throws (rather than answering an error) is still said in words.
@@ -119,63 +132,33 @@ export class LeftPanel implements Panel {
     );
   }
 
-  private render(body: HTMLElement, entries: Entry[], lessons: Lesson[]): void {
-    // Curator's own folder entries are the folders, not subjects to fold.
-    const groups = subjectsByGroup(entries.filter((e) => !isWorkspace(e)), lessons);
-    if (groups.size === 0) {
-      body.replaceChildren(
-        el('p', 'empty-state', 'No subjects yet. Folders appear as the conversation records them.'),
-      );
+  private render(body: HTMLElement, entries: Entry[]): void {
+    const folders = catalog(entries).sort((x, y) => compareNatural(x.subject, y.subject));
+    if (folders.length === 0) {
+      // The truth, in words: no folder is filed, and the seed is not a folder.
+      body.replaceChildren(el('p', 'empty-state', 'No folders yet. Folders appear as the Curator files them.'));
       return;
     }
-    const ul = el('ul', 'folder-list');
-    const names = [...groups.keys()].sort(compareNatural);
-    for (const name of names) {
-      const li = el('li', 'folder');
-      li.dataset.group = name;
-      const head = el('div', 'folder-head');
-      const href = groupHref(name, entries);
-      // The head shows the part that differs between groups (the shared
-      // prefix is cut); it sits on one line and ends in …; the full name is
-      // on hover.
-      const shown = displayGroupName(name, names);
-      const nameNode = href ? link(href, shown) : el('span', 'folder-name', shown);
-      nameNode.title = name;
-      head.appendChild(nameNode);
-      const count = entries.filter((e) => groupOf(e.subject) === name).length;
-      head.appendChild(el('span', 'folder-count', ` (${count})`));
-      // The folder's 0-9 value, on the folder: the authority of its latest entry.
-      const own = entries.filter((e) => groupOf(e.subject) === name).sort(compareKStart);
-      if (own.length > 0) {
-        const latest = own[own.length - 1]!.authority;
-        const badge = el('span', 'folder-head-value', String(latest));
-        badge.setAttribute('aria-label', `authority ${latest} of 9`);
-        head.appendChild(badge);
-        li.dataset.authority = String(latest);
-      }
-      li.appendChild(head);
-      const nested = el('div', 'group-subjects');
-      for (const s of groups.get(name)!) {
-        const folder = renderFolder(s, entries, lessons);
-        // A subject with no '.' is its own group: keep its name for screen
-        // readers but do not show it twice.
-        if (s === name) folder.querySelector('.folder-subject')?.classList.add('sr-only');
-        nested.appendChild(folder);
-      }
-      li.appendChild(nested);
+    const ul = el('ul', 'curator-rows');
+    for (const f of folders) {
+      const li = el('li', 'curator-row-item');
+      const row = link(folderHref(f), '');
+      row.className = 'curator-row';
+      row.dataset.subject = f.subject;
+      const authority = folderAuthority(f);
+      row.dataset.authority = String(authority);
+      const count = f.caseFile.length;
+      row.setAttribute('aria-label', `${f.subject}, ${count} ${count === 1 ? 'entry' : 'entries'}, authority ${authority} of 9`);
+      row.title = f.subject;
+      row.append(
+        el('span', 'curator-row-name', f.subject),
+        el('span', 'curator-row-count', String(count)),
+        el('span', 'curator-row-value', String(authority)),
+      );
+      li.appendChild(row);
       ul.appendChild(li);
     }
-    const parts: HTMLElement[] = [ul];
-    const unfiled = lessons.filter((l) => l.subject === null);
-    if (unfiled.length > 0) {
-      const box = el('div', 'lessons-unfiled-box');
-      box.appendChild(el('h3', '', 'Lessons without a subject'));
-      const list = el('ul', 'lessons-unfiled');
-      for (const l of unfiled) list.appendChild(renderLesson(l));
-      box.appendChild(list);
-      parts.push(box);
-    }
-    body.replaceChildren(...parts);
+    body.replaceChildren(ul);
   }
 
   unmount(): void {

@@ -20,53 +20,26 @@ function mountLeft(adapter: SeamAdapter): { slot: HTMLElement; panel: LeftPanel 
   return { slot, panel };
 }
 
+const marker = (subject: string, id = `f-${subject}`, over: Partial<Entry> = {}): Entry =>
+  makeEntry({ id, kid: 40, subject: `curator-folder-${subject}`, authority: 5, ...over });
+
 describe('LeftPanel', () => {
-  it('renders nav, record folders with counts, and the going-back links', async () => {
-    const { slot } = mountLeft(
-      adapterOf(async () => ({
-        ok: true,
-        data: [
-          makeEntry({ id: 'a', subject: 'order-1042.delivery_date' }),
-          makeEntry({ id: 'b', subject: 'order-1042.status' }),
-          makeEntry({ id: 'c', subject: 'parcel-77.status' }),
-        ],
-      })),
-    );
+  it('renders nav, the Curator heading, the folder rows, and the going-back links', async () => {
+    const { slot } = mountLeft(adapterOf(async () => ({
+      ok: true, data: [makeEntry({ id: 'a', subject: 'order-1042.status' }), marker('order-1042')],
+    })));
     await tick();
     expect(slot.querySelectorAll('nav')).toHaveLength(1);
-    const folders = Array.from(slot.querySelectorAll('.folder-head')).map((f) => [
-      f.querySelector('a')?.getAttribute('href'),
-      f.textContent,
-    ]);
-    // Name, count, then the folder's 0-9 value (latest entry's authority) on the folder.
-    expect(folders).toEqual([
-      ['/record/order-1042', 'order-1042 (2)5'],
-      ['/record/parcel-77', 'parcel-77 (1)5'],
-    ]);
-    expect(slot.querySelector('.folder-head-value')?.getAttribute('aria-label')).toBe('authority 5 of 9');
+    expect(slot.querySelector('.left-record h2')?.textContent).toBe('Curator');
+    expect(slot.querySelectorAll('.curator-row')).toHaveLength(1);
     const back = Array.from(slot.querySelectorAll('.left-back a')).map((a) => a.getAttribute('href'));
     expect(back).toEqual(['/calendar']);
-  });
-
-  it('a subject without a dot links to the latest entry of its chain', async () => {
-    const { slot } = mountLeft(
-      adapterOf(async () => ({
-        ok: true,
-        data: [
-          makeEntry({ id: 'old', subject: 'temperature', k_start: '2024-01-01T00:00:00.000Z' }),
-          makeEntry({ id: 'new', subject: 'temperature', k_start: '2024-03-01T00:00:00.000Z' }),
-        ],
-      })),
-    );
-    await tick();
-    expect(slot.querySelector('.folder-head a')?.getAttribute('href')).toBe('/entry/1/temperature/new');
-    expect(slot.querySelector('.folder-count')?.textContent).toBe(' (2)');
   });
 
   it('empty record shows the empty state; error shows the error state', async () => {
     const empty = mountLeft(adapterOf(async () => ({ ok: true, data: [] })));
     await tick();
-    expect(empty.slot.querySelector('.empty-state')).not.toBeNull();
+    expect(empty.slot.querySelector('.empty-state')?.textContent).toBe('No folders yet. Folders appear as the Curator files them.');
     const bad = mountLeft(adapterOf(async () => ({ ok: false, error: 'boom' })));
     await tick();
     expect(bad.slot.querySelector('.error-state')?.textContent).toBe('boom');
@@ -79,22 +52,31 @@ describe('LeftPanel', () => {
     const { slot, panel } = mountLeft(
       adapterOf(() => {
         calls++;
-        return calls === 1
-          ? first.promise
-          : Promise.resolve({ ok: true, data: [makeEntry({ id: 'n', subject: 'new.x' })] });
+        return calls === 1 ? first.promise : Promise.resolve({ ok: true, data: [marker('new')] });
       }),
     );
     panel.refresh();
     await tick();
-    first.resolve({ ok: true, data: [makeEntry({ id: 'o', subject: 'stale.x' })] });
+    first.resolve({ ok: true, data: [marker('stale')] });
     await tick();
-    expect(Array.from(slot.querySelectorAll('.folder-head a')).map((a) => a.textContent)).toEqual(['new']);
+    expect(Array.from(slot.querySelectorAll('.curator-row-name')).map((a) => a.textContent)).toEqual(['new']);
 
     const late = deferred<AdapterResult<Entry[]>>();
     const m = mountLeft(adapterOf(() => late.promise));
     m.panel.unmount();
-    late.resolve({ ok: true, data: [makeEntry()] });
+    late.resolve({ ok: true, data: [marker('x')] });
     await tick();
     expect(m.slot.innerHTML).toBe('');
+  });
+
+  it('a refresh shows a folder the Curator filed since', async () => {
+    const entries: Entry[] = [makeEntry({ id: 't1', subject: 'turn' })];
+    const { slot, panel } = mountLeft(adapterOf(async () => ({ ok: true, data: [...entries] })));
+    await tick();
+    expect(slot.querySelector('.curator-row')).toBeNull();
+    entries.push(marker('dog', 'f-dog', { case_file: ['t1'] }));
+    panel.refresh();
+    await tick();
+    expect(Array.from(slot.querySelectorAll('.curator-row-name')).map((n) => n.textContent)).toEqual(['dog']);
   });
 });

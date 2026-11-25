@@ -1,4 +1,5 @@
-import type { AdapterResult, CuratorAnswer, Entry, SeamAdapter } from '../adapter/seam.ts';
+import type { AdapterResult, CuratorAnswer, Entry, Lesson, SeamAdapter } from '../adapter/seam.ts';
+import { renderFolder as renderMeterCard } from '../shell/subject-folders.ts';
 import { renderKid } from '../util/kid-display.ts';
 import { catalog, type CuratorFolder } from '../util/curator.ts';
 
@@ -27,8 +28,13 @@ function entryLink(e: Entry, cls: string): HTMLAnchorElement {
   return a;
 }
 
-/** One folder: subject, its KID, the count, the case file by KID, its versions. */
-export function renderFolder(f: CuratorFolder): HTMLElement {
+/**
+ * One folder: subject, its KID, the count, the case file by KID, its
+ * versions, and the full card: the 0-9 meter of its latest entry, the
+ * authority history and ELLE's lessons under the subject (the sidebar shows
+ * one compact row per folder; the full card lives here, Darren Nov 25).
+ */
+export function renderFolder(f: CuratorFolder, lessons: Lesson[] = []): HTMLElement {
   const box = el('section', 'curator-folder');
   box.dataset.subject = f.subject;
   const head = el('p', 'curator-folder-head');
@@ -45,6 +51,9 @@ export function renderFolder(f: CuratorFolder): HTMLElement {
   if (f.caseFile.length === 0) files.appendChild(el('span', 'curator-none', 'No entries under this subject.'));
   for (const e of f.caseFile) files.appendChild(entryLink(e, 'kid'));
   box.appendChild(files);
+  const card = renderMeterCard(f.subject, [], lessons, f.caseFile);
+  card.querySelector('.folder-subject')?.classList.add('sr-only');
+  box.appendChild(card);
   return box;
 }
 
@@ -141,8 +150,15 @@ export class CuratorView {
     if (!out || !label) return;
     const token = ++this.token;
     let r: AdapterResult<Entry[]>;
+    let lessons: Lesson[] = [];
     try {
-      r = await this.adapter.fetchAllEntries();
+      const [entries, ls] = await Promise.all([
+        this.adapter.fetchAllEntries(),
+        // Lessons are optional: a failed read leaves the cards without them.
+        this.adapter.fetchLessons().catch(() => ({ ok: false as const, error: '' })),
+      ]);
+      r = entries;
+      lessons = ls.ok ? ls.data : [];
     } catch (e) {
       r = { ok: false, error: `The record read failed: ${e instanceof Error ? e.message : String(e)}` };
     }
@@ -153,7 +169,7 @@ export class CuratorView {
     out.replaceChildren(
       ...(folders.length === 0
         ? [el('p', 'empty-state', 'Curator has filed no folders yet.')]
-        : folders.map(renderFolder)),
+        : folders.map((f) => renderFolder(f, lessons))),
     );
   }
 

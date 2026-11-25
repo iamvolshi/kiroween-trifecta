@@ -27,30 +27,29 @@ export interface CuratorFolder {
   folder: Entry;
   /** Every folder entry for this subject, oldest first (more than one = re-filed). */
   versions: Entry[];
-  /** The entries under the subject, record order: the case file. */
+  /**
+   * The case file, record order: the entries under the subject, and the
+   * entries the standing folder points at (its `case_file` event ids, the
+   * turns the Curator read the subject from). Only entries in the record;
+   * a pointer the record does not hold is left out, never invented.
+   */
   caseFile: Entry[];
 }
 
 /** The catalog from the live entries, in the order Curator filed the folders. */
 export function catalog(entries: Entry[]): CuratorFolder[] {
   const versions = new Map<string, Entry[]>();
-  const bySubject = new Map<string, Entry[]>();
   for (const e of entries) {
-    if (isFolder(e)) {
-      const subject = e.subject.slice(FOLDER_PREFIX.length);
-      const list = versions.get(subject);
-      if (list) list.push(e);
-      else versions.set(subject, [e]);
-    } else {
-      const list = bySubject.get(e.subject);
-      if (list) list.push(e);
-      else bySubject.set(e.subject, [e]);
-    }
+    if (!isFolder(e)) continue;
+    const subject = e.subject.slice(FOLDER_PREFIX.length);
+    const list = versions.get(subject);
+    if (list) list.push(e);
+    else versions.set(subject, [e]);
   }
-  return [...versions.entries()].map(([subject, vs]) => ({
-    subject,
-    folder: vs[vs.length - 1]!,
-    versions: vs,
-    caseFile: bySubject.get(subject) ?? [],
-  }));
+  return [...versions.entries()].map(([subject, vs]) => {
+    const folder = vs[vs.length - 1]!;
+    const pointed = new Set(folder.case_file ?? []);
+    const caseFile = entries.filter((e) => !isWorkspace(e) && (e.subject === subject || e.subject.startsWith(subject + '.') || pointed.has(e.id)));
+    return { subject, folder, versions: vs, caseFile };
+  });
 }

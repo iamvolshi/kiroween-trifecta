@@ -62,7 +62,7 @@ async function settle(): Promise<void> {
 }
 
 const folderNames = (): string[] =>
-  Array.from(container.querySelectorAll('.shell-left .folder a')).map((a) => a.textContent ?? '');
+  Array.from(container.querySelectorAll('.shell-left .curator-row-name')).map((a) => a.textContent ?? '');
 
 afterEach(() => {
   router?.destroy();
@@ -119,8 +119,11 @@ describe('Router shell', () => {
     expect(current()).toEqual([]);
   });
 
-  it('left folders are the record accounts and update when the chat log grows', async () => {
-    entries = [makeEntry({ id: 'a', subject: 'order-1042.delivery_date' })];
+  it('left folders are the Curator folders and update when the chat log grows', async () => {
+    entries = [
+      makeEntry({ id: 'a', subject: 'order-1042.delivery_date' }),
+      makeEntry({ id: 'fa', subject: 'curator-folder-order-1042', kid: 3 }),
+    ];
     start('/chat');
     await settle();
     expect(folderNames()).toEqual(['order-1042']);
@@ -128,6 +131,7 @@ describe('Router shell', () => {
     entries = [
       ...entries,
       makeEntry({ id: 'p', subject: 'parcel-77.status', kid: 2 }),
+      makeEntry({ id: 'fp', subject: 'curator-folder-parcel-77', kid: 4 }),
     ];
     router!.getChatLog().push({} as ChatTurn);
     await settle();
