@@ -25,6 +25,12 @@ export interface View {
   unmount(): void;
 }
 
+/** /chat, with or without a trailing slash, query or hash. */
+function isChatPath(rawPath: string): boolean {
+  const p = stripBase(rawPath).split(/[?#]/)[0]!;
+  return p === '/chat' || p === '/chat/';
+}
+
 export class Router {
   private container: HTMLElement;
   private adapter: SeamAdapter;
@@ -38,6 +44,11 @@ export class Router {
   private leftPanel: Panel;
   private rightPanel: Panel;
   private unsubscribeLog: () => void;
+  /** Which pane fills the right column: telemetry on /chat, the mini chat everywhere else. */
+  private rightKind: 'telemetry' | 'mini' | null = null;
+  /** The mini chat's own mount point inside the right column (the terminal strip lives beside it). */
+  private miniHost: HTMLElement | null = null;
+  private miniChat: ChatView | null = null;
   /** Panel widths (drag grips) and the terminal's window state. */
   private layout: ShellLayout;
   private loadingModal: LoadingModal | null = null;
@@ -81,7 +92,6 @@ export class Router {
     // Right column: Curator + ELLE telemetry. It subscribes to the log itself.
     this.layout = new ShellLayout(this.slots);
     this.rightPanel = new TelemetryPanel(adapter, this.chatLog, this.layout);
-    this.rightPanel.mount(this.slots.right);
 
     this.clickHandler = (event: MouseEvent) => {
       // Only plain left clicks navigate in-app; modified and non-left clicks
@@ -137,7 +147,7 @@ export class Router {
     this.loadingModal?.hide();
     this.loadingModal = null;
     this.leftPanel.unmount();
-    this.rightPanel.unmount();
+    this.unmountRight();
     this.layout.destroy();
     this.inspector.unmount();
     this.container.innerHTML = '';
@@ -152,6 +162,42 @@ export class Router {
     this.currentView.mount(this.slots.center);
     setViewLabel(this.slots);
     this.leftPanel.refresh();
+    this.swapRight(isChatPath(path));
+  }
+
+  /**
+   * The right column: telemetry on /chat, a mini chat (the same ChatView, on the
+   * same chatLog) on every other page. Telemetry is not mounted off /chat.
+   */
+  private swapRight(onChat: boolean): void {
+    const want = onChat ? 'telemetry' : 'mini';
+    if (this.rightKind === want) return;
+    this.unmountRight();
+    const right = this.slots.right;
+    this.rightKind = want;
+    right.dataset.pane = want;
+    if (want === 'telemetry') {
+      right.setAttribute('aria-label', 'Telemetry');
+      this.rightPanel.mount(right);
+      return;
+    }
+    // A minimized or maximized terminal does not carry over to the mini chat.
+    this.layout.setTerminal('normal');
+    right.setAttribute('aria-label', 'Chat');
+    this.miniHost = document.createElement('div');
+    this.miniHost.className = 'mini-chat';
+    right.appendChild(this.miniHost);
+    this.miniChat = new ChatView(this.adapter, this.chatLog, this.models);
+    this.miniChat.mount(this.miniHost);
+  }
+
+  private unmountRight(): void {
+    if (this.rightKind === 'telemetry') this.rightPanel.unmount();
+    this.miniChat?.unmount();
+    this.miniChat = null;
+    this.miniHost?.remove();
+    this.miniHost = null;
+    this.rightKind = null;
   }
 
   private match(rawPath: string): View {

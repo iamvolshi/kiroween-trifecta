@@ -1,0 +1,78 @@
+/*
+ * The mini chat: the right column on every page but /chat. It is the chat
+ * view itself (same transcript, voices and composer), fitted to the column:
+ * the transcript scrolls inside it, the composer sits at its foot, and the
+ * engine boxes (which drive telemetry, not mounted here) are left out.
+ */
+.shell-right[data-pane='mini'] {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: var(--s2) var(--s3);
+}
+
+.mini-chat {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+.mini-chat .chat-view {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+}
+
+.mini-chat .chat-column {
+  max-width: none;
+  min-height: 0;
+}
+
+.mini-chat .chat-column:has(> .chat-transcript:empty) {
+  justify-content: flex-end;
+}
+
+.mini-chat .chat-transcript {
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
+}
+
+.mini-chat .chat-dock {
+  position: static;
+  margin: var(--s2) 0 0;
+  padding: var(--s2) 0 0;
+  background: transparent;
+}
+
+.mini-chat .bubble {
+  max-width: 100%;
+}
+
+.mini-chat .engine-boxes,
+.mini-chat .voice-picker-label {
+  display: none;
+}
+
+.mini-chat .chat-dock > *,
+.mini-chat .voice-picker-wrap {
+  min-width: 0;
+}
+
+.mini-chat .voice-model {
+  flex-basis: 100%;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mini-chat .chat-send {
+  padding: var(--s2) var(--s3);
+}
+@media (max-width: 800px) {
+  .shell-right[data-pane='mini'] {
+    height: 26rem;
+  }
+}

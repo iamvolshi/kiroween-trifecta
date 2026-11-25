@@ -1,0 +1,124 @@
+{
+  "desktop-chat": {
+    "path": "/chat",
+    "pane": "telemetry",
+    "telemetry": true,
+    "mini": false,
+    "scrollW": 1920,
+    "innerW": 1920,
+    "rightH": 1024,
+    "composerBottomInPane": "625 / pane bottom 1080 / viewport 1080",
+    "transcript": []
+  },
+  "desktop-calendar": {
+    "path": "/calendar",
+    "pane": "mini",
+    "telemetry": false,
+    "mini": true,
+    "scrollW": 1920,
+    "innerW": 1920,
+    "rightH": 1024,
+    "composerBottomInPane": "1072 / pane bottom 1080 / viewport 1080",
+    "transcript": []
+  },
+  "desktop-research": {
+    "path": "/research",
+    "pane": "mini",
+    "telemetry": false,
+    "mini": true,
+    "scrollW": 1920,
+    "innerW": 1920,
+    "rightH": 1024,
+    "composerBottomInPane": "1072 / pane bottom 1080 / viewport 1080",
+    "transcript": []
+  },
+  "desktop-sent-in-mini": {
+    "replied": true,
+    "path": "/calendar",
+    "pane": "mini",
+    "telemetry": false,
+    "mini": true,
+    "scrollW": 1920,
+    "innerW": 1920,
+    "rightH": 1024,
+    "composerBottomInPane": "1072 / pane bottom 1080 / viewport 1080",
+    "transcript": [
+      "You said: Hello from the mini chat (desktop)"
+    ],
+    "error": ""
+  },
+  "desktop-chat-after-send": {
+    "path": "/chat",
+    "pane": "telemetry",
+    "telemetry": true,
+    "mini": false,
+    "scrollW": 1920,
+    "innerW": 1920,
+    "rightH": 1024,
+    "composerBottomInPane": "1064 / pane bottom 1080 / viewport 1080",
+    "transcript": [
+      "You said: Hello from the mini chat (desktop)"
+    ]
+  },
+  "phone-chat": {
+    "path": "/chat",
+    "pane": "telemetry",
+    "telemetry": true,
+    "mini": false,
+    "scrollW": 390,
+    "innerW": 390,
+    "rightH": 187,
+    "composerBottomInPane": "451 / pane bottom 642 / viewport 844",
+    "transcript": []
+  },
+  "phone-calendar": {
+    "path": "/calendar",
+    "pane": "mini",
+    "telemetry": false,
+    "mini": true,
+    "scrollW": 390,
+    "innerW": 390,
+    "rightH": 338,
+    "composerBottomInPane": "835 / pane bottom 844 / viewport 844",
+    "transcript": []
+  },
+  "phone-research": {
+    "path": "/research",
+    "pane": "mini",
+    "telemetry": false,
+    "mini": true,
+    "scrollW": 390,
+    "innerW": 390,
+    "rightH": 338,
+    "composerBottomInPane": "835 / pane bottom 844 / viewport 844",
+    "transcript": []
+  },
+  "phone-sent-in-mini": {
+    "replied": true,
+    "path": "/calendar",
+    "pane": "mini",
+    "telemetry": false,
+    "mini": true,
+    "scrollW": 390,
+    "innerW": 390,
+    "rightH": 338,
+    "composerBottomInPane": "835 / pane bottom 844 / viewport 844",
+    "transcript": [
+      "You said: Hello from the mini chat (phone)"
+    ],
+    "error": ""
+  },
+  "phone-chat-after-send": {
+    "path": "/chat",
+    "pane": "telemetry",
+    "telemetry": true,
+    "mini": false,
+    "scrollW": 390,
+    "innerW": 390,
+    "rightH": 343,
+    "composerBottomInPane": "717 / pane bottom 1064 / viewport 844",
+    "transcript": [
+      "You said: Hello from the mini chat (phone)"
+    ]
+  }
+}
