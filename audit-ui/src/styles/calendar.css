@@ -250,19 +250,8 @@
 
 .entry-grid .col-authority,
 .entry-grid .col-authority .sort-button {
-  text-align: right;
-  justify-content: flex-end;
-}
-
-/* The Authority header word is right-aligned too; give it the same air
-   before Inspect as the digit below it, so it never reads as stuck to
-   the right edge or to the Inspect column. */
-.entry-grid .col-authority .sort-button {
-  padding-right: calc(var(--s1) + 2ch);
-}
-
-.entry-grid .col-inspect .sort-button {
-  padding-left: calc(var(--s1) + 1ch);
+  text-align: center;
+  justify-content: center;
 }
 
 /* Header: a sort button per column, and a grip on the right edge. */
@@ -360,15 +349,9 @@
 
 .entry-grid .cell-authority {
   font-weight: 700;
-  /* The authority digit is right-aligned; give it clear air before Inspect,
-     so it never reads as touching the Inspect column or the right edge. */
-  padding-right: calc(var(--s1) + 2ch);
-}
-
-.entry-grid .cell-inspect {
-  /* Inspect starts with air on its left, so the gap to Authority reads
-     on both sides of the column line. */
-  padding-left: calc(var(--s1) + 1ch);
+  /* Centered in the column (Darren, Nov 25): the digit sits in the middle
+     of its column, not shoved toward Inspect. The cell keeps the base
+     symmetric padding, so the center is the true center. */
 }
 
 /* A subject that runs long ends a full character before the next column,
