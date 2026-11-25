@@ -8,6 +8,17 @@ import { createLiveAdapter, type FetchLike } from './adapter/live.ts';
 import type { ChatTurn } from './adapter/seam.ts';
 import { createModelsStub, tick } from './test-helpers.ts';
 
+interface Fs { readFileSync(p: URL, enc: 'utf8'): string }
+const nodeFs = (globalThis as unknown as { process: { getBuiltinModule(n: string): Fs } }).process.getBuiltinModule('node:fs');
+const read = (p: string): string => nodeFs.readFileSync(new URL(p, import.meta.url), 'utf8');
+const miniChatCss = read('./styles/mini-chat.css');
+
+describe('mini chat clears the Netlify badge', () => {
+  it('the mini pane keeps 72px at its foot, so the composer sits above the fixed pill', () => {
+    expect(miniChatCss).toContain('padding: var(--s2) var(--s3) 72px');
+  });
+});
+
 function turn(message: string): ChatTurn {
   return {
     message,

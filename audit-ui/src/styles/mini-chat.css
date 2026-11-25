@@ -4,11 +4,14 @@
  * the transcript scrolls inside it, the composer sits at its foot, and the
  * engine boxes (which drive telemetry, not mounted here) are left out.
  */
+/* The composer sits above Netlify's fixed "Powered by Netlify" pill at the
+   viewport's bottom-right: the pill is about 36px tall and floats roughly
+   30px off the bottom, so the pane's foot clears it by 72px. */
 .shell-right[data-pane='mini'] {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  padding: var(--s2) var(--s3);
+  padding: var(--s2) var(--s3) 72px;
 }
 
 .mini-chat {
