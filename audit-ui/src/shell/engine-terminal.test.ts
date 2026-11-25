@@ -296,7 +296,7 @@ describe('the layout: drag grips and the terminal window', () => {
     expect(grip('right').hidden).toBe(true);
     expect(grip('left').hidden).toBe(true);
     // Hidden by CSS only: the list panel and the chat are still there, with their state.
-    expect(container.querySelector('.shell-left .main-nav')).not.toBeNull();
+    expect(container.querySelector('.shell-left .left-record')).not.toBeNull();
     expect(container.querySelector('.shell-center')!.firstElementChild).toBe(center);
     ctl('Restore terminal').click();
     expect(shell.dataset.terminal).toBe('normal');

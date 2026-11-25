@@ -50,7 +50,7 @@ export function createShell(container: HTMLElement): ShellSlots {
 
   const left = document.createElement('aside');
   left.className = 'shell-left';
-  left.setAttribute('aria-label', 'Directories');
+  left.setAttribute('aria-label', 'Chat');
 
   const center = document.createElement('main');
   center.className = 'shell-center';

@@ -49,33 +49,33 @@ describe('rename', () => {
 });
 
 describe('the rail', () => {
-  it('four icons in order: Chat, Audit, Research, Lessons; Chat is on at boot', async () => {
+  it('five icons in order: Chat, Audit, Research, Lessons, Curator; Chat is on at boot', async () => {
     await start('/chat');
     const buttons = Array.from(container.querySelectorAll<HTMLButtonElement>('.shell-rail .rail-button'));
-    expect(buttons.map((b) => b.getAttribute('aria-label'))).toEqual(['Chat', 'Audit', 'Research', 'Lessons']);
-    expect(RAIL.map((r) => r.key)).toEqual(['chat', 'audit', 'research', 'lessons']);
+    expect(buttons.map((b) => b.getAttribute('aria-label'))).toEqual(['Chat', 'Audit', 'Research', 'Lessons', 'Curator']);
+    expect(RAIL.map((r) => r.key)).toEqual(['chat', 'audit', 'research', 'lessons', 'curator']);
     expect(buttons.every((b) => b.querySelector('svg') !== null)).toBe(true);
-    expect(buttons.map((b) => b.getAttribute('aria-pressed'))).toEqual(['true', 'false', 'false', 'false']);
+    expect(buttons.map((b) => b.getAttribute('aria-pressed'))).toEqual(['true', 'false', 'false', 'false', 'false']);
     // Icons, not engine names.
     expect(container.querySelector('.shell-rail')?.textContent).toBe('');
     expect(container.querySelector('.shell-rail')?.innerHTML).not.toMatch(/KATIE|ERIE|ELLE|ARCHE/);
   });
 
-  it('Chat is the left column as it was: Directories, Record, Going back', async () => {
+  it('Chat is the Curator folders and Going back; the directories list is gone', async () => {
     await start('/chat');
-    expect(list().getAttribute('aria-label')).toBe('Directories');
+    expect(list().getAttribute('aria-label')).toBe('Chat');
     expect(Array.from(list().querySelectorAll('h2')).map((h) => h.textContent)).toEqual(['Curator', 'Going back']);
-    expect(list().querySelector('nav.main-nav')).not.toBeNull();
+    expect(list().querySelector('nav')).toBeNull();
     expect(Array.from(list().querySelectorAll('.left-back a')).map((a) => a.textContent)).toEqual(['Calendar Index']);
   });
 
-  it('tapping Chat swaps the list panel only; Audit, Research and Lessons also go to their pages', async () => {
+  it('tapping Chat swaps the list panel and goes to /chat; the right column is untouched', async () => {
     await start('/chat');
     const center = container.querySelector('.shell-center')!;
     const right = container.querySelector('.shell-right')!;
     const view = center.firstElementChild;
     const feed = right.innerHTML;
-    for (const [key, caption] of [['chat', 'Directories']] as const) {
+    for (const [key, caption] of [['chat', 'Chat']] as const) {
       rail(key).click();
       for (let i = 0; i < 4; i++) await tick();
       expect(list().dataset.panel).toBe(key);
@@ -214,7 +214,7 @@ describe('rail review-1 fixes', () => {
     expect(list().querySelector('.audit-accounts')?.textContent).toBe('turn (1)');
     rail('chat').click();
     for (let i = 0; i < 4; i++) await tick();
-    expect(list().querySelector('nav.main-nav a[aria-current="page"]')?.getAttribute('href')).toBe('/actions');
+    expect(list().querySelector('.left-record')).not.toBeNull();
   });
 
   it('a thrown read on a panel becomes words', async () => {

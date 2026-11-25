@@ -24,12 +24,12 @@ const marker = (subject: string, id = `f-${subject}`, over: Partial<Entry> = {})
   makeEntry({ id, kid: 40, subject: `curator-folder-${subject}`, authority: 5, ...over });
 
 describe('LeftPanel', () => {
-  it('renders nav, the Curator heading, the folder rows, and the going-back links', async () => {
+  it('renders the Curator heading (no directories nav), the folder rows, and the going-back links', async () => {
     const { slot } = mountLeft(adapterOf(async () => ({
       ok: true, data: [makeEntry({ id: 'a', subject: 'order-1042.status' }), marker('order-1042')],
     })));
     await tick();
-    expect(slot.querySelectorAll('nav')).toHaveLength(1);
+    expect(slot.querySelector('nav')).toBeNull();
     expect(slot.querySelector('.left-record h2')?.textContent).toBe('Curator');
     expect(slot.querySelectorAll('.curator-row')).toHaveLength(1);
     const back = Array.from(slot.querySelectorAll('.left-back a')).map((a) => a.getAttribute('href'));
@@ -43,7 +43,7 @@ describe('LeftPanel', () => {
     const bad = mountLeft(adapterOf(async () => ({ ok: false, error: 'boom' })));
     await tick();
     expect(bad.slot.querySelector('.error-state')?.textContent).toBe('boom');
-    expect(bad.slot.querySelectorAll('nav')).toHaveLength(1);
+    expect(bad.slot.querySelector('nav')).toBeNull();
   });
 
   it('drops a late result superseded by a newer refresh, and after unmount', async () => {

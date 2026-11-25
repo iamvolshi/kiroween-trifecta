@@ -1,7 +1,5 @@
 import type { SeamAdapter, Entry } from '../adapter/seam.ts';
 import type { Panel } from './panel.ts';
-import { createNav } from '../views/nav.ts';
-import { stripBase } from '../util/base.ts';
 import { compareKStart } from '../util/interval.ts';
 import { compareNatural } from '../util/natural.ts';
 import { groupOf } from './subject-folders.ts';
@@ -57,7 +55,7 @@ function folderAuthority(f: CuratorFolder): number {
 }
 
 /**
- * Left column: destinations nav; the Curator's folders, one compact row
+ * Chat's list column (the Curator panel is the same without Going back): the Curator's folders, one compact row
  * each (subject, entry count, latest authority), the whole row a link; and
  * the Calendar "going back" link. Only subjects the Curator filed show: a
  * subject is in because a curator-folder-<subject> marker is in the record
@@ -69,19 +67,19 @@ export class LeftPanel implements Panel {
   private adapter: SeamAdapter;
   private slot: HTMLElement | null = null;
   private folderBody: HTMLElement | null = null;
-  private navHost: HTMLElement | null = null;
   private requestToken = 0;
 
-  constructor(adapter: SeamAdapter) {
+  /** withBack false: the Curator icon's panel, the folder rows alone. */
+  private withBack: boolean;
+
+  constructor(adapter: SeamAdapter, withBack = true) {
     this.adapter = adapter;
+    this.withBack = withBack;
   }
 
   mount(slot: HTMLElement): void {
     this.slot = slot;
     slot.replaceChildren();
-
-    this.navHost = el('div', 'left-nav');
-    slot.appendChild(this.navHost);
 
     const record = el('section', 'left-record');
     // The folders are Curator's work: it files the record into them (Darren, Nov 22).
@@ -101,7 +99,7 @@ export class LeftPanel implements Panel {
       ul.appendChild(li);
     }
     back.appendChild(ul);
-    slot.appendChild(back);
+    if (this.withBack) slot.appendChild(back);
 
     this.refresh();
   }
@@ -109,10 +107,7 @@ export class LeftPanel implements Panel {
   refresh(): void {
     const slot = this.slot;
     const folderBody = this.folderBody;
-    if (!slot || !folderBody || !this.navHost) return;
-
-    // Mark the current destination right away; the folders follow the seam.
-    this.navHost.replaceChildren(createNav(stripBase(window.location.pathname)));
+    if (!slot || !folderBody) return;
 
     const token = ++this.requestToken;
     void this.adapter.fetchAllEntries().then(
@@ -166,6 +161,5 @@ export class LeftPanel implements Panel {
     if (this.slot) this.slot.replaceChildren();
     this.slot = null;
     this.folderBody = null;
-    this.navHost = null;
   }
 }

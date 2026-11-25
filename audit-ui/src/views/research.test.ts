@@ -244,17 +244,4 @@ describe('the way to the ERIE page', () => {
     expect(window.history.length).toBe(before);
     expect(container.querySelector('.shell-center')!.firstElementChild).toBe(page);
   });
-
-  it('the nav reads Chat / Action List / Calendar / Research, and Research lands on /research', async () => {
-    await start('/chat');
-    const links = [...container.querySelectorAll<HTMLAnchorElement>('nav.main-nav a')];
-    expect(links.map((a) => [a.textContent, a.getAttribute('href')])).toEqual([
-      ['Chat', '/chat'], ['Action List', '/actions'], ['Calendar', '/calendar'], ['Research', '/research'], ['Lessons', '/lessons'], ['Curator', '/curator'],
-    ]);
-    links[3]!.click();
-    for (let i = 0; i < 6; i++) await tick();
-    expect(window.location.pathname).toBe('/research');
-    expect(container.querySelector('.shell-center .erie-page')).not.toBeNull();
-    expect(container.querySelector('nav.main-nav a[aria-current="page"]')?.textContent).toBe('Research');
-  });
 });

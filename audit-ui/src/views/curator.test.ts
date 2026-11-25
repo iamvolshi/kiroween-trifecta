@@ -156,13 +156,13 @@ describe('the way to the Curator page, and the CURATOR label', () => {
     for (let i = 0; i < 6; i++) await tick();
   }
 
-  it('/curator renders the page; the nav ends with Curator', async () => {
-    await start('/curator');
+  it('/curator renders the page; the Curator icon is the way in', async () => {
+    await start('/chat');
+    container.querySelector<HTMLButtonElement>('.rail-button[data-rail="curator"]')!.click();
+    for (let i = 0; i < 6; i++) await tick();
+    expect(window.location.pathname).toBe('/curator');
     expect(container.querySelector('.shell-center .curator-head h1')?.textContent).toBe('Curator');
     expect(container.querySelector('.brand-view')?.textContent).toBe('View: Curator');
-    const links = [...container.querySelectorAll<HTMLAnchorElement>('nav.main-nav a')];
-    expect(links.at(-1)?.textContent).toBe('Curator');
-    expect(links.at(-1)?.getAttribute('aria-current')).toBe('page');
   });
 
   it('the left column says Curator above the folders, and files no folder as a subject', async () => {

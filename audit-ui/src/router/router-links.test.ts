@@ -28,9 +28,9 @@ afterEach(() => {
 describe('click handling', () => {
   beforeEach(() => start());
 
-  /** Click the Calendar nav link; report whether the router consumed it. */
+  /** Click the Going back Calendar link; report whether the router consumed it. */
   function click(init: MouseEventInit): { prevented: boolean } {
-    const a = container.querySelector<HTMLAnchorElement>('nav a[href="/calendar"]')!;
+    const a = container.querySelector<HTMLAnchorElement>('.left-back a[href="/calendar"]')!;
     let prevented = false;
     // Registered after the router's listener: observes its decision, then stops
     // jsdom from attempting a real navigation.

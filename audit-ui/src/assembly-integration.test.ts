@@ -39,8 +39,7 @@ async function settle(): Promise<void> {
   for (let i = 0; i < 5; i++) await tick();
 }
 
-describe('the shell nav links all six destinations on every route', () => {
-  const destinations = ['/actions', '/chat', '/calendar', '/research', '/lessons', '/curator'];
+describe('the shell has no directories list on any route; the rail is the navigation', () => {
   const paths = [
     '/actions',
     '/chat',
@@ -56,14 +55,12 @@ describe('the shell nav links all six destinations on every route', () => {
     '/no-such-page',
   ];
   for (const path of paths) {
-    it(`${path} renders one nav with all four links`, async () => {
+    it(`${path} renders five rail icons and no directories nav`, async () => {
       start(path);
       await settle();
-      expect(container.querySelectorAll('nav')).toHaveLength(1);
-      expect(container.querySelector('.shell-left nav')).not.toBeNull();
-      const hrefs = Array.from(container.querySelectorAll('nav a')).map((a) => a.getAttribute('href'));
-      for (const d of destinations) expect(hrefs).toContain(d);
-      expect(container.querySelectorAll('nav > :not(a)')).toHaveLength(0); // links only, no badge
+      expect(container.querySelectorAll('nav')).toHaveLength(0);
+      expect(container.querySelector('.main-nav')).toBeNull();
+      expect(container.querySelectorAll('.shell-rail .rail-button')).toHaveLength(5);
     });
   }
 

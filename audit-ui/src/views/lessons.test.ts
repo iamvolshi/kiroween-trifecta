@@ -220,14 +220,4 @@ describe('the way to the ELLE page', () => {
     expect(window.history.length).toBe(before);
     expect(container.querySelector('.shell-center')!.firstElementChild).toBe(page);
   });
-
-  it('the nav ends Research / Lessons, and Lessons lands on /lessons', async () => {
-    await start('/chat');
-    const links = [...container.querySelectorAll<HTMLAnchorElement>('nav.main-nav a')];
-    expect(links.map((a) => a.textContent)).toEqual(['Chat', 'Action List', 'Calendar', 'Research', 'Lessons', 'Curator']);
-    links[4]!.click();
-    for (let i = 0; i < 6; i++) await tick();
-    expect(window.location.pathname).toBe('/lessons');
-    expect(container.querySelector('nav.main-nav a[aria-current="page"]')?.textContent).toBe('Lessons');
-  });
 });
