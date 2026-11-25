@@ -40,13 +40,14 @@
 .erie-view {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-rows: minmax(0, auto) minmax(0, auto);
   grid-template-areas:
     'pool pool'
     'retrieval injection';
   gap: var(--s3);
   flex: 1;
   min-height: 0;
+  align-content: start;
 }
 
 .erie-pool { grid-area: pool; }
@@ -57,7 +58,7 @@
 @container (max-width: 760px) {
   .erie-view {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: repeat(3, minmax(0, 1fr));
+    grid-template-rows: repeat(3, minmax(0, auto));
     grid-template-areas: 'pool' 'retrieval' 'injection';
   }
 }

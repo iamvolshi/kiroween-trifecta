@@ -254,7 +254,7 @@ export class LessonsView {
     files.label.textContent = `case files · ${plural(subjects, 'subject', 'subjects')} · ${plural(all.length, 'lesson', 'lessons')}`;
     files.body.replaceChildren(
       ...(all.length === 0
-        ? [el('p', 'empty-state', 'No lessons yet.')]
+        ? [el('p', 'empty-state empty-line', 'No lessons yet.')]
         : filed.map(([subject, lessons]) => {
             const folder = el('section', `elle-file${subject === null ? ' is-unfiled' : ''}`);
             folder.dataset.subject = subject ?? '';
@@ -270,7 +270,7 @@ export class LessonsView {
     const greyParts: HTMLElement[] = [];
     if (qs !== null && !qs.ok) greyParts.push(el('p', 'error-state', qs.error));
     // With nothing held at all, the one lessons line says it for both.
-    else if (qs !== null && folders.length === 0 && open.length > 0) greyParts.push(el('p', 'empty-state elle-no-questions', 'No question is open.'));
+    else if (qs !== null && folders.length === 0 && open.length > 0) greyParts.push(el('p', 'empty-state empty-line elle-no-questions', 'No question is open.'));
     greyParts.push(...folders.map(renderQuestion));
     // Under the folders: the last sectioned request as the model received it
     // (Darren, Q2), verbatim. Never the model's reply; nothing when none.
@@ -282,7 +282,7 @@ export class LessonsView {
     }
     greyParts.push(...loose.map((l) => renderLesson(l)));
     if (open.length === 0) {
-      greyParts.push(el('p', 'empty-state', 'Nothing is held. No lesson is waiting to be promoted.'));
+      greyParts.push(el('p', 'empty-state empty-line', 'Nothing is held.'));
     }
     grey.body.replaceChildren(...greyParts);
 
@@ -295,7 +295,7 @@ export class LessonsView {
     answered.label.textContent = `answered · ${plural(learned.length, 'lesson', 'lessons')} learned`;
     answered.body.replaceChildren(
       ...(learned.length === 0
-        ? [el('p', 'empty-state', 'No lesson is learned yet.')]
+        ? [el('p', 'empty-state empty-line', 'No lesson is learned yet.')]
         : learned.map((l) => {
             const n = promotedOn.get(l.event_id);
             return renderLesson(l, n === undefined ? undefined : `promoted on turn ${n}`);
@@ -307,7 +307,7 @@ export class LessonsView {
   private renderTurns(turns: ReturnType<typeof box>, log: ReturnType<ChatLog['turns']>): void {
     turns.label.textContent = `per turn · ${plural(log.length, 'turn', 'turns')}`;
     if (log.length === 0) {
-      turns.body.replaceChildren(el('p', 'empty-state', 'No chat turns in this session yet.'));
+      turns.body.replaceChildren(el('p', 'empty-state empty-line', 'No chat turns yet.'));
       return;
     }
     turns.body.replaceChildren(

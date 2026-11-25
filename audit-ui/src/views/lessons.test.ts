@@ -101,15 +101,15 @@ describe('the ELLE page', () => {
   it('the live record as it is today: every lesson promoted, no subject', async () => {
     await mount(lessonsStub([LOOSE]));
     expect(texts('.elle-file-head')).toEqual(['unfiled · 1']);
-    expect(q('.elle-grey .elle-box-body').textContent).toBe('Nothing is held. No lesson is waiting to be promoted.');
+    expect(q('.elle-grey .elle-box-body').textContent).toBe('Nothing is held.');
   });
 
   it('nothing yet: every box says so in words', async () => {
     await mount(lessonsStub([]));
     expect(q('.elle-files .elle-box-body').textContent).toBe('No lessons yet.');
-    expect(q('.elle-grey .elle-box-body').textContent).toBe('Nothing is held. No lesson is waiting to be promoted.');
+    expect(q('.elle-grey .elle-box-body').textContent).toBe('Nothing is held.');
     expect(q('.elle-answered .elle-box-body').textContent).toBe('No lesson is learned yet.');
-    expect(q('.elle-turns .elle-box-body').textContent).toBe('No chat turns in this session yet.');
+    expect(q('.elle-turns .elle-box-body').textContent).toBe('No chat turns yet.');
   });
 
   it('a failed read says so in the lesson boxes', async () => {

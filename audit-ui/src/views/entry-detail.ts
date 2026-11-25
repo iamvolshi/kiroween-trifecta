@@ -117,6 +117,8 @@ export class EntryDetailView implements View {
     ];
 
     for (const [label, cls, html] of fields) {
+      // A field with no value is not shown (no blank rows).
+      if (html.trim() === '') continue;
       const dt = document.createElement('dt');
       dt.textContent = label;
 

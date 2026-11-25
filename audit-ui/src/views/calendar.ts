@@ -113,8 +113,8 @@ export function momentLabel(m: Moment, zone: TimeZone, timeZone: string): string
 
 /** What the folder shows before any spin: the route's own content. The hour names its moment in the shown zone; the month and day are the record's own structure, so they stay UTC. */
 function folderCaption(t: CalendarTarget, zone: TimeZone, timeZone: string): string {
-  if (t.level === 'month') return `Folder: ${MONTH_NAMES[t.month - 1]} ${t.year} (UTC)`;
-  if (t.level === 'day') return `Folder: ${t.year}-${p2(t.month)}-${p2(t.day)} (UTC)`;
+  // Month and day name themselves once, in the page's own title; the caption stays empty (and hidden) until a spin lands on an hour.
+  if (t.level === 'month' || t.level === 'day') return '';
   if (zone === 'utc') return `Folder: ${t.year}-${p2(t.month)}-${p2(t.day)} \u00b7 ${p2(t.hour)}:00 UTC`;
   const l = utcMomentToLocal(t.year, t.month, t.day, t.hour, timeZone);
   return `Folder: ${l.year}-${p2(l.month)}-${p2(l.day)} \u00b7 ${p2(l.hour)}:00 Local`;

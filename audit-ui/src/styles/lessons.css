@@ -40,13 +40,14 @@
 .elle-view {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-rows: minmax(0, auto) minmax(0, auto);
   grid-template-areas:
     'files grey'
     'answered turns';
   gap: var(--s3);
   flex: 1;
   min-height: 0;
+  align-content: start;
 }
 
 .elle-files { grid-area: files; }
@@ -58,7 +59,7 @@
 @container (max-width: 760px) {
   .elle-view {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: repeat(4, minmax(0, 1fr));
+    grid-template-rows: repeat(4, minmax(0, auto));
     grid-template-areas: 'files' 'grey' 'answered' 'turns';
   }
 }

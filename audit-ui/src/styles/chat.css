@@ -58,6 +58,15 @@
   gap: var(--s3);
 }
 
+/* Nothing said yet: the picker and the composer sit mid-pane, not under a tall empty area. */
+.chat-column:has(> .chat-transcript:empty) {
+  justify-content: center;
+}
+
+.chat-column:has(> .chat-transcript:empty) > .chat-transcript {
+  flex: 0 0 0;
+}
+
 /* ---- Bubbles ------------------------------------------------------------ */
 
 .chat-turn {
@@ -294,6 +303,31 @@
   font-size: var(--t-body-sm-size);
   line-height: var(--t-body-sm-lh);
   color: var(--muted);
+}
+
+.list-more {
+  margin: var(--s1) 0 0;
+  padding: var(--s1) var(--s2);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: var(--t-label-md-size);
+  cursor: pointer;
+}
+
+.list-more:hover {
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+/* The Show all list stays inside the panel: it scrolls, the panel does not grow. */
+.audit-accounts {
+  max-height: 50vh;
+  overflow-y: auto;
+  scrollbar-color: var(--line-strong) transparent;
+  scrollbar-width: thin;
 }
 
 .research-form {

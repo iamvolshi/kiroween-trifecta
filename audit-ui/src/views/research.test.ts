@@ -104,8 +104,8 @@ describe('the ERIE page', () => {
 
   it('no turns yet: retrieval and injection say so, never a bare box', async () => {
     await mount();
-    expect(q('.erie-retrieval .erie-box-body').textContent).toBe('No chat turns in this session yet.');
-    expect(q('.erie-injection .erie-box-body').textContent).toBe('No chat turns in this session yet.');
+    expect(q('.erie-retrieval .erie-box-body').textContent).toBe('No chat turns yet.');
+    expect(q('.erie-injection .erie-box-body').textContent).toBe('No chat turns yet.');
   });
 
   it('retrieval: question, state, text and every provenance field verbatim', async () => {

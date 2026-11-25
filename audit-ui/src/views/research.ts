@@ -190,8 +190,8 @@ export class ResearchView {
     this.retrievalLabel.textContent = `retrieval · ${count}`;
     this.injectionLabel.textContent = `injection · ${count}`;
     if (turns.length === 0) {
-      this.retrieval.replaceChildren(el('p', 'empty-state', 'No chat turns in this session yet.'));
-      this.injection.replaceChildren(el('p', 'empty-state', 'No chat turns in this session yet.'));
+      this.retrieval.replaceChildren(el('p', 'empty-state empty-line', 'No chat turns yet.'));
+      this.injection.replaceChildren(el('p', 'empty-state empty-line', 'No chat turns yet.'));
       return;
     }
     const shown = turns.map((t, i) => renderRetrieval(t.engines.erie, i + 1, t.message));
