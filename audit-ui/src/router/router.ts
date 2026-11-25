@@ -187,7 +187,7 @@ export class Router {
     this.miniHost = document.createElement('div');
     this.miniHost.className = 'mini-chat';
     right.appendChild(this.miniHost);
-    this.miniChat = new ChatView(this.adapter, this.chatLog, this.models);
+    this.miniChat = new ChatView(this.adapter, this.chatLog, this.models, true);
     this.miniChat.mount(this.miniHost);
   }
 
