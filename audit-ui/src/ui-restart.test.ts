@@ -98,7 +98,10 @@ describe('the rail', () => {
     expect(rail('audit').getAttribute('aria-pressed')).toBe('true');
     expect(container.querySelector('.shell-center .ktie-head h1')?.textContent).toBe('KTIE');
     expect(container.querySelector('.shell-center .ktie-drums')).not.toBeNull();
-    expect(right.innerHTML).toBe(feed); // the telemetry column does not move
+    // Off /chat the right column becomes the mini chat; telemetry is gone.
+    expect(right.innerHTML).not.toBe(feed);
+    expect(right.querySelector('.telemetry')).toBeNull();
+    expect(right.querySelector('.mini-chat')).not.toBeNull();
   });
 
   it('tapping Audit while already on the KTIE page only swaps the list panel: no remount', async () => {

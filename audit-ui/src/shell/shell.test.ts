@@ -78,10 +78,13 @@ describe('Router shell', () => {
     expect(container.querySelectorAll('.shell')).toHaveLength(1);
     expect(container.querySelector('.shell-center .action-list')).not.toBeNull();
     expect(container.querySelector('.shell-left .action-list')).toBeNull();
-    expect(container.querySelector('.shell-right .telemetry')).not.toBeNull();
+    // Off /chat the right column is the mini chat, not telemetry.
+    expect(container.querySelector('.shell-right .telemetry')).toBeNull();
+    expect(container.querySelector('.shell-right .mini-chat .chat-view')).not.toBeNull();
     const shell = container.querySelector('.shell');
     router!.navigate('/chat');
     await settle();
+    expect(container.querySelector('.shell-right .telemetry')).not.toBeNull();
     expect(container.querySelector('.shell')).toBe(shell);
     expect(container.querySelector('.shell-center .chat-view')).not.toBeNull();
   });

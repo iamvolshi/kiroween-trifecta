@@ -68,7 +68,8 @@ describe('connector down (address set, nothing answers): every view says so', ()
   };
   for (const path of ['/actions', '/calendar', '/entry/1/turn/x']) {
     it(`${path} shows "Connector unreachable"`, async () => {
-      await open(path, down, 'http://127.0.0.1:9');
+      const models: ModelSource = { status: () => fetchModelStatus('http://127.0.0.1:9', down) };
+      await open(path, down, 'http://127.0.0.1:9', models);
       expect(center()).toContain('Connector unreachable: Failed to fetch');
       expect(right()).toContain('Connector unreachable: Failed to fetch');
     });
