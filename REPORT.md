@@ -45,13 +45,11 @@ They went to the bridge built from `watson-bridge-host` and running on
 KIDs 20, 27 and 24 back. The built app showed the same thing at 1920 and
 1024: `docs/watson-proof/`.
 
-## Hosting: not done
+## Hosting
 
-There is no Render access on this machine. To host the bridge: Render >
-New > Blueprint > iamvolshi/scribe, branch `watson-bridge-host`, file
-`watson/apps/watson-bridge/render.yaml`. Then build the app with
-`VITE_WATSON_URL=<the bridge URL>`. Until then, no Watson box shows, and
-every answer stands as before.
+The bridge is live on Render at [watson-bridge-nfkl.onrender.com](https://watson-bridge-nfkl.onrender.com/), from `watson-bridge-host`. Read 2026-11-25: `GET /health` 200 `{ok:true, mode:deterministic}`; CORS preflight 204, any origin. Build the app with `VITE_WATSON_URL=https://watson-bridge-nfkl.onrender.com`.
+
+Hosted round trip (2026-11-25): live connector `/ask` -> hosted bridge, KIDs 20, 27, 24 in and back, 3 supported claims, confidence 0.90, 0.57 s (`docs/watson-proof/hosted-round-trip.json`). The built app (served on 127.0.0.1, live connector, hosted bridge) showed the same at 1920 and 1024 (`docs/watson-proof/watson-*.png`).
 
 ## Unproven
 
