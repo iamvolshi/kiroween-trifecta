@@ -24,12 +24,17 @@ export function renderLesson(l: Lesson): HTMLElement {
   return li;
 }
 
-export function renderFolder(subject: string, entries: Entry[], lessons: Lesson[]): HTMLElement {
+/**
+ * `ownEntries`, when given, is the folder's own entries (a Curator folder's case
+ * file: the turns it was read from, whatever their subject); otherwise the
+ * entries whose subject is `subject`.
+ */
+export function renderFolder(subject: string, entries: Entry[], lessons: Lesson[], ownEntries?: Entry[]): HTMLElement {
   const folder = el('section', 'subject-folder');
   folder.dataset.subject = subject;
   folder.appendChild(el('h3', 'folder-subject', subject));
 
-  const mine = entries.filter((e) => e.subject === subject).sort(compareKStart);
+  const mine = [...(ownEntries ?? entries.filter((e) => e.subject === subject))].sort(compareKStart);
   const value = el('p', 'folder-authority');
   // No label: it said the same thing on every card ('authority of latest
   // entry'), which is noise. The number and its history are the content.

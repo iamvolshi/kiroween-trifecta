@@ -1,0 +1,36 @@
+{
+  "desktop": {
+    "rows": [
+      [
+        "dog",
+        "2",
+        "5",
+        "/entry/33/turn/01a213d8-aa65-7612-9849-52315a522856"
+      ]
+    ],
+    "cards": 0,
+    "seedInPanel": false,
+    "rowHeight": 36,
+    "tapGoesTo": "/entry/33/turn/01a213d8-aa65-7612-9849-52315a522856"
+  },
+  "phone": {
+    "rows": [
+      [
+        "dog",
+        "2",
+        "5",
+        "/entry/33/turn/01a213d8-aa65-7612-9849-52315a522856"
+      ]
+    ],
+    "cards": 0,
+    "seedInPanel": false,
+    "rowHeight": 36,
+    "tapGoesTo": "/entry/33/turn/01a213d8-aa65-7612-9849-52315a522856"
+  },
+  "curatorPage": {
+    "cards": 1,
+    "value": "5",
+    "history": "5 -> 5",
+    "count": "2 entries"
+  }
+}

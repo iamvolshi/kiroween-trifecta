@@ -237,6 +237,8 @@ describe('the shell pieces of the face', () => {
     const entries: Entry[] = [
       makeEntry({ id: 'a', subject: 'turn', authority: 8, k_start: '2026-11-18T15:00:00.000Z' }),
       makeEntry({ id: 'b', subject: 'turn', authority: 3, k_start: '2026-11-18T15:05:00.000Z' }),
+      // The Curator filed them: the folder's case file points at both turns.
+      makeEntry({ id: 'f', kid: 3, subject: 'curator-folder-dog', authority: 5, case_file: ['a', 'b'] }),
     ];
     const adapter = createLiveAdapter('http://c.test', async (url) =>
       new Response(JSON.stringify(new URL(url).pathname === '/entries' ? entries : []), { status: 200 }));
@@ -244,7 +246,7 @@ describe('the shell pieces of the face', () => {
     document.body.appendChild(container);
     new LeftPanel(adapter).mount(container);
     for (let i = 0; i < 4; i++) await tick();
-    expect(container.querySelector('.folder-head-value')?.textContent).toBe('3');
-    expect(container.querySelector('.folder-head-value')?.getAttribute('aria-label')).toBe('authority 3 of 9');
+    expect(container.querySelector('.curator-row-value')?.textContent).toBe('3');
+    expect(container.querySelector('.curator-row')?.getAttribute('aria-label')).toBe('dog, 2 entries, authority 3 of 9');
   });
 });

@@ -174,21 +174,24 @@ describe('left column on the live adapter', () => {
     return slot;
   }
 
-  it('folders come from the live entries; subject-less lessons stay unfiled', async () => {
-    const slot = await mount({ '/entries': { body: [LIVE] }, '/lessons': { body: [lesson] } });
-    expect(slot.querySelector('.prompt-state')).toBeNull();
-    const f = slot.querySelector<HTMLElement>('.subject-folder[data-subject="turn"]')!;
-    expect(f.querySelector('.folder-value')?.textContent).toBe('5');
-    expect(slot.querySelector('.lessons-unfiled')?.textContent).toContain('Audit UI loves storms');
+  it('the Curator rows come from the live folder markers and their case_file', async () => {
+    const folder = { ...LIVE, id: 'f-dog', kid: 2, subject: 'curator-folder-dog', case_file: [LIVE.id] };
+    const slot = await mount({ '/entries': { body: [LIVE, folder] }, '/lessons': { body: [lesson] } });
+    const rows = [...slot.querySelectorAll('.curator-row')].map((r) => r.textContent);
+    expect(rows).toEqual(['dog15']);
   });
 
-  it('a malformed entries reply falls back to lessons only, and says why', async () => {
-    const slot = await mount({ '/entries': { body: 'nope' }, '/lessons': { body: [{ ...lesson, subject: 'turn' }] } });
-    expect(slot.querySelector('.prompt-state')?.textContent).toBe(
-      'Record entries not available: Connector reply to /entries is not a list of entries (see docs/assembly-parts.md)',
+  it('a malformed entries reply says why, in words', async () => {
+    const slot = await mount({ '/entries': { body: 'nope' }, '/lessons': { body: [lesson] } });
+    expect(slot.querySelector('.left-folders .error-state')?.textContent).toBe(
+      'Connector reply to /entries is not a list of entries (see docs/assembly-parts.md)',
     );
-    const f = slot.querySelector('.subject-folder[data-subject="turn"]')!;
-    expect(f.querySelector('.folder-value')?.textContent).toBe('--');
+  });
+
+  it('a case_file that is not a list of event ids is refused', async () => {
+    const a = createLiveAdapter(BASE, routed({ '/entries': { body: [{ ...LIVE, case_file: [1] }] } }).fetch);
+    const r = await a.fetchAllEntries();
+    expect(r.ok).toBe(false);
   });
 });
 

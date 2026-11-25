@@ -12,6 +12,12 @@ export interface Entry {
   evidence: string;
   reason: string;
   prev_hash: string;
+  /**
+   * A Curator folder entry only: the event ids its case file points at, in
+   * order (the connector reads them from the folder's case file). Absent on
+   * every other entry, and on a connector that does not send it.
+   */
+  case_file?: string[];
 }
 
 export type KidMap = Record<number, string>;
