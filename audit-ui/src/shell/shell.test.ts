@@ -87,38 +87,14 @@ describe('Router shell', () => {
   });
 
   for (const path of ROUTES) {
-    it(`${path}: the nav exists exactly once, with six destinations`, async () => {
+    it(`${path}: no directories nav; the rail has five icons`, async () => {
       entries = [makeEntry({ id: 'a', subject: 'order-1042.delivery_date' })];
       start(path);
       await settle();
-      expect(container.querySelectorAll('nav')).toHaveLength(1);
-      expect(container.querySelector('.shell-left nav')).not.toBeNull();
-      const hrefs = Array.from(container.querySelectorAll('nav a')).map((a) => a.getAttribute('href'));
-      expect(hrefs).toEqual(['/chat', '/actions', '/calendar', '/research', '/lessons', '/curator']);
-      expect(container.querySelectorAll('nav > :not(a)')).toHaveLength(0);
+      expect(container.querySelectorAll('nav')).toHaveLength(0);
+      expect(container.querySelectorAll('.shell-rail .rail-button')).toHaveLength(5);
     });
   }
-
-  it('aria-current follows navigation', async () => {
-    entries = [];
-    start('/actions');
-    await settle();
-    const current = (): string[] =>
-      Array.from(container.querySelectorAll('nav a[aria-current="page"]')).map((a) =>
-        a.getAttribute('href')!,
-      );
-    expect(current()).toEqual(['/actions']);
-    router!.navigate('/chat');
-    await settle();
-    expect(current()).toEqual(['/chat']);
-    router!.navigate('/calendar/2026-11');
-    await settle();
-    expect(current()).toEqual(['/calendar']);
-    router!.navigate('/no-such-page');
-    await settle();
-    expect(current()).toEqual([]);
-  });
-
   it('left folders are the Curator folders and update when the chat log grows', async () => {
     entries = [
       makeEntry({ id: 'a', subject: 'order-1042.delivery_date' }),

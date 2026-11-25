@@ -119,10 +119,29 @@
   color: var(--text);
 }
 
+/* Each icon is its engine's color (Chat keeps the accent). */
+.rail-button[data-rail='chat'] { --rail-color: var(--accent); }
+.rail-button[data-rail='audit'] { --rail-color: var(--rail-audit); }
+.rail-button[data-rail='research'] { --rail-color: var(--rail-research); }
+.rail-button[data-rail='lessons'] { --rail-color: var(--rail-lessons); }
+.rail-button[data-rail='curator'] { --rail-color: var(--rail-curator); }
+
+.rail-button[data-rail] {
+  color: var(--rail-color);
+  opacity: 0.78;
+}
+
+.rail-button[data-rail]:hover {
+  opacity: 1;
+  color: var(--rail-color);
+}
+
+/* The active icon: full color, a ring and a tinted tile. */
 .rail-button[aria-pressed='true'] {
-  border-color: var(--line-strong);
-  background: var(--surface-2);
-  color: var(--accent);
+  opacity: 1;
+  border-color: var(--rail-color);
+  background: color-mix(in srgb, var(--rail-color) 16%, var(--surface-2));
+  box-shadow: inset 3px 0 0 var(--rail-color);
 }
 
 /* ---- Columns --------------------------------------------------------- */
@@ -170,41 +189,6 @@
   letter-spacing: var(--t-label-sm-ls);
   text-transform: uppercase;
   color: var(--outline);
-}
-
-/* ---- Left: destinations --------------------------------------------- */
-
-.main-nav {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.main-nav .nav-link {
-  display: block;
-  padding: 6px var(--s2);
-  border-left: 2px solid transparent;
-  border-radius: 0 var(--radius) var(--radius) 0;
-  color: var(--muted);
-  font-family: var(--mono);
-  font-size: var(--t-label-md-size);
-  line-height: var(--t-label-md-lh);
-  letter-spacing: var(--t-label-md-ls);
-  font-weight: var(--t-label-md-wt);
-  text-transform: uppercase;
-  text-decoration: none;
-}
-
-.main-nav .nav-link:hover {
-  background: var(--surface);
-  color: var(--text);
-}
-
-.main-nav .nav-link[aria-current='page'] {
-  border-left-color: var(--accent);
-  background: var(--surface-2);
-  color: var(--primary);
-  font-weight: 700;
 }
 
 /* ---- Left: record folders and going back ---------------------------- */

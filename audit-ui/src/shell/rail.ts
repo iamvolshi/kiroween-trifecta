@@ -6,30 +6,31 @@ import { stripBase } from '../util/base.ts';
 
 /**
  * The icon rail on the far left and the list panel beside it. The rail's
- * icons are the engines by category, never by name: Chat (the left column
- * as it was), Audit (the record views), Research (the knowledge), Lessons.
- * Tapping an icon swaps the list panel. Audit also takes the center to
+ * icons are the navigation, each in its engine's color: Chat, Audit (the record
+ * views), Research (the knowledge), Lessons, Curator (the folders).
+ * Tapping an icon swaps the list panel and takes the center to its page. Audit takes the center to
  * the KTIE page (/calendar), Research to the ERIE page (/research) and
- * Lessons to the ELLE page (/lessons), through the Router, unless the
- * center is already there; Chat leaves the center and right columns as
- * they are.
+ * Lessons to the ELLE page (/lessons), Curator to /curator and Chat
+ * to /chat, through the Router, unless the center is already there.
  */
 
 /** Is `path` the KTIE page (the calendar, at any level)? */
 export function onKtiePage(path: string): boolean {
   return path === '/calendar' || path.startsWith('/calendar/');
 }
-export type RailKey = 'chat' | 'audit' | 'research' | 'lessons';
+export type RailKey = 'chat' | 'audit' | 'research' | 'lessons' | 'curator';
 
 /** Where an icon takes the center, and how to tell it is already there. */
-const PAGE: Partial<Record<RailKey, { path: string; here: (path: string) => boolean }>> = {
+const PAGE: Record<RailKey, { path: string; here: (path: string) => boolean }> = {
+  chat: { path: '/chat', here: (p) => p === '/chat' },
   audit: { path: '/calendar', here: onKtiePage },
   research: { path: '/research', here: (p) => p === '/research' },
   lessons: { path: '/lessons', here: (p) => p === '/lessons' },
+  curator: { path: '/curator', here: (p) => p === '/curator' },
 };
 
 /** The list column's caption per panel (Chat keeps the column's own name). */
-const CAPTION: Record<RailKey, string> = { chat: 'Directories', audit: 'Audit', research: 'Research', lessons: 'Lessons' };
+const CAPTION: Record<RailKey, string> = { chat: 'Chat', audit: 'Audit', research: 'Research', lessons: 'Lessons', curator: 'Curator' };
 
 export const RAIL: ReadonlyArray<{ key: RailKey; label: string; icon: string }> = [
   // Speech bubble.
@@ -40,6 +41,8 @@ export const RAIL: ReadonlyArray<{ key: RailKey; label: string; icon: string }> 
   { key: 'research', label: 'Research', icon: 'M10.5 4a6.5 6.5 0 1 1 0 13 6.5 6.5 0 0 1 0-13zM15.5 15.5 20 20' },
   // Bulb.
   { key: 'lessons', label: 'Lessons', icon: 'M9 17h6M10 20h4M12 3a6 6 0 0 0-3.5 10.9V17h7v-3.1A6 6 0 0 0 12 3z' },
+  // Open book.
+  { key: 'curator', label: 'Curator', icon: 'M12 6v14M12 6C10 4.5 6.5 4 3 4.5v14c3.5-.5 7 0 9 1.5 2-1.5 5.5-2 9-1.5v-14C17.5 4 14 4.5 12 6z' },
 ];
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -75,6 +78,7 @@ export class RailPanel implements Panel {
       audit: new AuditPanel(adapter),
       research: new ResearchPanel(adapter),
       lessons: new LessonsPanel(adapter),
+      curator: new LeftPanel(adapter, false),
     };
   }
 
@@ -99,7 +103,7 @@ export class RailPanel implements Panel {
       b.addEventListener('click', () => {
         this.show(item.key);
         const page = PAGE[item.key];
-        if (page && this.navigate && !page.here(stripBase(window.location.pathname))) this.navigate(page.path);
+        if (this.navigate && !page.here(stripBase(window.location.pathname))) this.navigate(page.path);
       });
       nav.appendChild(b);
     }
