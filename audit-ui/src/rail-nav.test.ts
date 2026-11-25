@@ -55,20 +55,20 @@ describe('rail navigation', () => {
 
   it.each([
     ['chat', 'var(--accent)'],
-    ['audit', 'var(--engine-katie)'],
-    ['research', 'var(--engine-erie)'],
-    ['lessons', 'var(--engine-elle)'],
-    ['curator', 'var(--engine-curator)'],
+    ['audit', 'var(--rail-audit)'],
+    ['research', 'var(--rail-research)'],
+    ['lessons', 'var(--rail-lessons)'],
+    ['curator', 'var(--rail-curator)'],
   ])('the %s icon takes its color from %s', (key, value) => {
     expect(shellCss).toContain(`.rail-button[data-rail='${key}'] { --rail-color: ${value}; }`);
   });
 
   it.each([
     ['--accent', '#00f0ff'],
-    ['--engine-katie', '#a78bfa'],
-    ['--engine-erie', '#4ade80'],
-    ['--engine-elle', '#fbbf24'],
-    ['--engine-curator', '#fb7185'],
+    ['--rail-audit', '#a78bfa'],
+    ['--rail-research', '#4ade80'],
+    ['--rail-lessons', '#fbbf24'],
+    ['--rail-curator', '#fb7185'],
   ])('%s is %s', (name, hex) => {
     expect(styleCss).toContain(`${name}: ${hex};`);
   });

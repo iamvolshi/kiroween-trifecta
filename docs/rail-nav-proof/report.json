@@ -1,0 +1,138 @@
+{
+  "desktop-chat": {
+    "path": "/chat",
+    "nav": 0,
+    "panel": "chat",
+    "icons": [
+      {
+        "k": "chat",
+        "color": "rgb(0, 240, 255)",
+        "pressed": "true"
+      },
+      {
+        "k": "audit",
+        "color": "rgb(167, 139, 250)",
+        "pressed": "false"
+      },
+      {
+        "k": "research",
+        "color": "rgb(74, 222, 128)",
+        "pressed": "false"
+      },
+      {
+        "k": "lessons",
+        "color": "rgb(251, 191, 36)",
+        "pressed": "false"
+      },
+      {
+        "k": "curator",
+        "color": "rgb(251, 113, 133)",
+        "pressed": "false"
+      }
+    ],
+    "rows": 1,
+    "empty": null
+  },
+  "desktop-curator": {
+    "path": "/curator",
+    "nav": 0,
+    "panel": "curator",
+    "icons": [
+      {
+        "k": "chat",
+        "color": "rgb(0, 240, 255)",
+        "pressed": "false"
+      },
+      {
+        "k": "audit",
+        "color": "rgb(167, 139, 250)",
+        "pressed": "false"
+      },
+      {
+        "k": "research",
+        "color": "rgb(74, 222, 128)",
+        "pressed": "false"
+      },
+      {
+        "k": "lessons",
+        "color": "rgb(251, 191, 36)",
+        "pressed": "false"
+      },
+      {
+        "k": "curator",
+        "color": "rgb(251, 113, 133)",
+        "pressed": "true"
+      }
+    ],
+    "rows": 1,
+    "empty": null
+  },
+  "phone-chat": {
+    "path": "/chat",
+    "nav": 0,
+    "panel": "chat",
+    "icons": [
+      {
+        "k": "chat",
+        "color": "rgb(0, 240, 255)",
+        "pressed": "true"
+      },
+      {
+        "k": "audit",
+        "color": "rgb(167, 139, 250)",
+        "pressed": "false"
+      },
+      {
+        "k": "research",
+        "color": "rgb(74, 222, 128)",
+        "pressed": "false"
+      },
+      {
+        "k": "lessons",
+        "color": "rgb(251, 191, 36)",
+        "pressed": "false"
+      },
+      {
+        "k": "curator",
+        "color": "rgb(251, 113, 133)",
+        "pressed": "false"
+      }
+    ],
+    "rows": 1,
+    "empty": null
+  },
+  "phone-curator": {
+    "path": "/curator",
+    "nav": 0,
+    "panel": "curator",
+    "icons": [
+      {
+        "k": "chat",
+        "color": "rgb(0, 240, 255)",
+        "pressed": "false"
+      },
+      {
+        "k": "audit",
+        "color": "rgb(167, 139, 250)",
+        "pressed": "false"
+      },
+      {
+        "k": "research",
+        "color": "rgb(74, 222, 128)",
+        "pressed": "false"
+      },
+      {
+        "k": "lessons",
+        "color": "rgb(251, 191, 36)",
+        "pressed": "false"
+      },
+      {
+        "k": "curator",
+        "color": "rgb(251, 113, 133)",
+        "pressed": "true"
+      }
+    ],
+    "rows": 1,
+    "empty": null
+  }
+}

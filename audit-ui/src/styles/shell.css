@@ -121,10 +121,10 @@
 
 /* Each icon is its engine's color (Chat keeps the accent). */
 .rail-button[data-rail='chat'] { --rail-color: var(--accent); }
-.rail-button[data-rail='audit'] { --rail-color: var(--engine-katie); }
-.rail-button[data-rail='research'] { --rail-color: var(--engine-erie); }
-.rail-button[data-rail='lessons'] { --rail-color: var(--engine-elle); }
-.rail-button[data-rail='curator'] { --rail-color: var(--engine-curator); }
+.rail-button[data-rail='audit'] { --rail-color: var(--rail-audit); }
+.rail-button[data-rail='research'] { --rail-color: var(--rail-research); }
+.rail-button[data-rail='lessons'] { --rail-color: var(--rail-lessons); }
+.rail-button[data-rail='curator'] { --rail-color: var(--rail-curator); }
 
 .rail-button[data-rail] {
   color: var(--rail-color);
