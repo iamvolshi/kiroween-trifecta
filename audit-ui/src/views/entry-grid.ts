@@ -62,9 +62,9 @@ const LISTS: Record<GridList, { columns: readonly ColumnKey[]; widths: readonly 
   did: { columns: COLUMNS.map((c) => c.key), widths: DEFAULT_WIDTHS },
   believed: { columns: COLUMNS.map((c) => c.key), widths: DEFAULT_WIDTHS },
   pool: { columns: COLUMNS.map((c) => c.key), widths: DEFAULT_WIDTHS },
-  actions: { columns: ['kid', 'subject', 'state', 'authority', 'inspect'], widths: [5, 43, 11, 5, 9] },
-  record: { columns: ['time', 'kid', 'subject', 'state', 'authority', 'evidence'], widths: [21, 5, 43, 11, 5, 37] },
-  chain: { columns: ['time', 'kid', 'state', 'authority', 'evidence', 'reason'], widths: [21, 6, 11, 5, 30, 45] },
+  actions: { columns: ['kid', 'subject', 'state', 'authority', 'inspect'], widths: [5, 43, 11, 7, 9] },
+  record: { columns: ['time', 'kid', 'subject', 'state', 'authority', 'evidence'], widths: [21, 5, 43, 11, 7, 37] },
+  chain: { columns: ['time', 'kid', 'state', 'authority', 'evidence', 'reason'], widths: [21, 6, 11, 7, 30, 45] },
 };
 
 /** The columns a list shows, in order. */

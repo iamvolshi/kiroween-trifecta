@@ -254,6 +254,17 @@
   justify-content: flex-end;
 }
 
+/* The Authority header word is right-aligned too; give it the same air
+   before Inspect as the digit below it, so it never reads as stuck to
+   the right edge or to the Inspect column. */
+.entry-grid .col-authority .sort-button {
+  padding-right: calc(var(--s1) + 2ch);
+}
+
+.entry-grid .col-inspect .sort-button {
+  padding-left: calc(var(--s1) + 1ch);
+}
+
 /* Header: a sort button per column, and a grip on the right edge. */
 .entry-grid th {
   position: relative;
