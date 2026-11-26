@@ -1,0 +1,24 @@
+{
+  "overview": {
+    "rows": 29,
+    "nodes": 0,
+    "edges": 0,
+    "err": null
+  },
+  "nouns": {
+    "rows": 114,
+    "nodes": 0,
+    "edges": 0,
+    "err": null
+  },
+  "graph": {
+    "rows": 0,
+    "nodes": 33,
+    "edges": 72,
+    "err": null
+  },
+  "answer": {
+    "hits": 5,
+    "first": "k_record, K-0104, authority 8 of 9Victor creates the Creature on a dreary November night, bringing it to life with a spark. Quote: \"It was on a dreary night of "
+  }
+}
