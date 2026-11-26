@@ -246,7 +246,7 @@ describe('the shell pieces of the face', () => {
     document.body.appendChild(container);
     new LeftPanel(adapter).mount(container);
     for (let i = 0; i < 4; i++) await tick();
-    expect(container.querySelector('.curator-row-value')?.textContent).toBe('3');
+    expect(container.querySelector('.curator-row-value')?.textContent).toBe('3/9');
     expect(container.querySelector('.curator-row')?.getAttribute('aria-label')).toBe('dog, 2 entries, authority 3 of 9');
   });
 });

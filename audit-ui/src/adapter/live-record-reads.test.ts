@@ -178,7 +178,7 @@ describe('left column on the live adapter', () => {
     const folder = { ...LIVE, id: 'f-dog', kid: 2, subject: 'curator-folder-dog', case_file: [LIVE.id] };
     const slot = await mount({ '/entries': { body: [LIVE, folder] }, '/lessons': { body: [lesson] } });
     const rows = [...slot.querySelectorAll('.curator-row')].map((r) => r.textContent);
-    expect(rows).toEqual(['dog15']);
+    expect(rows).toEqual(['dog1 entry5/9']);
   });
 
   it('a malformed entries reply says why, in words', async () => {

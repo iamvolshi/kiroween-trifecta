@@ -147,8 +147,8 @@ export class LeftPanel implements Panel {
       row.title = f.subject;
       row.append(
         el('span', 'curator-row-name', f.subject),
-        el('span', 'curator-row-count', String(count)),
-        el('span', 'curator-row-value', String(authority)),
+        el('span', 'curator-row-count', `${count} ${count === 1 ? 'entry' : 'entries'}`),
+        el('span', 'curator-row-value', `${authority}/9`),
       );
       li.appendChild(row);
       ul.appendChild(li);
