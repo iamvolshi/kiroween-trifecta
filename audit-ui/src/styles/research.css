@@ -202,3 +202,9 @@
   margin: 0 0 var(--s1);
   color: var(--muted);
 }
+
+/* Sherlock answer notes: weakly sure is said in words, in the warning color, never as a confident answer. */
+.sherlock-notes { margin: 6px 0; }
+.sherlock-weak { margin: 0 0 4px; padding: 6px 8px; border-left: 3px solid var(--warn); color: var(--warn); font-weight: 600; }
+.sherlock-rerank { margin: 0; font-size: var(--t-label-md-size); line-height: var(--t-label-md-lh); color: var(--muted); }
+.curator-kid { margin-left: 8px; font-size: var(--t-label-md-size); line-height: var(--t-label-md-lh); color: var(--muted); }

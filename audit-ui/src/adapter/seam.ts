@@ -41,6 +41,10 @@ export interface Provenance {
   /** Sherlock sends these: the passage's KID and its 0-9 authority. */
   kid?: number;
   authority?: number;
+  /** Sherlock: 'passage' or 'k_entry'; a K entry also carries its label (K-0266) and rerank score. */
+  kind?: 'passage' | 'k_entry';
+  kid_label?: string;
+  rerank_score?: number;
 }
 
 /** Curator's catalog answer (mirrors POST /curator/ask): ERIE over the folders only. */
@@ -93,6 +97,11 @@ export interface AskResult {
   state: 'found' | 'not_found';
   text: string;
   provenance: Provenance[];
+  /** Sherlock only: how sure it is, and whether the reranker ordered the hits. */
+  status?: string;
+  low_confidence?: boolean;
+  ranked_by?: string;
+  rerank?: { used: boolean; model?: string | null; error?: string | null };
 }
 
 /**

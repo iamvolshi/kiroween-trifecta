@@ -1,5 +1,6 @@
 import type { AskResult, Entry, SeamAdapter } from '../adapter/seam.ts';
 import { renderKid } from '../util/kid-display.ts';
+import { kidText } from '../util/sherlock-notes.ts';
 import type { WatsonBridge, WatsonConclusion, WatsonInput } from './bridge.ts';
 
 /**
@@ -27,6 +28,8 @@ export function watsonInput(answer: AskResult, entries: Entry[]): WatsonInput {
     answer: answer.text,
     citations: answer.provenance.map((p) => {
       const e = byId.get(p.content);
+      const k = kidText(p);
+      if (k !== undefined && p.kind === 'k_entry') return { source: p.source, content: p.excerpt, kid: k };
       return e ? { source: p.source, content: p.excerpt, kid: renderKid(e.kid) } : { source: p.source, content: p.excerpt };
     }),
   };

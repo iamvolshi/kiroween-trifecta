@@ -1,6 +1,7 @@
 import type { AdapterResult, CuratorAnswer, Entry, Lesson, SeamAdapter } from '../adapter/seam.ts';
 import { renderFolder as renderMeterCard } from '../shell/subject-folders.ts';
 import { renderKid } from '../util/kid-display.ts';
+import { answerNotes, kidWords } from '../util/sherlock-notes.ts';
 import { catalog, type CuratorFolder } from '../util/curator.ts';
 
 /**
@@ -75,10 +76,14 @@ export function renderAnswer(question: string, r: AdapterResult<CuratorAnswer>):
   }
   turn.dataset.state = 'found';
   turn.appendChild(el('pre', 'curator-answer', r.data.text));
+  const notes = answerNotes(r.data);
+  if (notes) turn.appendChild(notes);
   const list = el('ol', 'curator-provenance');
   for (const p of r.data.provenance) {
     const li = el('li', '');
     li.append(el('span', 'curator-source', p.source), el('span', 'curator-content', p.content));
+    const k = kidWords(p);
+    if (k) li.append(el('span', 'curator-kid', k));
     list.appendChild(li);
   }
   turn.appendChild(list);

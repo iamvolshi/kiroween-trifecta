@@ -4,7 +4,7 @@ import { compareKStart } from '../util/interval.ts';
 import { compareNatural } from '../util/natural.ts';
 import { groupOf, renderLesson } from './subject-folders.ts';
 import { isWorkspace } from '../util/curator.ts';
-import { renderKid } from '../util/kid-display.ts';
+import { answerNotes, kidWords } from '../util/sherlock-notes.ts';
 import { WatsonCaller, renderConclusion } from '../watson/conclusion.ts';
 import { createWatsonBridge, type WatsonBridge } from '../watson/bridge.ts';
 
@@ -227,11 +227,13 @@ function renderHits(out: HTMLElement, r: AdapterResult<AskResult>): void {
   const ul = el('ul', 'research-hits');
   for (const p of r.data.provenance) {
     const li = el('li', 'research-hit');
-    const where = p.kid === undefined ? p.source : `${p.source}, KID ${renderKid(p.kid)}${p.authority === undefined ? '' : `, authority ${p.authority} of 9`}`;
+    const k = kidWords(p);
+    const where = k === '' ? p.source : `${p.source}, ${k}`;
     li.append(el('span', 'research-source', where), el('span', 'research-excerpt', p.excerpt));
     ul.appendChild(li);
   }
-  out.replaceChildren(ul);
+  const notes = answerNotes(r.data);
+  out.replaceChildren(...(notes ? [notes, ul] : [ul]));
 }
 
 /** Lessons: ELLE's lessons, live, learned ones first. */

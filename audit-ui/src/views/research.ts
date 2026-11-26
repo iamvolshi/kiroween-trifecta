@@ -1,7 +1,7 @@
 import type { AskResult, ChatTurn, Entry, Lesson, SeamAdapter } from '../adapter/seam.ts';
 import type { ChatLog } from './chat-log.ts';
 import { renderEntryGrid } from './entry-grid.ts';
-import { renderKid } from '../util/kid-display.ts';
+import { answerNotes, kidText } from '../util/sherlock-notes.ts';
 import { viewerTimeZone } from '../util/timezone.ts';
 import { WatsonCaller } from '../watson/conclusion.ts';
 import { createWatsonBridge, type WatsonBridge } from '../watson/bridge.ts';
@@ -79,11 +79,14 @@ export function renderRetrieval(erie: AskResult | null, n: number, message: stri
     return turn;
   }
   turn.appendChild(field('text', erie.text));
+  const notes = answerNotes(erie);
+  if (notes) turn.appendChild(notes);
   const list = el('ol', 'erie-provenance');
   for (const p of erie.provenance) {
     const li = el('li', 'erie-source-item');
     li.append(field('source', p.source), field('content', p.content));
-    if (p.kid !== undefined) li.appendChild(field('KID', renderKid(p.kid)));
+    const kt = kidText(p);
+    if (kt !== undefined) li.appendChild(field('KID', kt));
     if (p.authority !== undefined) li.appendChild(field('authority', `${p.authority} of 9`));
     li.appendChild(field('excerpt', p.excerpt));
     list.appendChild(li);

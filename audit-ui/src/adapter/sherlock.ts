@@ -25,6 +25,9 @@ function toProvenance(v: unknown): Provenance | null {
   const p: Provenance = { source: v.source, content: v.content, excerpt: v.excerpt };
   if (typeof v.kid === 'number') p.kid = v.kid;
   if (typeof v.authority === 'number') p.authority = v.authority;
+  if (v.kind === 'passage' || v.kind === 'k_entry') p.kind = v.kind;
+  if (typeof v.kid_label === 'string') p.kid_label = v.kid_label;
+  if (typeof v.rerank_score === 'number') p.rerank_score = v.rerank_score;
   return p;
 }
 
@@ -36,7 +39,16 @@ export function asAnswer(v: unknown): AdapterResult<AskResult & { found?: boolea
   }
   const provenance = v.provenance.map(toProvenance);
   if (provenance.some((p) => p === null)) return { ok: false, error: 'Sherlock reply to ask has a provenance item that is not one' };
-  return { ok: true, data: { question: v.question, state: v.state, text: v.text, provenance: provenance as Provenance[] } };
+  const data: AskResult = { question: v.question, state: v.state, text: v.text, provenance: provenance as Provenance[] };
+  if (typeof v.status === 'string') data.status = v.status;
+  if (typeof v.low_confidence === 'boolean') data.low_confidence = v.low_confidence;
+  if (typeof v.ranked_by === 'string') data.ranked_by = v.ranked_by;
+  if (isObj(v.rerank) && typeof v.rerank.used === 'boolean') {
+    data.rerank = { used: v.rerank.used };
+    if (typeof v.rerank.model === 'string') data.rerank.model = v.rerank.model;
+    if (typeof v.rerank.error === 'string') data.rerank.error = v.rerank.error;
+  }
+  return { ok: true, data };
 }
 
 export function createSherlockAdapter(baseUrl: string, caseId = '', fetchImpl?: FetchLike): SeamAdapter {
