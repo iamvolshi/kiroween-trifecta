@@ -1,6 +1,7 @@
 import type { AskResult, ChatTurn, Entry, Lesson, SeamAdapter } from '../adapter/seam.ts';
 import type { ChatLog } from './chat-log.ts';
 import { renderEntryGrid } from './entry-grid.ts';
+import { renderKid } from '../util/kid-display.ts';
 import { viewerTimeZone } from '../util/timezone.ts';
 import { WatsonCaller } from '../watson/conclusion.ts';
 import { createWatsonBridge, type WatsonBridge } from '../watson/bridge.ts';
@@ -81,7 +82,10 @@ export function renderRetrieval(erie: AskResult | null, n: number, message: stri
   const list = el('ol', 'erie-provenance');
   for (const p of erie.provenance) {
     const li = el('li', 'erie-source-item');
-    li.append(field('source', p.source), field('content', p.content), field('excerpt', p.excerpt));
+    li.append(field('source', p.source), field('content', p.content));
+    if (p.kid !== undefined) li.appendChild(field('KID', renderKid(p.kid)));
+    if (p.authority !== undefined) li.appendChild(field('authority', `${p.authority} of 9`));
+    li.appendChild(field('excerpt', p.excerpt));
     list.appendChild(li);
   }
   if (erie.provenance.length === 0) turn.appendChild(el('p', 'erie-none', 'No provenance came with this answer.'));
@@ -142,6 +146,15 @@ export class ResearchView {
     const head = el('header', 'erie-head');
     head.appendChild(el('h1', 'erie-name', ERIE_NAME));
     if (ERIE_EXPANSION !== null) head.appendChild(el('p', 'erie-expansion', ERIE_EXPANSION));
+    const nav = el('div', 'corpus-tabs');
+    nav.setAttribute('role', 'group');
+    nav.setAttribute('aria-label', 'Corpus views');
+    for (const [href, text] of [['/research', 'ERIE'], ['/research/overview', 'Overview'], ['/research/nouns', 'Nouns'], ['/research/graph', 'Graph']] as const) {
+      const a = el('a', href === '/research' ? 'is-current' : '', text);
+      a.setAttribute('href', href);
+      nav.appendChild(a);
+    }
+    head.appendChild(nav);
     const body = el('div', 'view-body erie-view');
     body.dataset.view = 'Research';
     const a = box('erie-pool', 'pool');

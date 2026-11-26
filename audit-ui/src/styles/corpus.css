@@ -1,0 +1,56 @@
+/* The corpus views in Research: overview, nouns, graph. Dense, one view, the
+   body scrolls inside itself. Research green (--rail-research) marks the tab. */
+
+.corpus-tabs { display: flex; gap: var(--s2); margin: var(--s2) 0 0; }
+.corpus-tabs a {
+  padding: 3px var(--s3);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: var(--muted);
+  font-size: var(--t-label-md-size);
+  letter-spacing: var(--t-label-md-ls);
+  text-transform: uppercase;
+  text-decoration: none;
+}
+.corpus-tabs a.is-current { color: var(--rail-research); border-color: var(--rail-research); }
+
+.corpus-body { flex: 1; min-height: 0; overflow: auto; padding-right: var(--s2); }
+.corpus-key { color: var(--faint); font-size: var(--t-label-md-size); text-transform: uppercase; letter-spacing: var(--t-label-md-ls); margin-right: var(--s2); }
+
+.corpus-stats { display: flex; flex-wrap: wrap; gap: var(--s2); margin-bottom: var(--s3); }
+.corpus-stat { display: flex; flex-direction: column; padding: var(--s2) var(--s3); background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); min-width: 96px; }
+.corpus-stat-value { font-family: var(--mono); font-size: var(--t-headline-sm-size); color: var(--text); }
+.corpus-stat-label { font-size: var(--t-label-sm-size); color: var(--muted); text-transform: uppercase; letter-spacing: var(--t-label-sm-ls); }
+
+.corpus-terms { display: flex; flex-wrap: wrap; gap: var(--s1) var(--s2); align-items: baseline; margin: 0 0 var(--s3); }
+.corpus-term { font-family: var(--mono); font-size: var(--t-body-sm-size); color: var(--muted); padding: 0 var(--s2); background: var(--inset); border-radius: var(--radius); }
+
+.corpus-table { width: 100%; border-collapse: collapse; font-size: var(--t-body-sm-size); margin-bottom: var(--s3); }
+.corpus-table th { text-align: left; color: var(--faint); font-weight: 500; text-transform: uppercase; font-size: var(--t-label-sm-size); letter-spacing: var(--t-label-sm-ls); padding: 2px var(--s2); border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--bg); }
+.corpus-table td { padding: 2px var(--s2); border-bottom: 1px solid var(--surface-2); color: var(--text); vertical-align: top; }
+.corpus-table td:nth-child(n+3) { font-family: var(--mono); color: var(--muted); }
+
+.corpus-ends { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s3); }
+.corpus-excerpt { margin: 0; padding: var(--s2) var(--s3); background: var(--inset); border-left: 2px solid var(--line); font-size: var(--t-body-sm-size); color: var(--muted); }
+.corpus-excerpt .corpus-key { display: block; }
+.corpus-built { margin: var(--s2) 0 0; font-size: var(--t-label-sm-size); color: var(--faint); }
+
+.corpus-filter { display: flex; gap: var(--s1); margin-bottom: var(--s2); }
+.corpus-kind { background: var(--surface); color: var(--muted); border: 1px solid var(--line); border-radius: var(--radius); padding: 2px var(--s3); font-size: var(--t-label-md-size); cursor: pointer; }
+.corpus-kind:hover, .corpus-kind:focus-visible { color: var(--text); border-color: var(--rail-research); }
+
+.corpus-graph { display: flex; flex-direction: column; gap: var(--s2); }
+.corpus-graph-svg { width: 100%; max-height: 72vh; background: var(--inset); border: 1px solid var(--line); border-radius: var(--radius); }
+.cg-edge { stroke: var(--line-strong); opacity: 0.35; }
+.cg-node circle { fill: var(--surface-3); stroke: var(--muted); stroke-width: 1.2; }
+.cg-node.kind-person circle { fill: var(--engine-katie); stroke: none; }
+.cg-node.kind-place circle { fill: var(--rail-research); stroke: none; }
+.cg-node.kind-thing circle { fill: var(--engine-erie); stroke: none; }
+.cg-label { fill: var(--text); font-size: 11px; font-family: var(--sans); paint-order: stroke; stroke: var(--inset); stroke-width: 3px; }
+.cg-node { outline: none; cursor: default; }
+.is-focus .cg-node { opacity: 0.18; }
+.is-focus .cg-node.is-near { opacity: 1; }
+.is-focus .cg-edge { opacity: 0.05; }
+.is-focus .cg-edge.is-near { opacity: 0.9; stroke: var(--text); }
+
+@media (max-width: 700px) { .corpus-ends { grid-template-columns: 1fr; } }
