@@ -1,0 +1,6 @@
+# Build-time environment for the Hackenstein demo.
+# VITE_SHERLOCK_URL is baked into the app at build time; without it the
+# app shows "no Sherlock address was set at build time (VITE_SHERLOCK_URL)".
+# Sherlock already allows this origin (CORS), so the URL is the only missing piece.
+[build.environment]
+  VITE_SHERLOCK_URL = "https://sherlock-search-nwx7.onrender.com"
