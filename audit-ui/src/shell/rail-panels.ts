@@ -4,6 +4,7 @@ import { compareKStart } from '../util/interval.ts';
 import { compareNatural } from '../util/natural.ts';
 import { groupOf, renderLesson } from './subject-folders.ts';
 import { isWorkspace } from '../util/curator.ts';
+import { renderKid } from '../util/kid-display.ts';
 import { WatsonCaller, renderConclusion } from '../watson/conclusion.ts';
 import { createWatsonBridge, type WatsonBridge } from '../watson/bridge.ts';
 
@@ -163,7 +164,13 @@ export class ResearchPanel implements Panel {
       const q = input.value.trim();
       if (q !== '') this.search(q);
     });
-    box.append(form, this.results);
+    const views = el('ul', 'left-links research-corpus');
+    for (const [href, text] of [['/research/overview', 'Corpus overview'], ['/research/nouns', 'Nouns'], ['/research/graph', 'Graph']] as const) {
+      const li = el('li', '');
+      li.appendChild(link(href, text));
+      views.appendChild(li);
+    }
+    box.append(form, this.results, views);
     slot.replaceChildren(box);
     if (this.last) {
       input.value = this.last.question;
@@ -220,7 +227,8 @@ function renderHits(out: HTMLElement, r: AdapterResult<AskResult>): void {
   const ul = el('ul', 'research-hits');
   for (const p of r.data.provenance) {
     const li = el('li', 'research-hit');
-    li.append(el('span', 'research-source', p.source), el('span', 'research-excerpt', p.excerpt));
+    const where = p.kid === undefined ? p.source : `${p.source}, KID ${renderKid(p.kid)}${p.authority === undefined ? '' : `, authority ${p.authority} of 9`}`;
+    li.append(el('span', 'research-source', where), el('span', 'research-excerpt', p.excerpt));
     ul.appendChild(li);
   }
   out.replaceChildren(ul);

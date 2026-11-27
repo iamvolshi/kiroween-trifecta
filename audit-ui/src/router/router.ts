@@ -8,6 +8,7 @@ import { ADDRESS_FOLLOWED, CalendarView } from '../views/calendar.ts';
 import { parseCalendarPath } from '../util/calendar.ts';
 import { RecordView } from '../views/record.ts';
 import { ResearchView } from '../views/research.ts';
+import { CorpusView, CORPUS_TABS, type CorpusTab } from '../views/corpus.ts';
 import { LessonsView } from '../views/lessons.ts';
 import { CuratorView } from '../views/curator.ts';
 import { createShell, setViewLabel, type ShellSlots } from '../shell/shell.ts';
@@ -216,6 +217,10 @@ export class Router {
     if (path === '/research') {
       return new ResearchView(this.adapter, this.chatLog);
     }
+
+    const corpus = path.match(/^\/research\/([a-z]+)$/);
+    const tab = CORPUS_TABS.find((t) => corpus && t.id === corpus[1]);
+    if (tab) return new CorpusView(this.adapter, tab.id as CorpusTab);
 
     if (path === '/lessons') {
       return new LessonsView(this.adapter, this.chatLog);

@@ -165,8 +165,8 @@ describe('LOW-3: the tab title and favicon are ours', () => {
 });
 
 describe('LOW-4: the app runs one adapter, the live one, and the header says the line', () => {
-  it('main.ts builds the live adapter from the connector address; the header carries the line and no seam chip', () => {
-    expect(mainTs).toContain('createLiveAdapter(CONNECTOR_URL)');
+  it('main.ts builds the Sherlock adapter from the Sherlock address; the header carries the line and no seam chip', () => {
+    expect(mainTs).toContain('createSherlockAdapter(SHERLOCK_URL, SHERLOCK_CASE)');
     expect(mainTs).not.toContain('createRecordStub');
     const root = host();
     createShell(root);

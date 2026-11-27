@@ -1,3 +1,5 @@
+import type { CorpusReads } from './sherlock-types';
+
 export interface Entry {
   id: string;        // unique row ID
   kid: number;       // KID is a number, never a name
@@ -36,6 +38,9 @@ export interface Provenance {
   source: string;  // where it came from
   content: string; // what object it points at
   excerpt: string; // the supporting text
+  /** Sherlock sends these: the passage's KID and its 0-9 authority. */
+  kid?: number;
+  authority?: number;
 }
 
 /** Curator's catalog answer (mirrors POST /curator/ask): ERIE over the folders only. */
@@ -232,6 +237,8 @@ export interface SeamAdapter {
   fetchQuestions(): Promise<AdapterResult<QuestionsResult>>;
   /** Entries for one account, grouped by subject (GET /record/{account_id}). */
   fetchRecord(accountId: string): Promise<AdapterResult<RecordResult>>;
+  /** Corpus overview, nouns and graph (Sherlock). Absent on an adapter that has no corpus. */
+  corpus?: CorpusReads;
 }
 
 /** True when `v` has the ChatTurn fields the app renders; a connector reply without them is refused. */
