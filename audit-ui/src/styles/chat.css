@@ -58,15 +58,6 @@
   gap: var(--s3);
 }
 
-/* Nothing said yet: the picker and the composer sit mid-pane, not under a tall empty area. */
-.chat-column:has(> .chat-transcript:empty) {
-  justify-content: center;
-}
-
-.chat-column:has(> .chat-transcript:empty) > .chat-transcript {
-  flex: 0 0 0;
-}
-
 /* ---- Bubbles ------------------------------------------------------------ */
 
 .chat-turn {

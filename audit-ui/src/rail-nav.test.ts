@@ -65,10 +65,10 @@ describe('rail navigation', () => {
 
   it.each([
     ['--accent', '#00f0ff'],
-    ['--rail-audit', '#a78bfa'],
-    ['--rail-research', '#4ade80'],
-    ['--rail-lessons', '#fbbf24'],
-    ['--rail-curator', '#fb7185'],
+    ['--rail-audit', 'var(--engine-katie)'],
+    ['--rail-research', 'var(--engine-erie)'],
+    ['--rail-lessons', 'var(--engine-elle)'],
+    ['--rail-curator', '#a78bfa'],
   ])('%s is %s', (name, hex) => {
     expect(styleCss).toContain(`${name}: ${hex};`);
   });

@@ -56,7 +56,7 @@ const cells = (r: HTMLElement) =>
 describe('the marker test: only folders the Curator filed', () => {
   it('seed subjects with no marker are out; a marked subject is in with its count and latest authority', async () => {
     const s = await mount(adapter([...SEED, T1, T2, DOG]));
-    expect(rows(s).map(cells)).toEqual([['dog', '2', '6']]);
+    expect(rows(s).map(cells)).toEqual([['dog', '2 entries', '6/9']]);
     expect(s.textContent).not.toContain('frankenstein');
     expect(s.querySelector('.subject-folder, .folder-list')).toBeNull(); // no big cards in the sidebar
   });
@@ -64,24 +64,24 @@ describe('the marker test: only folders the Curator filed', () => {
   it('the marker decides, not the name: a marked frankenstein subject is in', async () => {
     const marked = makeEntry({ id: 'f-ch1', kid: 50, subject: 'curator-folder-frankenstein-chapter-1', authority: 5 });
     const s = await mount(adapter([...SEED, marked]));
-    expect(rows(s).map(cells)).toEqual([['frankenstein-chapter-1', '1', '8']]);
+    expect(rows(s).map(cells)).toEqual([['frankenstein-chapter-1', '1 entry', '8/9']]);
   });
 
   it('a subject with entries of its own counts them and shows its latest authority', async () => {
     const s = await mount(adapter([...ACCT, ACCT_FOLDER, ...SEED]));
-    expect(rows(s).map(cells)).toEqual([['order-1042', '2', '7']]);
+    expect(rows(s).map(cells)).toEqual([['order-1042', '2 entries', '7/9']]);
   });
 
   it('a folder with nothing in the record shows 0 and the folder entry authority', async () => {
     const lone = makeEntry({ id: 'f-cat', kid: 60, subject: 'curator-folder-cat', authority: 5, case_file: ['gone'] });
     const s = await mount(adapter([lone]));
-    expect(rows(s).map(cells)).toEqual([['cat', '0', '5']]);
+    expect(rows(s).map(cells)).toEqual([['cat', '0 entries', '5/9']]);
   });
 
   it('a re-filed subject is one row, from its standing folder', async () => {
     const older = makeEntry({ id: 'f-dog-0', kid: 33, subject: 'curator-folder-dog', authority: 5, case_file: ['t1'] });
     const s = await mount(adapter([T1, T2, older, DOG]));
-    expect(rows(s).map(cells)).toEqual([['dog', '2', '6']]);
+    expect(rows(s).map(cells)).toEqual([['dog', '2 entries', '6/9']]);
   });
 
   it('rows sort by subject, numbers in order', async () => {

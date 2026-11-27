@@ -15,6 +15,8 @@ import type { RepoSession } from './repo-session.ts';
 
 /** The locked composer's placeholder before a voice is picked. */
 export const AWAITING_MASK = 'INPUT // AWAITING_MASK';
+/** The locked placeholder in a compact (mini chat) column, where the full mask does not fit. */
+export const AWAITING_MASK_COMPACT = 'INPUT';
 /** What the header's view chip reads on this view. */
 export const CHAT_VIEW_NAME = 'Chat / Observability';
 
@@ -61,6 +63,8 @@ export class ChatView implements View {
   private requestToken = 0;
   private models: ModelSource;
   private status: StatusState = { state: 'loading' };
+  /** Compact (mini chat) columns get the short locked placeholder. */
+  private compact: boolean;
   /** served_by of the last reply per voice. */
   private served = new Map<Register, ServedBy>();
   /** Keeps the pressed engine box in step with the telemetry column's focus. */
@@ -70,11 +74,12 @@ export class ChatView implements View {
   /** The voices from the last good /models answer: a failed re-read keeps them pickable. */
   private voices: Register[] = [];
 
-  constructor(adapter: SeamAdapter, log: ChatLog, models: ModelSource = CONNECTOR_MODELS, repo: RepoSession | null = null) {
+  constructor(adapter: SeamAdapter, log: ChatLog, models: ModelSource = CONNECTOR_MODELS, repo: RepoSession | null = null, compact = false) {
     this.adapter = adapter;
     this.log = log;
     this.models = models;
     this.repo = repo;
+    this.compact = compact;
   }
 
   /** The attached GitHub repo, shared with the other chat view; null = no repo control. */
@@ -198,7 +203,7 @@ export class ChatView implements View {
     const ready = this.repoMode() || (voice !== null && (this.voices.includes(voice) || (this.voices.length === 0 && this.status.state !== 'ok')));
     if (this.input) {
       this.input.disabled = !ready;
-      this.input.placeholder = this.repoMode() ? `Ask ${this.repo?.status?.repo ?? 'your repo'}` : ready && voice ? `Message ${VOICE_LABELS[voice].name}` : AWAITING_MASK;
+      this.input.placeholder = this.repoMode() ? `Ask ${this.repo?.status?.repo ?? 'your repo'}` : ready && voice ? `Message ${VOICE_LABELS[voice].name}` : (this.compact ? AWAITING_MASK_COMPACT : AWAITING_MASK);
     }
     if (this.sendBtn) this.sendBtn.disabled = !ready || this.pending;
   }

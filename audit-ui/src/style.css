@@ -30,11 +30,11 @@
 
   /* Meaning: signal (cyan), warning (amber), good (emerald), error. */
   --accent: #00f0ff;
-  /* Rail icon colors, one per engine (KATIE, ERIE, ELLE); Curator has its own rose. Separate from the --engine-* telemetry colors. */
-  --rail-audit: #a78bfa;
-  --rail-research: #4ade80;
-  --rail-lessons: #fbbf24;
-  --rail-curator: #fb7185;
+  /* Rail icon colors: each engine's own color; Curator takes purple. */
+  --rail-audit: var(--engine-katie);
+  --rail-research: var(--engine-erie);
+  --rail-lessons: var(--engine-elle);
+  --rail-curator: #a78bfa;
   --accent-dim: #00dbe9;
   --accent-bg: #00353a;
   --accent-bg-hover: #00494f;
