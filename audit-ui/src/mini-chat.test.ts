@@ -96,6 +96,18 @@ describe('right column by page', () => {
 });
 
 describe('the mini chat is the one conversation', () => {
+  it('the mini chat uses the short locked placeholder, so it fits the narrow column', async () => {
+    await start('/calendar');
+    const input = right().querySelector<HTMLInputElement>('.mini-chat #chat-message')!;
+    expect(input.placeholder).toBe('INPUT');
+  });
+
+  it('/chat keeps the full locked placeholder', async () => {
+    await start('/chat');
+    const input = root.querySelector<HTMLInputElement>('.shell-center #chat-message')!;
+    expect(input.placeholder).toBe('INPUT // AWAITING_MASK');
+  });
+
   it('a message sent from the mini chat lands in the shared chat log and shows in /chat', async () => {
     await start('/calendar');
     const log = router!.getChatLog();
