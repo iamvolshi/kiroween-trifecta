@@ -1,0 +1,74 @@
+{
+  "steps": [],
+  "panel_in_left": true,
+  "panel_in_chat_column": false,
+  "dock_children": [
+    "voice-slot",
+    "chat-composer"
+  ],
+  "ready": true,
+  "ready_text": "Ready: octocat/Spoon-Knife (main). 3 files read, 0 skipped, 14 passages.",
+  "metrics": {
+    "left": [
+      56,
+      56,
+      277,
+      1080
+    ],
+    "slot": [
+      72,
+      101,
+      260,
+      529
+    ],
+    "viewport": [
+      1920,
+      1080
+    ],
+    "leftScrollTop": 0,
+    "scrollW": 220,
+    "clientW": 220,
+    "overflowing": [],
+    "fields": [
+      [
+        81,
+        262,
+        251,
+        310
+      ],
+      [
+        81,
+        318,
+        251,
+        366
+      ],
+      [
+        81,
+        374,
+        251,
+        422
+      ],
+      [
+        81,
+        430,
+        251,
+        458
+      ]
+    ],
+    "inView": true
+  },
+  "placeholder": "Ask octocat/Spoon-Knife",
+  "answered": true,
+  "answer": {
+    "text": "[KID 7, index.html] <html> <head> <meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\"/> <title>Spoon-Knife</title> <LINK href=\"styles.css\" rel=\"stylesheet\" type=\"text/css\"> </head>",
+    "cites": [
+      [
+        "index.html",
+        "KID 7"
+      ]
+    ],
+    "placeholder": "Ask octocat/Spoon-Knife"
+  },
+  "detached": true,
+  "after_detach": "Attach GitHub repo"
+}
