@@ -300,6 +300,13 @@ describe('asking the attached repo', () => {
     expect(li.querySelector('.repo-kid')!.textContent).toBe('KID 7');
   });
 
+  it('says in words when nothing in the repo answers, instead of an empty bubble', async () => {
+    await ready({ '/api/github/ask': () => json(200, answerBody({ state: 'not_found', text: '', rerank: { used: false }, provenance: [] })) });
+    await send('hello');
+    expect(q('.chat-reply .bubble-text')!.textContent).toBe('Nothing in this repo answers that.');
+    expect(q('.repo-citation')).toBeNull();
+  });
+
   it('uses the same low-confidence wording as the book answers', async () => {
     await ready({ '/api/github/ask': () => json(200, answerBody({ status: 'WEAK_SUPPORT', low_confidence: true })) });
     await send('Anything?');

@@ -162,7 +162,13 @@ export function renderRepoTurn(t: RepoTurn): HTMLElement {
 
   const replyRow = el('div', 'bubble-row bubble-row-reply');
   const bubble = el('div', 'bubble chat-reply');
-  bubble.appendChild(el('p', 'bubble-text', t.answer.text));
+  // A question with no match comes back with no text at all. Without a
+  // fallback the bubble is empty and the rerank note below it reads as the
+  // whole answer ("Not reranked (first-stage order)."). Say so in words.
+  const words = t.answer.state === 'not_found' && t.answer.text.trim() === ''
+    ? 'Nothing in this repo answers that.'
+    : t.answer.text;
+  bubble.appendChild(el('p', 'bubble-text', words));
   const notes = answerNotes(asAsk(t.answer, t.message));
   if (notes) bubble.appendChild(notes);
   if (t.answer.citations.length > 0) {
