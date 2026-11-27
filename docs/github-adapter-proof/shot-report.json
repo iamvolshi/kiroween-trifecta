@@ -1,0 +1,30 @@
+{
+  "steps": [],
+  "control_text": "Attach GitHub repo",
+  "a_state_seen": {
+    "state": "sending",
+    "text": "Fetching octocat/Spoon-Knife: 0 of 0 files read."
+  },
+  "b_ready": true,
+  "b_text": "Ready: octocat/Spoon-Knife (main). 3 files read, 0 skipped, 14 passages.",
+  "b_source": [
+    "Ask the book:false",
+    "Ask octocat/Spoon-Knife:true"
+  ],
+  "c_answered": true,
+  "c_answer": {
+    "text": "[KID 7, index.html] <html> <head> <meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\"/> <title>Spoon-Knife</title> <LINK href=\"styles.css\" rel=\"stylesheet\" type=\"text/css\"> </head>",
+    "weak": "Sherlock is only weakly sure of this answer. These are its best matches, not a confirmed answer.",
+    "rerank": "Reranked by nvidia/nemotron-3.5-rerank-8b.",
+    "cites": [
+      [
+        "index.html",
+        "KID 7"
+      ]
+    ]
+  },
+  "d_error_seen": true,
+  "d_error": "GitHub could not find that repo. It may be private, or the name may be wrong. Only public repos can be attached.",
+  "e_error_seen": true,
+  "e_error": "Sherlock unreachable: Failed to fetch. The app does not use any other search."
+}
