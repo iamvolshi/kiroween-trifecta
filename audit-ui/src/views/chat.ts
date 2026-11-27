@@ -9,7 +9,7 @@ import { syncEngineBoxes } from './engine-boxes.ts';
 import { engineFocusChannel } from '../shell/engine-focus-channel.ts';
 import { renderVoicePicker } from './voice-picker.ts';
 import { offeredVoices, VOICE_LABELS } from './voices.ts';
-import { mountRepoPanel, renderRepoTurn } from './repo-panel.ts';
+import { renderRepoTurn } from './repo-panel.ts';
 import type { RepoSession } from './repo-session.ts';
 
 /** The locked composer's placeholder before a voice is picked. */
@@ -78,9 +78,7 @@ export class ChatView implements View {
 
   /** The attached GitHub repo, shared with the other chat view; null = no repo control. */
   private repo: RepoSession | null;
-  private repoSlot: HTMLElement | null = null;
   private unsubscribeRepo: (() => void) | null = null;
-  private stopRepoPanel: (() => void) | null = null;
 
   /** True while the chat asks the attached repo and not the book. */
   private repoMode(): boolean {
@@ -110,9 +108,6 @@ export class ChatView implements View {
     this.form.append(label, this.input, this.sendBtn);
     dock.append(this.pickerSlot, this.form);
     if (this.repo) {
-      this.repoSlot = el('div', 'repo-slot');
-      dock.prepend(this.repoSlot);
-      this.stopRepoPanel = mountRepoPanel(this.repoSlot, this.repo);
       this.unsubscribeRepo = this.repo.subscribe(() => {
         this.renderControls();
         this.renderTranscript();
@@ -336,9 +331,6 @@ export class ChatView implements View {
     this.unsubscribeFocus = null;
     this.unsubscribeRepo?.();
     this.unsubscribeRepo = null;
-    this.stopRepoPanel?.();
-    this.stopRepoPanel = null;
-    this.repoSlot = null;
     this.form = null;
     this.input = null;
     this.sendBtn = null;

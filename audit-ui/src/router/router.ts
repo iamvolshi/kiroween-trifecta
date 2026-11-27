@@ -79,7 +79,7 @@ export class Router {
     if (header) this.inspector.mount(header, this.slots.shell);
     // The rail and the list panel it swaps (Chat's list is the directories column).
     // Audit's icon goes to the KTIE page, Research's to the ERIE page, Lessons' to the ELLE page, through this Router (navigate), like a plain link.
-    const left = new RailPanel(adapter, this.slots.rail, this.slots.left, (path) => this.navigate(path));
+    const left = new RailPanel(adapter, this.slots.rail, this.slots.left, (path) => this.navigate(path), this.repo);
     this.leftPanel = left;
     left.mount();
     // First load: the record service may be asleep, so say so until the

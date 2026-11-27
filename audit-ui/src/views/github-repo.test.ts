@@ -9,6 +9,7 @@ import type { SeamAdapter, ChatOptions } from '../adapter/seam.ts';
 import { createGithubClient, mintToken, SESSION_KEY } from '../adapter/github-client.ts';
 import { RepoSession } from './repo-session.ts';
 import { ChatView } from './chat.ts';
+import { LeftPanel } from '../shell/left.ts';
 import { ChatLog } from './chat-log.ts';
 import { createModelsStub, tick } from '../test-helpers.ts';
 
@@ -155,11 +156,22 @@ function chatAdapter(): { adapter: SeamAdapter; chats: string[] } {
   return { adapter, chats };
 }
 
+let leftPanel: LeftPanel | null = null;
+
+/** The shell in miniature: the left column (with the repo panel) beside the chat view. */
 async function openChat(repo: RepoSession): Promise<{ chats: string[] }> {
   const { adapter, chats } = chatAdapter();
   const log = new ChatLog();
   log.setVoice('book');
-  new ChatView(adapter, log, createModelsStub(), repo).mount(container);
+  leftPanel?.unmount();
+  const left = document.createElement('div');
+  left.className = 'shell-left';
+  const center = document.createElement('div');
+  container.replaceChildren(left, center);
+  const folderless = { fetchAllEntries: () => Promise.resolve({ ok: true as const, data: [] }) } as unknown as SeamAdapter;
+  leftPanel = new LeftPanel(folderless, true, repo);
+  leftPanel.mount(left);
+  new ChatView(adapter, log, createModelsStub(), repo).mount(center);
   await tick();
   return { chats };
 }

@@ -1,6 +1,7 @@
 import type { SeamAdapter } from '../adapter/seam.ts';
 import type { Panel } from './panel.ts';
 import { LeftPanel } from './left.ts';
+import type { RepoSession } from '../views/repo-session.ts';
 import { AuditPanel, LessonsPanel, ResearchPanel } from './rail-panels.ts';
 import { stripBase } from '../util/base.ts';
 
@@ -69,12 +70,12 @@ export class RailPanel implements Panel {
   /** The Router's navigate: Audit's way to the KTIE page, Research's to the ERIE page. None: panel only. */
   private navigate: ((path: string) => void) | null;
 
-  constructor(adapter: SeamAdapter, rail: HTMLElement, list: HTMLElement, navigate: ((path: string) => void) | null = null) {
+  constructor(adapter: SeamAdapter, rail: HTMLElement, list: HTMLElement, navigate: ((path: string) => void) | null = null, repo: RepoSession | null = null) {
     this.rail = rail;
     this.list = list;
     this.navigate = navigate;
     this.panels = {
-      chat: new LeftPanel(adapter),
+      chat: new LeftPanel(adapter, true, repo),
       audit: new AuditPanel(adapter),
       research: new ResearchPanel(adapter),
       lessons: new LessonsPanel(adapter),

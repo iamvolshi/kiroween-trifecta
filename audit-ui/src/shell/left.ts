@@ -4,6 +4,8 @@ import { compareKStart } from '../util/interval.ts';
 import { compareNatural } from '../util/natural.ts';
 import { groupOf } from './subject-folders.ts';
 import { catalog, type CuratorFolder } from '../util/curator.ts';
+import { mountRepoPanel } from '../views/repo-panel.ts';
+import type { RepoSession } from '../views/repo-session.ts';
 
 function el<K extends keyof HTMLElementTagNameMap>(
   tag: K,
@@ -72,14 +74,26 @@ export class LeftPanel implements Panel {
   /** withBack false: the Curator icon's panel, the folder rows alone. */
   private withBack: boolean;
 
-  constructor(adapter: SeamAdapter, withBack = true) {
+  /** The shared GitHub repo session: the Attach panel sits at the top of the column. null = no panel. */
+  private repo: RepoSession | null;
+  private stopRepoPanel: (() => void) | null = null;
+
+  constructor(adapter: SeamAdapter, withBack = true, repo: RepoSession | null = null) {
     this.adapter = adapter;
     this.withBack = withBack;
+    this.repo = repo;
   }
 
   mount(slot: HTMLElement): void {
     this.slot = slot;
     slot.replaceChildren();
+
+    if (this.repo) {
+      const repoSlot = el('section', 'repo-slot');
+      repoSlot.setAttribute('aria-label', 'GitHub repo');
+      slot.appendChild(repoSlot);
+      this.stopRepoPanel = mountRepoPanel(repoSlot, this.repo);
+    }
 
     const record = el('section', 'left-record');
     // The folders are Curator's work: it files the record into them (Darren, Nov 22).
@@ -158,6 +172,8 @@ export class LeftPanel implements Panel {
 
   unmount(): void {
     this.requestToken++;
+    this.stopRepoPanel?.();
+    this.stopRepoPanel = null;
     if (this.slot) this.slot.replaceChildren();
     this.slot = null;
     this.folderBody = null;
