@@ -9,6 +9,7 @@ import { syncEngineBoxes } from './engine-boxes.ts';
 import { engineFocusChannel } from '../shell/engine-focus-channel.ts';
 import { renderVoicePicker } from './voice-picker.ts';
 import { offeredVoices, VOICE_LABELS } from './voices.ts';
+import { attachTypewriter } from '../shell/typewriter.ts';
 import { renderRepoTurn } from './repo-panel.ts';
 import type { RepoSession } from './repo-session.ts';
 
@@ -105,7 +106,7 @@ export class ChatView implements View {
     this.input.autocomplete = 'off';
     this.sendBtn = el('button', 'chat-send', 'Send');
     this.sendBtn.type = 'submit';
-    this.form.append(label, this.input, this.sendBtn);
+    this.form.append(label, this.input, attachTypewriter(this.input), this.sendBtn);
     dock.append(this.pickerSlot, this.form);
     if (this.repo) {
       this.unsubscribeRepo = this.repo.subscribe(() => {

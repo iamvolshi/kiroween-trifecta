@@ -1,0 +1,61 @@
+{
+  "toggle_initial": "Sound on",
+  "log_sound_on": [
+    {
+      "key": "H",
+      "at": 0.17
+    },
+    {
+      "key": "e",
+      "at": 0.29
+    },
+    {
+      "key": "l",
+      "at": 0.41
+    },
+    {
+      "key": "l",
+      "at": 0.53
+    },
+    {
+      "key": "o",
+      "at": 0.65
+    },
+    {
+      "key": "Backspace",
+      "at": 1.01
+    }
+  ],
+  "toggle_after_click": "Sound off / off",
+  "strikes_while_muted": 0,
+  "typed_text_lands": "Hel nowo",
+  "wav_peak": 0.12858837842941284,
+  "after_reload": "Sound off / pressed=false / off",
+  "layout": {
+    "form": [
+      585,
+      581,
+      1353,
+      625
+    ],
+    "input": [
+      598,
+      587,
+      1180,
+      619
+    ],
+    "toggle": [
+      1188,
+      591,
+      1273,
+      615
+    ],
+    "send": [
+      1281,
+      586,
+      1348,
+      620
+    ],
+    "overflow": false
+  }
+}

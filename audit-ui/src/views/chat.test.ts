@@ -88,14 +88,14 @@ describe('before the first pick: the picker and the composer, nothing else', () 
     const { adapter } = fake(async () => ({ ok: true, data: turn1() }));
     await open(adapter);
     const view = container.querySelector<HTMLElement>('.chat-view')!;
-    // What is on screen: the picker label, three chips, the composer's button. The h1 and label are screen-reader only.
+    // What is on screen: the picker label, three chips, the sound switch, the composer's button. The h1 and label are screen-reader only.
     expect(container.querySelector('h1')?.classList.contains('sr-only')).toBe(true);
     expect(container.querySelector('label[for="chat-message"]')?.classList.contains('sr-only')).toBe(true);
     const visible = Array.from(view.querySelectorAll<HTMLElement>('*'))
       .filter((e) => e.children.length === 0 && !e.closest('.sr-only'))
       .map((e) => e.textContent)
       .filter((t) => t !== '');
-    expect(visible).toEqual(['Pick your Frankenstein', '[BOOK]', '1818', '[MOVIE]', '1931', '[YOUNG FRANKENSTEIN]', '1974', 'Send']);
+    expect(visible).toEqual(['Pick your Frankenstein', '[BOOK]', '1818', '[MOVIE]', '1931', '[YOUNG FRANKENSTEIN]', '1974', 'Sound on', 'Send']);
     for (const gone of ['.mask-cards', '.mask-card', '.view-intro', '.empty-state', '.persona-picker', '.chat-controls']) {
       expect(container.querySelector(gone)).toBeNull();
     }

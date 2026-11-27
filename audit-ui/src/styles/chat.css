@@ -429,3 +429,20 @@
   background: var(--engine);
   color: #000;
 }
+
+/* The small typewriter-sound switch beside Send. */
+.chat-sound {
+  padding: var(--s1) var(--s2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: transparent;
+  color: var(--faint);
+  font-size: var(--t-label-md-size);
+  line-height: var(--t-label-md-lh);
+  white-space: nowrap;
+}
+
+.chat-sound[aria-pressed='true'] {
+  color: var(--voice-accent);
+  border-color: var(--voice-accent);
+}
