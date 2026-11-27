@@ -9,6 +9,8 @@ import { syncEngineBoxes } from './engine-boxes.ts';
 import { engineFocusChannel } from '../shell/engine-focus-channel.ts';
 import { renderVoicePicker } from './voice-picker.ts';
 import { offeredVoices, VOICE_LABELS } from './voices.ts';
+import { mountRepoPanel, renderRepoTurn } from './repo-panel.ts';
+import type { RepoSession } from './repo-session.ts';
 
 /** The locked composer's placeholder before a voice is picked. */
 export const AWAITING_MASK = 'INPUT // AWAITING_MASK';
@@ -67,10 +69,22 @@ export class ChatView implements View {
   /** The voices from the last good /models answer: a failed re-read keeps them pickable. */
   private voices: Register[] = [];
 
-  constructor(adapter: SeamAdapter, log: ChatLog, models: ModelSource = CONNECTOR_MODELS) {
+  constructor(adapter: SeamAdapter, log: ChatLog, models: ModelSource = CONNECTOR_MODELS, repo: RepoSession | null = null) {
     this.adapter = adapter;
     this.log = log;
     this.models = models;
+    this.repo = repo;
+  }
+
+  /** The attached GitHub repo, shared with the other chat view; null = no repo control. */
+  private repo: RepoSession | null;
+  private repoSlot: HTMLElement | null = null;
+  private unsubscribeRepo: (() => void) | null = null;
+  private stopRepoPanel: (() => void) | null = null;
+
+  /** True while the chat asks the attached repo and not the book. */
+  private repoMode(): boolean {
+    return this.repo !== null && this.repo.source === 'repo' && this.repo.ready;
   }
 
   mount(container: HTMLElement): void {
@@ -95,6 +109,15 @@ export class ChatView implements View {
     this.sendBtn.type = 'submit';
     this.form.append(label, this.input, this.sendBtn);
     dock.append(this.pickerSlot, this.form);
+    if (this.repo) {
+      this.repoSlot = el('div', 'repo-slot');
+      dock.prepend(this.repoSlot);
+      this.stopRepoPanel = mountRepoPanel(this.repoSlot, this.repo);
+      this.unsubscribeRepo = this.repo.subscribe(() => {
+        this.renderControls();
+        this.renderTranscript();
+      });
+    }
     column.append(this.transcript, this.errorSlot, dock);
     root.appendChild(column);
     this.root = root;
@@ -176,10 +199,10 @@ export class ChatView implements View {
     this.renderPicker(focus);
     // Ready while the picked voice is one the connector offers (a chip shows it), or,
     // on a remount, while no voice list has been read yet: the pick from the log stands.
-    const ready = voice !== null && (this.voices.includes(voice) || (this.voices.length === 0 && this.status.state !== 'ok'));
+    const ready = this.repoMode() || (voice !== null && (this.voices.includes(voice) || (this.voices.length === 0 && this.status.state !== 'ok')));
     if (this.input) {
       this.input.disabled = !ready;
-      this.input.placeholder = ready && voice ? `Message ${VOICE_LABELS[voice].name}` : AWAITING_MASK;
+      this.input.placeholder = this.repoMode() ? `Ask ${this.repo?.status?.repo ?? 'your repo'}` : ready && voice ? `Message ${VOICE_LABELS[voice].name}` : AWAITING_MASK;
     }
     if (this.sendBtn) this.sendBtn.disabled = !ready || this.pending;
   }
@@ -188,7 +211,10 @@ export class ChatView implements View {
     const box = this.transcript;
     if (!box) return;
     // No turns: nothing at all (no greeting, no placeholder words).
-    const nodes = this.log.turns().flatMap((t, i) => {
+    // Asking the repo shows the repo's own turns; the book's log is kept for when the user switches back.
+    const nodes = this.repoMode() && this.repo
+      ? this.repo.turns.map((t) => renderRepoTurn(t))
+      : this.log.turns().flatMap((t, i) => {
       if (!isChatTurn(t)) return [];
       // The engine boxes sit beside the reply (renderChatTurn), keyed by the turn's index.
       return [renderChatTurn(t, this.log.voiceAt(i), i)];
@@ -214,9 +240,32 @@ export class ChatView implements View {
     const btn = this.sendBtn;
     if (!input || !btn) return;
     const voice = this.log.voice();
-    if (!voice) return; // composer is disabled until a voice is picked
+    const repoAsk = this.repoMode() ? this.repo : null;
+    if (!voice && !repoAsk) return; // composer is disabled until a voice is picked
     const message = input.value.trim();
     if (message === '') return;
+
+    if (repoAsk) {
+      // The attached repo answers, through Sherlock's /api/github/ask only.
+      const token = ++this.requestToken;
+      const root = this.container;
+      this.pending = true;
+      btn.disabled = true;
+      this.errorSlot?.replaceChildren();
+      this.pendingMessage = message;
+      input.value = '';
+      this.renderTranscript();
+      const error = await repoAsk.ask(message);
+      this.pending = false;
+      if (token !== this.requestToken || this.container !== root) return;
+      this.pendingMessage = null;
+      if (error !== '') input.value = message;
+      this.renderControls();
+      this.renderTranscript();
+      if (error !== '') this.errorSlot?.replaceChildren(el('p', 'error-state', error));
+      return;
+    }
+    if (!voice) return;
 
     const options: ChatOptions = { persona: 'Frankenstein', register: voice };
 
@@ -285,6 +334,11 @@ export class ChatView implements View {
     this.submitHandler = null;
     this.unsubscribeFocus?.();
     this.unsubscribeFocus = null;
+    this.unsubscribeRepo?.();
+    this.unsubscribeRepo = null;
+    this.stopRepoPanel?.();
+    this.stopRepoPanel = null;
+    this.repoSlot = null;
     this.form = null;
     this.input = null;
     this.sendBtn = null;

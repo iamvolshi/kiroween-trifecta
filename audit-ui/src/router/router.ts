@@ -3,6 +3,9 @@ import { ActionListView } from '../views/action-list.ts';
 import { EntryDetailView } from '../views/entry-detail.ts';
 import { NotFoundView } from '../views/not-found.ts';
 import { ChatView, type ModelSource } from '../views/chat.ts';
+import { RepoSession } from '../views/repo-session.ts';
+import { createGithubClient, SESSION_KEY } from '../adapter/github-client.ts';
+import { SHERLOCK_URL } from '../adapter/sherlock-url.ts';
 import { ChatLog } from '../views/chat-log.ts';
 import { ADDRESS_FOLLOWED, CalendarView } from '../views/calendar.ts';
 import { parseCalendarPath } from '../util/calendar.ts';
@@ -58,9 +61,15 @@ export class Router {
   /** The PEEP / RATR inspector drawer. */
   readonly inspector: Inspector;
 
-  constructor(adapter: SeamAdapter, container: HTMLElement, models?: ModelSource, trifacta?: TrifactaClient) {
+  /** The attached GitHub repo, shared by the chat and the mini chat. */
+  private repo: RepoSession;
+
+  constructor(adapter: SeamAdapter, container: HTMLElement, models?: ModelSource, trifacta?: TrifactaClient, repo?: RepoSession) {
     this.adapter = adapter;
     this.models = models;
+    this.repo = repo ?? new RepoSession(createGithubClient(SHERLOCK_URL));
+    // A person who attached a repo before finds it again after a reload.
+    if (!repo && localStorage.getItem(SESSION_KEY)) void this.repo.refresh();
     this.container = container;
     this.slots = createShell(container);
     // PEEP and RATR: two small header buttons and their drawer, on every
@@ -188,7 +197,7 @@ export class Router {
     this.miniHost = document.createElement('div');
     this.miniHost.className = 'mini-chat';
     right.appendChild(this.miniHost);
-    this.miniChat = new ChatView(this.adapter, this.chatLog, this.models);
+    this.miniChat = new ChatView(this.adapter, this.chatLog, this.models, this.repo);
     this.miniChat.mount(this.miniHost);
   }
 
@@ -211,7 +220,7 @@ export class Router {
     }
 
     if (path === '/chat') {
-      return new ChatView(this.adapter, this.chatLog, this.models);
+      return new ChatView(this.adapter, this.chatLog, this.models, this.repo);
     }
 
     if (path === '/research') {

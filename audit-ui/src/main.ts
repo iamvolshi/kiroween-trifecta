@@ -7,6 +7,7 @@ import './styles/calendar-rail.css';
 import './styles/shell.css';
 import './styles/telemetry.css';
 import './styles/mini-chat.css';
+import './styles/repo.css';
 import './styles/folders.css';
 import './styles/loading-modal.css';
 import './styles/research.css';
