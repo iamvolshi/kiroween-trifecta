@@ -166,10 +166,11 @@ export class ChatView implements View {
     if (this.status.state === 'ok') this.voices = offeredVoices(this.status.data.register_voices);
     const voices = this.voices;
     if (voices.length === 0) {
-      // Nothing to pick yet: the reason in words (loading says nothing).
+      // Nothing to pick yet: the reason in words. Loading says it is
+      // waking the connector, so a cold load never looks like a dead chat.
       if (this.status.state === 'error') slot.replaceChildren(el('p', 'error-state', this.status.error));
       else if (this.status.state === 'ok') slot.replaceChildren(el('p', 'error-state', 'The connector reports no voices.'));
-      else slot.replaceChildren();
+      else slot.replaceChildren(el('p', 'picker-loading', 'Waking the connector…'));
       return;
     }
     // A failed re-read keeps the chips; the model at the row's end says the connector is unreachable.

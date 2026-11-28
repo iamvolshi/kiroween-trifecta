@@ -156,6 +156,15 @@ describe('before the first pick: the picker and the composer, nothing else', () 
     expect(input().disabled).toBe(true);
   });
 
+  it('while the voices are still loading the picker slot says it is waking the connector', async () => {
+    const { adapter } = fake(async () => ({ ok: true, data: turn1() }));
+    const never: ModelSource = { status: () => new Promise(() => {}) };
+    await open(adapter, new ChatLog(), never);
+    expect(container.querySelector('.voice-picker')).toBeNull();
+    expect(container.querySelector('.voice-slot .picker-loading')?.textContent).toBe('Waking the connector…');
+    expect(input().disabled).toBe(true);
+  });
+
   it('three big tiles in the middle: Book 1818, Movie 1931, Young 1974, each with a picture', async () => {
     const { adapter } = fake(async () => ({ ok: true, data: turn1() }));
     await open(adapter);

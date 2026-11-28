@@ -193,7 +193,9 @@ export class SherlockWatsonView implements View {
     this.sourceLine?.replaceChildren(document.createTextNode(this.sourceWords()));
     if (this.pickerSlot) {
       if (this.voices.length === 0) {
-        this.pickerSlot.replaceChildren(...(this.voicesError ? [el('p', 'error-state', this.voicesError)] : []));
+        // Loading says it is waking the connector, so a cold load never
+        // looks like a dead page; an error says so in words.
+        this.pickerSlot.replaceChildren(...(this.voicesError ? [el('p', 'error-state', this.voicesError)] : [el('p', 'picker-loading', 'Waking the connector…')]));
       } else {
         this.pickerSlot.replaceChildren(renderVoicePicker(this.voices, voice, (v) => { this.log.setVoice(v); this.renderControls(); }, null));
       }

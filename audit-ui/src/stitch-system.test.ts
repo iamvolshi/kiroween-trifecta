@@ -168,8 +168,9 @@ describe('page titles', () => {
 });
 
 describe('which role key elements use', () => {
-  it('voice model label-md, the composer telemetry-data, the feed text telemetry-data, section headings label-sm', () => {
+  it('voice model label-md, the picker loading line label-md, the composer telemetry-data, the feed text telemetry-data, section headings label-sm', () => {
     expect(usesRole(rule(chatCss, '.voice-model'), 'label-md')).toBe(true);
+    expect(usesRole(rule(chatCss, '.picker-loading'), 'label-md')).toBe(true);
     expect(usesRole(rule(chatCss, '.chat-composer input'), 'telemetry-data')).toBe(true);
     expect(rule(chatCss, '.chat-column')).toContain('max-width: 768px;');
     expect(usesRole(rule(systemCss, '.feed-text'), 'telemetry-data')).toBe(true);
