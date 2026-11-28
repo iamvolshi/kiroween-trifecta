@@ -30,6 +30,25 @@ modal, its CSS and its tests were deleted.
    names need absorbing. Click to enter is the stop control
    (WCAG 2.2.2): the loop never traps anyone on a screen.
 
+## v4 — the card, not the copy (Nov 28)
+
+Darren, on the v3 look: "doesnt look good." The copy and the timing
+were approved; the card was the problem. What was weak: the card was
+wide for its short lines, so the text floated in the middle with dead
+space on both sides; the HACKENSTEIN eyebrow was nearly invisible at
+9px muted; the enter button was a thin quiet outline; everything
+centered made it a generic dark modal instead of an announcement.
+
+What changed, copy and timing untouched: the card is left-aligned
+and narrower (30rem), the spacing tighter, the eyebrow up to 11px, a
+rose rule across the top of the card, and CLICK TO ENTER is now a
+filled button, dark text on light, so the way in is the loudest
+thing on the card. The type is the same as v3: Space Grotesk
+headline, Geist lines, JetBrains Mono enter, no Arial anywhere.
+
+Local proof shot of the new card (same CSS, same fonts) is
+`splash-look-left-aligned.png` in this folder.
+
 ## The screens (final)
 
 - Announcement (8s): "Never lies." / "Ask Frankenstein's monster
@@ -48,7 +67,7 @@ modal, its CSS and its tests were deleted.
 
 ## Tests
 
-- 674 tests pass, `tsc` clean, build clean.
+- 676 tests pass, `tsc` clean, build clean.
 - The splash tests pin: the announcement first; each screen stays up
   at least one second per three words (the rule itself, computed from
   the copy); the loop opens and closes on the announcement; a longer
@@ -82,8 +101,11 @@ modal, its CSS and its tests were deleted.
 - `fe1c69c` — splash story replaces the loading spinner (v1)
 - `2284d83` — splash opening is the announcement, not the catalog (v2)
 - `f5739d9` — splash screens stay up as long as their words need (v3)
+- `5e50d9e` — splash set in the display face, Arial out of the app
+- `ee9f479` — splash card reads like an announcement, not a modal (v4)
 - Branch: `feat/preview-all`. Published to `gh-pages` at `0637ae5`
-  (v1), `afdea3d` (v2), `10040c2` (v3). Live at
+  (v1), `afdea3d` (v2), `10040c2` (v3), `40ab579` (type),
+  `cf08a18` (v4). Live at
   https://iamvolshi.github.io/kiroween-trifecta/chat
 
 ## Sources for the timing rule
