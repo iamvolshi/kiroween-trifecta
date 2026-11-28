@@ -2,8 +2,10 @@
 // how far Sherlock is with it, which source the chat asks (the book or the repo),
 // and the repo's own question/answer turns. One instance per Router.
 import type { GithubClient, AttachRequest, RepoAnswer, RepoStatus } from '../adapter/github-client.ts';
+import type { RosieSession } from './rosie-session.ts';
 
-export type Source = 'book' | 'repo';
+/** What the chat asks: the book, the attached GitHub repo, or the folder Rosie reads. */
+export type Source = 'book' | 'repo' | 'folder';
 
 export interface RepoTurn { message: string; answer: RepoAnswer }
 
@@ -23,10 +25,22 @@ export class RepoSession {
   attaching = false;
   source: Source = 'book';
   readonly turns: RepoTurn[] = [];
+  /** The local folder Rosie reads for this person, or null when this build has no Rosie. */
+  readonly rosie: RosieSession | null;
+  private rosieWasReady = false;
 
-  constructor(client: GithubClient, pollMs = 1500) {
+  constructor(client: GithubClient, pollMs = 1500, rosie: RosieSession | null = null) {
     this.client = client;
     this.pollMs = pollMs;
+    this.rosie = rosie;
+    rosie?.subscribe(() => {
+      const ready = rosie.ready;
+      // A folder that just became ready is asked first, like a repo; a folder that went away stops being asked.
+      if (ready && !this.rosieWasReady && this.source === 'book' && rosie.turns.length === 0) this.source = 'folder';
+      if (!ready && this.source === 'folder') this.source = 'book';
+      this.rosieWasReady = ready;
+      this.emit();
+    });
   }
 
   subscribe(fn: () => void): () => void {
@@ -39,6 +53,32 @@ export class RepoSession {
   }
 
   get ready(): boolean { return this.status?.state === 'ready'; }
+
+  /** Who answers now: the source the person picked, if it is ready; otherwise the book. */
+  get mode(): Source {
+    if (this.source === 'repo' && this.ready) return 'repo';
+    if (this.source === 'folder' && this.rosie?.ready) return 'folder';
+    return 'book';
+  }
+
+  /** The turns of the source that answers now (the book keeps its own log in the chat). */
+  get activeTurns(): RepoTurn[] { return this.mode === 'folder' && this.rosie ? this.rosie.turns : this.turns; }
+
+  /** The name the composer shows for the source that answers now. */
+  get activeName(): string {
+    if (this.mode === 'folder') return this.rosie?.status?.folder ?? 'your folder';
+    return this.status?.repo ?? 'your repo';
+  }
+
+  /** Ask the source that answers now (repo or folder). */
+  askActive(message: string): Promise<string> {
+    return this.mode === 'folder' && this.rosie ? this.rosie.ask(message) : this.ask(message);
+  }
+
+  /** Ask the source that answers now, without keeping the turn. */
+  askQuietActive(message: string): ReturnType<GithubClient['ask']> {
+    return this.mode === 'folder' && this.rosie ? this.rosie.askQuiet(message) : this.askQuiet(message);
+  }
   get working(): boolean { return this.attaching || (this.status !== null && WORKING.has(this.status.state)); }
 
   /** Read the status once (on boot, so a reload finds the repo again) and keep polling while it works. */
@@ -87,7 +127,7 @@ export class RepoSession {
     if (r.ok) {
       this.status = null;
       this.turns.length = 0;
-      this.source = 'book';
+      if (this.source === 'repo') this.source = 'book';
     }
     this.emit();
   }
@@ -108,6 +148,7 @@ export class RepoSession {
 
   setSource(s: Source): void {
     if (s === 'repo' && !this.ready) return;
+    if (s === 'folder' && !this.rosie?.ready) return;
     this.source = s;
     this.emit();
   }

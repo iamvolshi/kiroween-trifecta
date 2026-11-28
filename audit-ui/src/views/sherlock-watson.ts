@@ -132,7 +132,8 @@ export class SherlockWatsonView implements View {
 
   private sourceWords(): string {
     const r = this.repo;
-    if (r && r.source === 'repo' && r.ready) return `Sherlock will investigate the attached repo ${r.status?.repo ?? ''}.`.replace(' .', '.');
+    if (r && r.mode === 'folder') return `Sherlock will investigate the attached local folder ${r.activeName}.`;
+    if (r && r.mode === 'repo') return `Sherlock will investigate the attached repo ${r.status?.repo ?? ''}.`.replace(' .', '.');
     return 'Sherlock will investigate the book (the Frankenstein case).';
   }
 

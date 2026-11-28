@@ -169,6 +169,7 @@ export function renderRepoTurn(t: RepoTurn): HTMLElement {
     const list = el('ol', 'repo-citations');
     for (const c of t.answer.citations) {
       const li = el('li', 'repo-citation');
+      if (c.machine) li.append(el('span', 'repo-machine', c.machine), document.createTextNode(' '));
       li.append(el('code', 'repo-path', c.path));
       const kid = c.kid === undefined ? c.kid_label ?? '' : `KID ${renderKid(c.kid)}`;
       if (kid !== '') li.append(document.createTextNode(' '), el('span', 'repo-kid', kid));

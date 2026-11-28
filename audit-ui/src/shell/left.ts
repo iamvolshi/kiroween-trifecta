@@ -5,6 +5,7 @@ import { compareNatural } from '../util/natural.ts';
 import { groupOf } from './subject-folders.ts';
 import { catalog, type CuratorFolder } from '../util/curator.ts';
 import { mountRepoPanel } from '../views/repo-panel.ts';
+import { mountRosiePanel } from '../views/rosie-panel.ts';
 import type { RepoSession } from '../views/repo-session.ts';
 
 function el<K extends keyof HTMLElementTagNameMap>(
@@ -77,6 +78,7 @@ export class LeftPanel implements Panel {
   /** The shared GitHub repo session: the Attach panel sits at the top of the column. null = no panel. */
   private repo: RepoSession | null;
   private stopRepoPanel: (() => void) | null = null;
+  private stopRosiePanel: (() => void) | null = null;
 
   constructor(adapter: SeamAdapter, withBack = true, repo: RepoSession | null = null) {
     this.adapter = adapter;
@@ -93,6 +95,12 @@ export class LeftPanel implements Panel {
       repoSlot.setAttribute('aria-label', 'GitHub repo');
       slot.appendChild(repoSlot);
       this.stopRepoPanel = mountRepoPanel(repoSlot, this.repo);
+      if (this.repo.rosie) {
+        const rosieSlot = el('section', 'rosie-slot');
+        rosieSlot.setAttribute('aria-label', 'Local drive');
+        slot.appendChild(rosieSlot);
+        this.stopRosiePanel = mountRosiePanel(rosieSlot, this.repo);
+      }
     }
 
     const record = el('section', 'left-record');
@@ -174,6 +182,8 @@ export class LeftPanel implements Panel {
     this.requestToken++;
     this.stopRepoPanel?.();
     this.stopRepoPanel = null;
+    this.stopRosiePanel?.();
+    this.stopRosiePanel = null;
     if (this.slot) this.slot.replaceChildren();
     this.slot = null;
     this.folderBody = null;

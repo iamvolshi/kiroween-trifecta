@@ -24,6 +24,8 @@ export interface RepoStatus {
 }
 
 export interface RepoCitation {
+  /** Set for a local folder (Rosie): the computer the file is on. */
+  machine?: string;
   path: string;
   kid?: number;
   kid_label?: string;
@@ -95,13 +97,14 @@ function toStatus(v: unknown): RepoStatus | null {
   };
 }
 
-function toAnswer(v: unknown): RepoAnswer | null {
+export function toAnswer(v: unknown): RepoAnswer | null {
   if (!isObj(v) || typeof v.text !== 'string' || (v.state !== 'found' && v.state !== 'not_found') || !Array.isArray(v.provenance)) return null;
   const citations: RepoCitation[] = [];
   for (const p of v.provenance) {
     if (!isObj(p)) return null;
     const path = typeof p.path === 'string' ? p.path : typeof p.section === 'string' ? p.section : '';
     const c: RepoCitation = { path, excerpt: typeof p.excerpt === 'string' ? p.excerpt : '', source: typeof p.source === 'string' ? p.source : '' };
+    if (typeof p.machine === 'string' && p.machine !== '') c.machine = p.machine;
     if (typeof p.kid === 'number') c.kid = p.kid;
     if (typeof p.kid_label === 'string') c.kid_label = p.kid_label;
     citations.push(c);
@@ -117,19 +120,22 @@ function toAnswer(v: unknown): RepoAnswer | null {
   return a;
 }
 
+/** The per-person session key: 43 random URL-safe chars kept in localStorage; one key serves GitHub and Rosie. */
+export function sessionToken(storage: Pick<Storage, 'getItem' | 'setItem'>): string {
+  let t = '';
+  try { t = storage.getItem(SESSION_KEY) ?? ''; } catch { /* storage blocked: a fresh key per call would lose the repo */ }
+  if (!/^[A-Za-z0-9_-]{32,128}$/.test(t)) {
+    t = mintToken();
+    try { storage.setItem(SESSION_KEY, t); } catch { /* kept for this page only below */ }
+  }
+  return t;
+}
+
 export function createGithubClient(baseUrl: string, fetchImpl?: FetchLike, storage: Pick<Storage, 'getItem' | 'setItem'> = localStorage): GithubClient {
   const base = baseUrl.trim().replace(/\/+$/, '');
   const doFetch: FetchLike = fetchImpl ?? ((url, init) => fetch(url, init));
 
-  function token(): string {
-    let t = '';
-    try { t = storage.getItem(SESSION_KEY) ?? ''; } catch { /* storage blocked: a fresh key per call would lose the repo */ }
-    if (!/^[A-Za-z0-9_-]{32,128}$/.test(t)) {
-      t = mintToken();
-      try { storage.setItem(SESSION_KEY, t); } catch { /* kept for this page only below */ }
-    }
-    return t;
-  }
+  const token = (): string => sessionToken(storage);
 
   /** Returns the parsed body, or words. `missingOk` turns a 404 into null data. */
   async function call(path: string, method: 'GET' | 'POST', body?: unknown): Promise<AdapterResult<{ status: number; json: unknown }>> {

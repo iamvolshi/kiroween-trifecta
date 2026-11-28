@@ -29,3 +29,25 @@
 .repo-path { font-family: var(--mono); color: var(--primary); overflow-wrap: anywhere; }
 .repo-kid { color: var(--warn); font-family: var(--mono); }
 .repo-excerpt { margin: 2px 0 0; padding-left: var(--s2); border-left: 2px solid var(--line); color: var(--muted); white-space: pre-wrap; overflow-wrap: anywhere; max-height: 7rem; overflow: auto; }
+
+/* Attach local drive (Rosie), OCME-013-hack: same look as the GitHub control above it. */
+.rosie-slot { display: flex; flex-direction: column; gap: var(--s2); margin-bottom: var(--s3); min-width: 0; }
+.rosie-slot > * { min-width: 0; }
+.rosie-bar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2); }
+.rosie-source { display: flex; flex-direction: column; align-self: stretch; flex: 1 0 100%; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.rosie-source-btn, .rosie-attach-btn, .rosie-detach-btn, .rosie-unpair-btn, .rosie-go, .rosie-download {
+  font: inherit; font-size: 12px; color: var(--muted); background: var(--surface); border: 1px solid var(--line);
+  border-radius: 6px; padding: var(--s1) var(--s2); cursor: pointer; text-decoration: none;
+}
+.rosie-source-btn { border: 0; border-radius: 0; text-align: left; white-space: normal; overflow-wrap: anywhere; }
+.rosie-source-btn[aria-pressed='true'] { background: var(--accent-bg); color: var(--primary); }
+.rosie-attach-btn:hover, .rosie-detach-btn:hover, .rosie-unpair-btn:hover, .rosie-go:hover, .rosie-download:hover { background: var(--surface-2); color: var(--text); }
+.rosie-source-btn:focus-visible, .rosie-attach-btn:focus-visible, .rosie-detach-btn:focus-visible, .rosie-unpair-btn:focus-visible, .rosie-go:focus-visible, .rosie-download:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.rosie-go:disabled, .rosie-detach-btn:disabled, .rosie-unpair-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.rosie-steps { display: flex; flex-direction: column; gap: var(--s2); align-items: stretch; padding: var(--s2); background: var(--inset); border: 1px solid var(--line); border-radius: 6px; }
+.rosie-note { margin: 0; font-size: 12px; color: var(--muted); overflow-wrap: anywhere; }
+.rosie-code { margin: 0; font-family: var(--mono); font-size: 22px; letter-spacing: 0.12em; color: var(--primary); text-align: center; user-select: all; }
+.rosie-progress { margin: 0; font-size: 12px; color: var(--muted); overflow-wrap: anywhere; }
+.rosie-progress[data-state='ready'] { color: var(--ok); }
+.rosie-error { margin: 0; overflow-wrap: anywhere; }
+.repo-machine { color: var(--muted); font-size: 11px; }

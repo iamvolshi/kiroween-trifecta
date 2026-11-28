@@ -83,7 +83,7 @@ export class ChatView implements View {
 
   /** True while the chat asks the attached repo and not the book. */
   private repoMode(): boolean {
-    return this.repo !== null && this.repo.source === 'repo' && this.repo.ready;
+    return this.repo !== null && this.repo.mode !== 'book';
   }
 
   mount(container: HTMLElement): void {
@@ -198,7 +198,7 @@ export class ChatView implements View {
     const ready = this.repoMode() || (voice !== null && (this.voices.includes(voice) || (this.voices.length === 0 && this.status.state !== 'ok')));
     if (this.input) {
       this.input.disabled = !ready;
-      this.input.placeholder = this.repoMode() ? `Ask ${this.repo?.status?.repo ?? 'your repo'}` : ready && voice ? `Message ${VOICE_LABELS[voice].name}` : AWAITING_MASK;
+      this.input.placeholder = this.repoMode() ? `Ask ${this.repo?.activeName ?? 'your repo'}` : ready && voice ? `Message ${VOICE_LABELS[voice].name}` : AWAITING_MASK;
     }
     if (this.sendBtn) this.sendBtn.disabled = !ready || this.pending;
   }
@@ -209,7 +209,7 @@ export class ChatView implements View {
     // No turns: nothing at all (no greeting, no placeholder words).
     // Asking the repo shows the repo's own turns; the book's log is kept for when the user switches back.
     const nodes = this.repoMode() && this.repo
-      ? this.repo.turns.map((t) => renderRepoTurn(t))
+      ? this.repo.activeTurns.map((t) => renderRepoTurn(t))
       : this.log.turns().flatMap((t, i) => {
       if (!isChatTurn(t)) return [];
       // The engine boxes sit beside the reply (renderChatTurn), keyed by the turn's index.
@@ -251,7 +251,7 @@ export class ChatView implements View {
       this.pendingMessage = message;
       input.value = '';
       this.renderTranscript();
-      const error = await repoAsk.ask(message);
+      const error = await repoAsk.askActive(message);
       this.pending = false;
       if (token !== this.requestToken || this.container !== root) return;
       this.pendingMessage = null;

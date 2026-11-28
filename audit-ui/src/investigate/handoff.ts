@@ -92,17 +92,17 @@ function sherlockFailure(error: string): string {
 }
 
 export async function investigate(deps: InvestigateDeps, question: string, voice: Register): Promise<Investigation> {
-  const useRepo = deps.repo !== null && deps.repo.source === 'repo' && deps.repo.ready;
+  const useRepo = deps.repo !== null && deps.repo.mode !== 'book';
   const out: Investigation = {
     question, voice, report: null, conclusion: null, reply: null, problems: [],
-    source: useRepo ? `the attached repo ${deps.repo?.status?.repo ?? ''}`.trim() : 'the book (the Frankenstein case)',
+    source: useRepo ? (deps.repo?.mode === 'folder' ? `the attached local folder ${deps.repo.activeName}` : `the attached repo ${deps.repo?.status?.repo ?? ''}`.trim()) : 'the book (the Frankenstein case)',
   };
 
   // 1. Sherlock.
   let report: AdapterResult<AskResult>;
   try {
     if (useRepo && deps.repo) {
-      const r = await deps.repo.askQuiet(question);
+      const r = await deps.repo.askQuietActive(question);
       report = r.ok ? { ok: true, data: repoAnswerAsAsk(r.data, question) } : r;
     } else {
       report = await deps.sherlock.ask(question);
