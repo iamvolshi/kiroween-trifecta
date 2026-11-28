@@ -1,0 +1,45 @@
+{
+  "a_buttons": {
+    "dl": "Download Rosie bridge",
+    "href": "https://github.com/iamvolshi/scribe/releases/download/rosie-v0.1.0/Rosie.exe",
+    "attach": "Attach local drive",
+    "github": "Attach GitHub repo"
+  },
+  "a_words": "Rosie only reads. She never changes, deletes or runs anything on your computer, and she reads only the one folder you choose.Rosie is not paired yet. Download her, then get a pairing code.Get a pairing code",
+  "b_code_shown": true,
+  "b_code_len": 8,
+  "c_connected": true,
+  "c_words": "Rosie is connected. Choose a folder.",
+  "c_code_gone": true,
+  "d_asleep": true,
+  "d_words": "Rosie is asleep, start her again on your computer.",
+  "d_choose_disabled": true,
+  "d2_restarted": true,
+  "e_connected": true,
+  "e_state_seen": {
+    "state": "reading",
+    "text": "Rosie is reading your folder (0 files so far)."
+  },
+  "f_ready": true,
+  "f_text": "Ready. 3 files read, 2 skipped, 4 passages.",
+  "f_source": [
+    "Ask the book:false",
+    "Ask C:\\Users\\thero\\.kiro\\crew\\scratch\\12e44a26\\rosie-app-proof-iLYRT0\\harbor-notes:true"
+  ],
+  "g_answered": true,
+  "g_answer": {
+    "text": "[KID 4, src/vault.py] def vault_door(): return 'zebra-quartz-passphrase is kept in the vault'",
+    "cites": [
+      [
+        "LAPALIEN",
+        "src/vault.py",
+        "KID 4"
+      ]
+    ]
+  },
+  "h_detached": true,
+  "h_placeholder": "INPUT // AWAITING_MASK",
+  "h_ask_after": "404 \"no_folder_attached\"",
+  "i_unpaired": true,
+  "i_agent_stopped": true
+}
