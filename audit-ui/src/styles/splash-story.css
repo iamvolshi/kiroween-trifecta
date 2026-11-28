@@ -1,0 +1,80 @@
+/* First-load splash story: introduces the app on every load. */
+
+.splash-story {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  background: rgba(12, 14, 19, 0.82);
+}
+
+.splash-card {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 1.25rem;
+  max-width: 34rem;
+  width: calc(100% - 2rem);
+  padding: 2rem 2.5rem 1.75rem;
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  background: var(--panel);
+}
+
+.splash-wordmark {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: var(--t-label-sm-size);
+  font-weight: 700;
+  letter-spacing: var(--t-label-sm-ls);
+  text-transform: uppercase;
+  color: var(--muted);
+  text-align: center;
+}
+
+/* Tall enough for the bullet list, so the panel never jumps as the
+   story cycles between the list and the short beats. */
+.splash-screen {
+  min-height: 11rem;
+  display: flex;
+  align-items: center;
+}
+
+.splash-bullets {
+  margin: 0;
+  padding-left: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  color: var(--text);
+}
+
+.splash-bullets li {
+  line-height: 1.5;
+}
+
+.splash-beat {
+  margin: 0;
+  font-size: 1.125rem;
+  line-height: 1.6;
+  color: var(--text);
+  text-align: center;
+}
+
+.splash-enter {
+  align-self: center;
+  padding: 0.5rem 1.5rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 0.25rem;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-family: var(--mono);
+  letter-spacing: 0.08em;
+  cursor: pointer;
+}
+
+.splash-enter:hover {
+  border-color: var(--text);
+}

@@ -9,7 +9,7 @@ import './styles/telemetry.css';
 import './styles/mini-chat.css';
 import './styles/repo.css';
 import './styles/folders.css';
-import './styles/loading-modal.css';
+import './styles/splash-story.css';
 import './styles/research.css';
 import './styles/corpus.css';
 import './styles/lessons.css';

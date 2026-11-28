@@ -18,7 +18,7 @@ import { InvestigationLog, SherlockWatsonView } from '../views/sherlock-watson.t
 import { createShell, setViewLabel, type ShellSlots } from '../shell/shell.ts';
 import { Inspector } from '../inspector/drawer.ts';
 import { createTrifactaClient, type TrifactaClient } from '../inspector/trifacta.ts';
-import { LoadingModal } from '../shell/loading-modal.ts';
+import { SplashStory } from '../shell/splash-story.ts';
 import { stripBase, withBase } from '../util/base.ts';
 import { RailPanel } from '../shell/rail.ts';
 import { TelemetryPanel } from '../shell/telemetry.ts';
@@ -56,7 +56,8 @@ export class Router {
   private miniChat: ChatView | null = null;
   /** Panel widths (drag grips) and the terminal's window state. */
   private layout: ShellLayout;
-  private loadingModal: LoadingModal | null = null;
+  /** The first-load splash story; entering removes it. */
+  private splash: SplashStory | null = null;
   /** Where the chat reads its voices and models; undefined = the connector (GET /models). */
   private models: ModelSource | undefined;
   /** Who speaks in Chat: the connector's /chat (personas). Defaults to the one adapter. */
@@ -88,22 +89,9 @@ export class Router {
     const left = new RailPanel(adapter, this.slots.rail, this.slots.left, (path) => this.navigate(path), this.repo);
     this.leftPanel = left;
     left.mount();
-    // First load: the record service may be asleep, so say so until the
-    // left panel's list first settles. The chat panel owns the list at boot.
-    const folderBody = this.slots.left.querySelector('.left-folders');
-    if (folderBody instanceof HTMLElement) {
-      this.loadingModal = new LoadingModal(folderBody, container);
-      // A rail tap before the first settle swaps that list away, so it would
-      // never settle: the new panel says its own loading state instead. A
-      // Chat list mounted again later is not re-watched: the modal is boot-only.
-      const swapped = new MutationObserver(() => {
-        if (!folderBody.isConnected) {
-          swapped.disconnect();
-          this.loadingModal?.hide();
-        }
-      });
-      swapped.observe(this.slots.left, { childList: true });
-    }
+    // First load: the splash story introduces the app. It waits on
+    // nothing: the record service boots behind it on its own.
+    this.splash = new SplashStory(container);
     this.unsubscribeLog = this.chatLog.subscribe(() => this.leftPanel.refresh());
     // Right column: Curator + ELLE telemetry. It subscribes to the log itself.
     this.layout = new ShellLayout(this.slots);
@@ -160,8 +148,8 @@ export class Router {
       this.currentView = null;
     }
     this.unsubscribeLog();
-    this.loadingModal?.hide();
-    this.loadingModal = null;
+    this.splash?.enter();
+    this.splash = null;
     this.leftPanel.unmount();
     this.unmountRight();
     this.layout.destroy();
