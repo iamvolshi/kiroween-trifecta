@@ -33,25 +33,38 @@
   text-align: center;
 }
 
-/* Tall enough for the bullet list, so the panel never jumps as the
-   story cycles between the list and the short beats. */
+/* Tall enough for the announcement, so the panel never jumps as the
+   story cycles between the announcement and the short beats. */
 .splash-screen {
   min-height: 11rem;
   display: flex;
+  flex-direction: column;
   align-items: center;
+  justify-content: center;
+  gap: 1rem;
 }
 
-.splash-bullets {
+.splash-headline {
   margin: 0;
-  padding-left: 1.25rem;
+  font-family: var(--mono);
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--text);
+  text-align: center;
+}
+
+.splash-opening {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  color: var(--text);
+  gap: 0.5rem;
+  text-align: center;
 }
 
-.splash-bullets li {
+.splash-opening p {
+  margin: 0;
   line-height: 1.5;
+  color: var(--text);
 }
 
 .splash-beat {

@@ -1,16 +1,17 @@
 /**
- * The first-load splash story: bullets first, short beats about three
- * seconds each, looping back to the bullets, click to enter always
- * present and entering at once. Nothing in it waits on or mentions
- * the backend.
+ * The first-load splash story: the announcement first, short beats
+ * about three seconds each, looping back to the announcement, click
+ * to enter always present and entering at once. Nothing in it waits
+ * on or mentions the backend.
  */
-import { describe, it, expect, afterEach } from 'vitest';
+import { describe, it, expect, afterEach, vi } from 'vitest';
 import { createRecordStub, createFailingStub, deferred, tick } from '../test-helpers.ts';
 import { boot } from '../boot.ts';
 import {
   SplashStory,
   SPLASH_BEAT_MS,
-  SPLASH_BULLETS,
+  SPLASH_HEADLINE,
+  SPLASH_OPENING,
   SPLASH_BEATS,
   SPLASH_ENTER_LABEL,
 } from './splash-story.ts';
@@ -37,42 +38,56 @@ describe('SplashStory (unit)', () => {
     splash = new SplashStory(host, { beatMs });
   }
 
-  function bullets(): string[] {
-    return [...host.querySelectorAll('.splash-bullets li')].map((li) => li.textContent ?? '');
+  function opening(): string[] {
+    return [...host.querySelectorAll('.splash-opening p')].map((p) => p.textContent ?? '');
   }
 
-  it('opens on the bullet list, 11 apps in caps, enter always present', () => {
+  it('opens on the announcement, enter always present', () => {
     setup();
     expect(host.querySelector('.splash-story')).not.toBeNull();
-    expect(bullets()).toEqual(SPLASH_BULLETS);
-    expect(bullets()[0]).toContain('ERIE, KATIE, ELLE, ARCHE, SHERLOCK, PEEP, RATR, CURATOR, WATSON, ROSIE, TEMPE');
+    expect(host.querySelector('.splash-headline')?.textContent).toBe(SPLASH_HEADLINE);
+    expect(opening()).toEqual(SPLASH_OPENING);
     const enter = host.querySelector('.splash-enter') as HTMLButtonElement;
     expect(enter?.textContent).toBe(SPLASH_ENTER_LABEL);
   });
 
-  it('advances about every beat, and the loop opens and closes on the bullets', async () => {
-    setup(30);
-    expect(SPLASH_BEAT_MS).toBe(3000);
-    expect(bullets().length).toBe(4);
-    await sleep(40);
-    expect(host.querySelector('.splash-beat')?.textContent).toBe(SPLASH_BEATS[0]);
-    expect(host.querySelector('.splash-enter')).not.toBeNull();
-    await sleep(40);
-    expect(host.querySelector('.splash-beat')?.textContent).toBe(SPLASH_BEATS[1]);
-    await sleep(40);
-    expect(bullets()).toEqual(SPLASH_BULLETS);
-    await sleep(40);
-    expect(host.querySelector('.splash-beat')?.textContent).toBe(SPLASH_BEATS[0]);
+  it('advances about every beat, and the loop opens and closes on the announcement', () => {
+    vi.useFakeTimers();
+    try {
+      setup(3000);
+      expect(SPLASH_BEAT_MS).toBe(3000);
+      expect(host.querySelector('.splash-headline')).not.toBeNull();
+      vi.advanceTimersByTime(3000);
+      expect(host.querySelector('.splash-beat')?.textContent).toBe(SPLASH_BEATS[0]);
+      expect(host.querySelector('.splash-enter')).not.toBeNull();
+      vi.advanceTimersByTime(3000);
+      expect(host.querySelector('.splash-beat')?.textContent).toBe(SPLASH_BEATS[1]);
+      expect(host.querySelector('.splash-beat')?.textContent).toContain(
+        'ERIE, KATIE, ELLE, ARCHE, SHERLOCK, PEEP, RATR, CURATOR, WATSON, ROSIE, TEMPE',
+      );
+      vi.advanceTimersByTime(3000);
+      expect(host.querySelector('.splash-beat')?.textContent).toBe(SPLASH_BEATS[2]);
+      vi.advanceTimersByTime(3000);
+      expect(host.querySelector('.splash-headline')?.textContent).toBe(SPLASH_HEADLINE);
+      expect(opening()).toEqual(SPLASH_OPENING);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
-  it('enter removes it at once and stops the loop', async () => {
-    setup(30);
-    await sleep(40);
-    expect(host.querySelector('.splash-beat')).not.toBeNull();
-    (host.querySelector('.splash-enter') as HTMLButtonElement).click();
-    expect(host.querySelector('.splash-story')).toBeNull();
-    await sleep(80);
-    expect(host.querySelector('.splash-story')).toBeNull();
+  it('enter removes it at once and stops the loop', () => {
+    vi.useFakeTimers();
+    try {
+      setup(3000);
+      vi.advanceTimersByTime(3000);
+      expect(host.querySelector('.splash-beat')).not.toBeNull();
+      (host.querySelector('.splash-enter') as HTMLButtonElement).click();
+      expect(host.querySelector('.splash-story')).toBeNull();
+      vi.advanceTimersByTime(30000);
+      expect(host.querySelector('.splash-story')).toBeNull();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('mentions nothing about the backend waking or loading', () => {
@@ -108,7 +123,7 @@ describe('SplashStory at boot', () => {
     );
     await sleep(400);
     expect(app.querySelector('.splash-story')).not.toBeNull();
-    expect(app.querySelector('.splash-bullets li')).not.toBeNull();
+    expect(app.querySelector('.splash-headline')).not.toBeNull();
     entriesGate.resolve({ ok: true, data: [] });
     lessonsGate.resolve({ ok: true, data: [] });
     await tick();

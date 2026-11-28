@@ -1,10 +1,9 @@
 /**
- * The first-load splash story: the old first-load screen was a bare
- * spinner that said nothing about the app while the record service
- * woke. This replaces it. A bigger panel introduces the app on every
- * load: first a bullet list of what it does, then short beats about
- * three seconds each, looping back to the bullets so there is never
- * dead air. Click to enter is always visible and enters at once.
+ * The first-load splash story: the app announcement, the first thing
+ * a user sees. It opens on the announcement, then short beats about
+ * three seconds each, looping back to the announcement so the resting
+ * state is the announcement and there is never dead air. Click to
+ * enter is always visible and enters at once.
  *
  * Nothing here waits on, checks, or mentions the backend. The record
  * service boots in the background on its own; the splash does not
@@ -13,18 +12,20 @@
 
 export const SPLASH_BEAT_MS = 3000;
 
-/** The first screen, and the resting state the loop closes on. */
-export const SPLASH_BULLETS: string[] = [
-  'Hackenstein, 11 apps: ERIE, KATIE, ELLE, ARCHE, SHERLOCK, PEEP, RATR, CURATOR, WATSON, ROSIE, TEMPE.',
-  'Three Frankenstein personas: the book (1818), the 1931 film, Young Frankenstein (1974).',
-  'Ask any of them anything, or attach your own GitHub repo and ask about that instead.',
-  'Every answer carries the file and record ID behind it. When it isn\u2019t sure, it says so. When it doesn\u2019t know, it says that too.',
+/** The opening, in Darren's own words from the app's own tagline. */
+export const SPLASH_HEADLINE = 'Never lies.';
+
+export const SPLASH_OPENING: string[] = [
+  'Ask Frankenstein\u2019s monster anything.',
+  'Every answer carries the file and the record behind it.',
+  'When it doesn\u2019t know, it says so.',
 ];
 
-/** The beats, about three seconds each, between bullet screens. */
+/** The beats, about three seconds each, between announcements. */
 export const SPLASH_BEATS: string[] = [
-  'Hackenstein never lies. It learns lessons and develops identity through use.',
-  'Everything it says is written to the record, with the file and the moment behind it. That is the whole point.',
+  'Three Frankensteins to talk to: the book (1818), the 1931 film, Young Frankenstein (1974). Or attach your own GitHub repo and ask about that.',
+  'Eleven apps work the record: ERIE, KATIE, ELLE, ARCHE, SHERLOCK, PEEP, RATR, CURATOR, WATSON, ROSIE, TEMPE.',
+  'It learns lessons and develops identity through use. Everything it says is written to the record, with the file and the moment behind it. That is the whole point.',
 ];
 
 export const SPLASH_ENTER_LABEL = 'CLICK TO ENTER';
@@ -70,7 +71,8 @@ export class SplashStory {
     this.screen = screen;
     this.render();
 
-    // Bullets, beat, beat, bullets: the loop opens and closes on the list.
+    // Announcement, beat, beat, beat, announcement: the loop opens and
+    // closes on the announcement.
     this.timer = setInterval(() => {
       this.index = (this.index + 1) % (SPLASH_BEATS.length + 1);
       this.render();
@@ -80,14 +82,17 @@ export class SplashStory {
   private render(): void {
     this.screen.replaceChildren();
     if (this.index === 0) {
-      const list = document.createElement('ul');
-      list.className = 'splash-bullets';
-      for (const bullet of SPLASH_BULLETS) {
-        const item = document.createElement('li');
-        item.textContent = bullet;
-        list.append(item);
+      const headline = document.createElement('p');
+      headline.className = 'splash-headline';
+      headline.textContent = SPLASH_HEADLINE;
+      const opening = document.createElement('div');
+      opening.className = 'splash-opening';
+      for (const line of SPLASH_OPENING) {
+        const item = document.createElement('p');
+        item.textContent = line;
+        opening.append(item);
       }
-      this.screen.append(list);
+      this.screen.append(headline, opening);
       return;
     }
     const beat = document.createElement('p');
