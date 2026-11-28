@@ -247,7 +247,10 @@ export class ChatView implements View {
     if (message === '') return;
 
     if (repoAsk) {
-      // The attached repo answers, through Sherlock's /api/github/ask only.
+      // The attached repo answers first, through Sherlock's /api/github/ask.
+      // When it has nothing on the question, the persona talks instead: the
+      // repo is an added ability, not the whole chat. A chat that dead-ends
+      // on "Cool this is nice." is not a chat.
       const token = ++this.requestToken;
       const root = this.container;
       this.pending = true;
@@ -256,15 +259,36 @@ export class ChatView implements View {
       this.pendingMessage = message;
       input.value = '';
       this.renderTranscript();
-      const error = await repoAsk.ask(message);
+      const r = await repoAsk.askQuiet(message);
       this.pending = false;
       if (token !== this.requestToken || this.container !== root) return;
       this.pendingMessage = null;
-      if (error !== '') input.value = message;
-      this.renderControls();
-      this.renderTranscript();
-      if (error !== '') this.errorSlot?.replaceChildren(el('p', 'error-state', error));
-      return;
+      if (!r.ok) {
+        input.value = message;
+        this.renderControls();
+        this.renderTranscript();
+        this.errorSlot?.replaceChildren(el('p', 'error-state', r.error));
+        return;
+      }
+      if (r.data.state === 'found') {
+        repoAsk.keepTurn(message, r.data);
+        this.renderControls();
+        this.renderTranscript();
+        return;
+      }
+      if (!voice) {
+        // No persona picked to fall back to: the repo's own not-knowing stands.
+        repoAsk.keepTurn(message, r.data);
+        this.renderControls();
+        this.renderTranscript();
+        return;
+      }
+      // The repo had nothing: the persona answers, so the chat is in book
+      // mode now, which is what makes the reply visible (the transcript in
+      // repo mode shows only repo turns). The repo stays attached; one tap
+      // on its button asks it again.
+      repoAsk.setSource('book');
+      // Fall through: the persona answers below.
     }
     if (!voice) return;
 

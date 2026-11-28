@@ -92,13 +92,10 @@ export class RepoSession {
     this.emit();
   }
 
-  /** Ask the attached repo. The turn is kept on success; a failure comes back as words. */
-  async ask(message: string): Promise<string> {
-    const r = await this.client.ask(message);
-    if (!r.ok) return r.error;
-    this.turns.push({ message, answer: r.data });
+  /** Keep a turn that was asked quietly: the chat asked Sherlock first, then decided the answer is worth showing. */
+  keepTurn(message: string, answer: RepoAnswer): void {
+    this.turns.push({ message, answer });
     this.emit();
-    return '';
   }
 
   /** Ask the attached repo without keeping the turn: the Sherlock & Watson page keeps its own. */

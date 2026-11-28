@@ -5,7 +5,7 @@
  * Sherlock is a fetch double; no network.
  */
 import { describe, it, expect, beforeEach } from 'vitest';
-import type { SeamAdapter, ChatOptions } from '../adapter/seam.ts';
+import type { SeamAdapter, ChatOptions, ChatTurn } from '../adapter/seam.ts';
 import { createGithubClient, mintToken, SESSION_KEY } from '../adapter/github-client.ts';
 import { RepoSession } from './repo-session.ts';
 import { ChatView } from './chat.ts';
@@ -150,19 +150,37 @@ beforeEach(() => {
   document.body.replaceChildren(container);
 });
 
+/** The persona talking: one plain reply, no retrieval. */
+function personaTurn(message: string): ChatTurn {
+  return {
+    message,
+    known: true,
+    step: null,
+    total_steps: 0,
+    engines: {
+      arche: { reply: 'Nice. Tell me more.' },
+      erie: null,
+      elle: null,
+      elle_promoted: null,
+      lessons_in_prompt: { subjects: [], injected: [], held: [] },
+      katie: [],
+    },
+  };
+}
+
 function chatAdapter(): { adapter: SeamAdapter; chats: string[] } {
   const chats: string[] = [];
-  const adapter = { chat: (m: string, _o?: ChatOptions) => { chats.push(m); return Promise.resolve({ ok: false as const, error: 'book down' }); } } as unknown as SeamAdapter;
+  const adapter = { chat: (m: string, _o?: ChatOptions) => { chats.push(m); return Promise.resolve({ ok: true as const, data: personaTurn(m) }); } } as unknown as SeamAdapter;
   return { adapter, chats };
 }
 
 let leftPanel: LeftPanel | null = null;
 
 /** The shell in miniature: the left column (with the repo panel) beside the chat view. */
-async function openChat(repo: RepoSession): Promise<{ chats: string[] }> {
+async function openChat(repo: RepoSession, voice: 'book' | null = 'book'): Promise<{ chats: string[] }> {
   const { adapter, chats } = chatAdapter();
   const log = new ChatLog();
-  log.setVoice('book');
+  if (voice !== null) log.setVoice(voice);
   leftPanel?.unmount();
   const left = document.createElement('div');
   left.className = 'shell-left';
@@ -187,7 +205,7 @@ function attachFromForm(repoText: string): void {
 }
 
 describe('attach flow in the chat', () => {
-  it('offers the control, sends the repo, shows progress then ready with file counts', async () => {
+  it('offers the control, sends the repo, polls until ready', async () => {
     const { s, repo } = scripted([
       statusBody({ state: 'fetching', files_listed: 12, files_ingested: 3, passages: 0 }),
       statusBody({ state: 'indexing', files_listed: 12, files_ingested: 10, passages: 20 }),
@@ -199,22 +217,10 @@ describe('attach flow in the chat', () => {
     await settle();
     const attach = s.calls.find((c) => c.url.endsWith('/attach'))!;
     expect(attach.body).toEqual({ repo: 'octo/hello' });
-    const ready = q('.repo-progress')!;
-    expect(ready.getAttribute('data-state')).toBe('ready');
-    expect(ready.textContent).toMatch(/10 files read, 2 skipped, 31 passages/);
+    // The scan's progress lives in the telemetry now, not in this panel.
+    expect(q('.repo-progress')).toBeNull();
     // it went through fetching and indexing on the way
     expect(s.calls.filter((c) => c.url.endsWith('/status')).length).toBeGreaterThanOrEqual(3);
-  });
-
-  it('shows fetching and indexing words while it works', async () => {
-    const { repo } = scripted([statusBody({ state: 'fetching', files_ingested: 3 })]);
-    await openChat(repo);
-    attachFromForm('octo/hello');
-    await Promise.resolve();
-    await tick();
-    await repo.refresh();
-    expect(q('.repo-progress')!.textContent).toMatch(/Fetching octo\/hello.*3 of 12 files read/);
-    repo.detach();
   });
 
   it('sends branch and folder when given', async () => {
@@ -300,8 +306,21 @@ describe('asking the attached repo', () => {
     expect(li.querySelector('.repo-kid')!.textContent).toBe('KID 7');
   });
 
-  it('says in words when nothing in the repo answers, instead of an empty bubble', async () => {
-    await ready({ '/api/github/ask': () => json(200, answerBody({ state: 'not_found', text: '', rerank: { used: false }, provenance: [] })) });
+  it('falls back to the persona when nothing in the repo answers, instead of an empty bubble', async () => {
+    const { chats, repo } = await ready({ '/api/github/ask': () => json(200, answerBody({ state: 'not_found', text: '', rerank: { used: false }, provenance: [] })) });
+    await send('hello');
+    expect(chats).toEqual(['hello']);
+    expect(repo.source).toBe('book');
+    expect(q('.repo-turn')).toBeNull();
+    expect(q('.repo-citation')).toBeNull();
+    expect(q('.chat-reply .bubble-text')!.textContent).toContain('Nice. Tell me more.');
+  });
+
+  it('says in words when nothing in the repo answers and no persona is picked', async () => {
+    const r = scripted([statusBody()], { '/api/github/ask': () => json(200, answerBody({ state: 'not_found', text: '', rerank: { used: false }, provenance: [] })) });
+    await openChat(r.repo, null);
+    attachFromForm('octo/hello');
+    await settle();
     await send('hello');
     expect(q('.chat-reply .bubble-text')!.textContent).toBe('Nothing in this repo answers that.');
     expect(q('.repo-citation')).toBeNull();
