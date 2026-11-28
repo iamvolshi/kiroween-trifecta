@@ -159,7 +159,11 @@ describe('before the first pick: the picker and the composer, nothing else', () 
     const tiles = Array.from(picker.querySelectorAll<HTMLButtonElement>('.frankenstein-tile'));
     expect(tiles.map((t) => t.dataset.voice)).toEqual(['book', 'movie', 'young-frankenstein']);
     expect(tiles.map((t) => t.textContent)).toEqual(['BOOK1818', 'MOVIE1931', 'YOUNG1974']);
-    expect(tiles.every((t) => t.querySelector('svg') !== null)).toBe(true);
+    expect(tiles.map((t) => t.querySelector('img')?.getAttribute('src'))).toEqual([
+      '/frankenstein-book.png',
+      '/frankenstein-movie.png',
+      '/frankenstein-young.png',
+    ]);
     expect(picker.querySelector('.frankenstein-tiles')?.getAttribute('role')).toBe('radiogroup');
     expect(picker.querySelector('.frankenstein-tiles')?.getAttribute('aria-labelledby')).toBe('frankenstein-heading');
     expect(tiles.every((t) => t.getAttribute('role') === 'radio' && t.getAttribute('aria-checked') === 'false')).toBe(true);

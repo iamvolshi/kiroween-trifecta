@@ -1,6 +1,15 @@
 import type { Register } from '../adapter/seam.ts';
 import type { Announcement } from './model-announce.ts';
 import { VOICE_LABELS } from './voices.ts';
+import { withBase } from '../util/base.ts';
+
+/** One picture per voice, served from public/: the 1818 book, the 1931
+ * Creature, the 1974 monster in his top hat. */
+const TILE_IMAGES: Record<Register, string> = {
+  book: 'frankenstein-book.png',
+  movie: 'frankenstein-movie.png',
+  'young-frankenstein': 'frankenstein-young.png',
+};
 
 /**
  * The voice picker: a "Pick your Frankenstein" label over one small bordered
@@ -65,41 +74,10 @@ export function renderVoicePicker(
   return wrap;
 }
 
-/** One icon per voice, as SVG children (viewBox 0 0 24 24): an open book,
- * a film strip, a top hat. */
-const ICONS: Record<Register, Array<[string, Record<string, string>]>> = {
-  book: [
-    ['path', { d: 'M12 6.5C10 4.8 7 4.2 4 5v13c3-.8 6-.2 8 1.5 2-1.7 5-2.3 8-1.5V5c-3-.8-6-.2-8 1.5z' }],
-    ['path', { d: 'M12 6.5V19.5' }],
-  ],
-  movie: [
-    ['rect', { x: '3', y: '5', width: '18', height: '14', rx: '2' }],
-    ['path', { d: 'M7.5 5v14M16.5 5v14' }],
-    ['path', { d: 'M4.5 8h1.5M4.5 12h1.5M4.5 16h1.5M18 8h1.5M18 12h1.5M18 16h1.5' }],
-  ],
-  'young-frankenstein': [
-    ['path', { d: 'M7 15.5V8a5 5 0 0 1 10 0v7.5' }],
-    ['path', { d: 'M7 12h10' }],
-    ['rect', { x: '2.5', y: '15.5', width: '19', height: '2.5', rx: '1.2' }],
-  ],
-};
-
-function icon(register: Register): SVGSVGElement {
-  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  svg.setAttribute('viewBox', '0 0 24 24');
-  svg.setAttribute('aria-hidden', 'true');
-  for (const [tag, attrs] of ICONS[register]) {
-    const child = document.createElementNS('http://www.w3.org/2000/svg', tag);
-    for (const [name, value] of Object.entries(attrs)) child.setAttribute(name, value);
-    svg.appendChild(child);
-  }
-  return svg;
-}
-
 /**
  * The big picker: "Choose your Frankenstein" over three big tiles in the
  * middle of the chat page, one per voice (Book 1818, Movie 1931, Young
- * 1974), each with its own icon and wearing its own voice's accent when
+ * 1974), each with its picture and wearing its own voice's accent when
  * picked. Same radio-group behaviour as the small chips. The chat shows
  * it while the transcript is empty; the small chips stay at the bottom
  * for switching once the conversation is going.
@@ -128,7 +106,11 @@ export function renderBigVoicePicker(
     b.setAttribute('aria-checked', String(v === selected));
     b.dataset.voice = v;
     b.tabIndex = v === selected || ((selected === null || !voices.includes(selected)) && i === 0) ? 0 : -1;
-    b.appendChild(icon(v));
+    const img = document.createElement('img');
+    img.className = 'frankenstein-image';
+    img.src = withBase(`/${TILE_IMAGES[v]}`);
+    img.alt = '';
+    b.appendChild(img);
     const t = document.createElement('span');
     t.className = 'frankenstein-tag';
     t.textContent = tag;
