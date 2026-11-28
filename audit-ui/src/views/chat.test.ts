@@ -1,8 +1,10 @@
 /**
  * The chat face after the restart: a centered chat-app column, nothing on
- * screen before a pick but the voice chips and the locked composer; three
- * small chips from /models; the picked voice's accent; bubbles user right,
- * replies left. Voices and models come from a /models test double.
+ * screen before a pick but the big Frankenstein picker in the middle
+ * ("Choose your Frankenstein": Book 1818, Movie 1931, Young 1974) and the
+ * voice chips and the locked composer at the bottom; three small chips from
+ * /models; the picked voice's accent; bubbles user right, replies left.
+ * Voices and models come from a /models test double.
  */
 import { describe, it, expect, beforeEach } from 'vitest';
 import type { SeamAdapter, ChatTurn, AdapterResult, ChatOptions, Register } from '../adapter/seam.ts';
@@ -88,19 +90,21 @@ describe('before the first pick: the picker and the composer, nothing else', () 
     const { adapter } = fake(async () => ({ ok: true, data: turn1() }));
     await open(adapter);
     const view = container.querySelector<HTMLElement>('.chat-view')!;
-    // What is on screen: the picker label, three chips, the sound switch, the composer's button. The h1 and label are screen-reader only.
+    // What is on screen: the big picker in the middle, the chip row, the sound switch, the composer's button. The h1 and label are screen-reader only.
     expect(container.querySelector('h1')?.classList.contains('sr-only')).toBe(true);
     expect(container.querySelector('label[for="chat-message"]')?.classList.contains('sr-only')).toBe(true);
     const visible = Array.from(view.querySelectorAll<HTMLElement>('*'))
       .filter((e) => e.children.length === 0 && !e.closest('.sr-only'))
       .map((e) => e.textContent)
       .filter((t) => t !== '');
-    expect(visible).toEqual(['Pick your Frankenstein', '[BOOK]', '1818', '[MOVIE]', '1931', '[YOUNG FRANKENSTEIN]', '1974', 'Sound on', 'Send']);
+    expect(visible).toEqual(['Choose your Frankenstein', 'BOOK', '1818', 'MOVIE', '1931', 'YOUNG', '1974', 'Pick your Frankenstein', '[BOOK]', '1818', '[MOVIE]', '1931', '[YOUNG]', '1974', 'Sound on', 'Send']);
     for (const gone of ['.mask-cards', '.mask-card', '.view-intro', '.empty-state', '.persona-picker', '.chat-controls']) {
       expect(container.querySelector(gone)).toBeNull();
     }
     expect(view.textContent).not.toMatch(/who do you want|ARCHE runs|Chat with|nothing yet|No messages yet|NOT KNOWN/i);
-    expect(container.querySelector('.chat-transcript')!.childNodes).toHaveLength(0);
+    // The transcript holds exactly the big picker until the first turn.
+    expect(container.querySelector('.chat-transcript')!.childNodes).toHaveLength(1);
+    expect(container.querySelector('.frankenstein-picker')).not.toBeNull();
     expect(container.querySelector('.model-slot')).toBeNull();
   });
 
@@ -118,13 +122,13 @@ describe('before the first pick: the picker and the composer, nothing else', () 
     expect(calls).toHaveLength(0);
   });
 
-  it('the chips sit directly above the composer, in the column, in order Book, Movie, Young Frankenstein', async () => {
+  it('the chips sit directly above the composer, in the column, in order Book, Movie, Young', async () => {
     const { adapter } = fake(async () => ({ ok: true, data: turn1() }));
     await open(adapter);
     const dock = container.querySelector('.chat-column > .chat-dock')!;
     expect(Array.from(dock.children).map((c) => c.className)).toEqual(['voice-slot', 'chat-composer']);
     const chips = Array.from(container.querySelectorAll<HTMLButtonElement>('.voice-picker .voice-chip'));
-    expect(chips.map((c) => c.textContent)).toEqual(['[BOOK] 1818', '[MOVIE] 1931', '[YOUNG FRANKENSTEIN] 1974']);
+    expect(chips.map((c) => c.textContent)).toEqual(['[BOOK] 1818', '[MOVIE] 1931', '[YOUNG] 1974']);
     expect(chips.map((c) => c.dataset.voice)).toEqual(['book', 'movie', 'young-frankenstein']);
     expect(container.querySelector('.voice-picker')?.getAttribute('role')).toBe('radiogroup');
     expect(container.querySelector('.voice-picker')?.getAttribute('aria-labelledby')).toBe('voice-picker-label');
@@ -146,6 +150,52 @@ describe('before the first pick: the picker and the composer, nothing else', () 
     expect(container.querySelector('.voice-slot .error-state')?.textContent).toBe('The connector reports no voices.');
     expect(input().disabled).toBe(true);
   });
+
+  it('three big tiles in the middle: Book 1818, Movie 1931, Young 1974, each with an icon', async () => {
+    const { adapter } = fake(async () => ({ ok: true, data: turn1() }));
+    await open(adapter);
+    const picker = container.querySelector('.frankenstein-picker')!;
+    expect(picker.querySelector('.frankenstein-heading')?.textContent).toBe('Choose your Frankenstein');
+    const tiles = Array.from(picker.querySelectorAll<HTMLButtonElement>('.frankenstein-tile'));
+    expect(tiles.map((t) => t.dataset.voice)).toEqual(['book', 'movie', 'young-frankenstein']);
+    expect(tiles.map((t) => t.textContent)).toEqual(['BOOK1818', 'MOVIE1931', 'YOUNG1974']);
+    expect(tiles.every((t) => t.querySelector('svg') !== null)).toBe(true);
+    expect(picker.querySelector('.frankenstein-tiles')?.getAttribute('role')).toBe('radiogroup');
+    expect(picker.querySelector('.frankenstein-tiles')?.getAttribute('aria-labelledby')).toBe('frankenstein-heading');
+    expect(tiles.every((t) => t.getAttribute('role') === 'radio' && t.getAttribute('aria-checked') === 'false')).toBe(true);
+    expect(tiles.map((t) => t.tabIndex)).toEqual([0, -1, -1]);
+  });
+
+  it('tapping a big tile picks that voice and unlocks the composer; the tiles stay until the first turn', async () => {
+    const { adapter } = fake(async () => ({ ok: true, data: turn1() }));
+    await open(adapter);
+    container.querySelector<HTMLButtonElement>('.frankenstein-tile[data-voice="movie"]')!.click();
+    expect(input().disabled).toBe(false);
+    expect(input().placeholder).toBe('Message Movie');
+    expect(container.querySelector('.frankenstein-tile[data-voice="movie"]')?.getAttribute('aria-checked')).toBe('true');
+    expect(container.querySelector('.voice-picker [data-voice="movie"]')?.getAttribute('aria-checked')).toBe('true');
+    expect(container.querySelector('.frankenstein-picker')).not.toBeNull();
+  });
+
+  it('after the first turn the big picker is gone', async () => {
+    const { adapter } = fake(async () => ({ ok: true, data: turn1() }));
+    await open(adapter);
+    container.querySelector<HTMLButtonElement>('.frankenstein-tile[data-voice="book"]')!.click();
+    send('one');
+    await tick();
+    expect(container.querySelector('.frankenstein-picker')).toBeNull();
+    expect(container.querySelector('.bubble-row-reply .chat-reply')?.textContent).toContain('Your order arrives');
+  });
+
+  it('the mini chat keeps its chips and shows no big tiles', async () => {
+    const { adapter } = fake(async () => ({ ok: true, data: turn1() }));
+    const view = new ChatView(adapter, new ChatLog(), createModelsStub(), null, true);
+    view.mount(container);
+    await tick();
+    await tick();
+    expect(container.querySelector('.frankenstein-picker')).toBeNull();
+    expect(container.querySelector('.voice-picker')).not.toBeNull();
+  });
 });
 
 describe('picking a voice', () => {
@@ -160,7 +210,7 @@ describe('picking a voice', () => {
     // Focus stays on the chip just picked; the picker stays for switching.
     expect((document.activeElement as HTMLElement).dataset.voice).toBe('book');
     pick('young-frankenstein');
-    expect(input().placeholder).toBe('Message Young Frankenstein');
+    expect(input().placeholder).toBe('Message Young');
     expect(container.querySelectorAll('.voice-chip[aria-checked="true"]')).toHaveLength(1);
   });
 
@@ -289,9 +339,9 @@ describe('talking', () => {
     const replies = Array.from(container.querySelectorAll('.chat-reply'));
     expect(replies.map((r) => r.querySelector('.sr-only')?.textContent)).toEqual([
       'Frankenstein (Book) replied: ',
-      'Frankenstein (Young Frankenstein) replied: ',
+      'Frankenstein (Young) replied: ',
     ]);
-    expect(replies.map((r) => r.querySelector('.bubble-name')?.textContent)).toEqual(['Frankenstein (Book)', 'Frankenstein (Young Frankenstein)']);
+    expect(replies.map((r) => r.querySelector('.bubble-name')?.textContent)).toEqual(['Frankenstein (Book)', 'Frankenstein (Young)']);
     expect(container.textContent).not.toContain('ARCHE replied');
   });
 

@@ -100,7 +100,7 @@ describe('MED-2: card fields, chat lines and the no-match box carry real text la
     root.querySelector('form')!.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
     await settle();
     expect(root.querySelector('.chat-user .sr-only')?.textContent).toBe('You said: ');
-    expect(root.querySelector('.chat-reply .sr-only')?.textContent).toBe('Frankenstein (Young Frankenstein) replied: ');
+    expect(root.querySelector('.chat-reply .sr-only')?.textContent).toBe('Frankenstein (Young) replied: ');
   });
 
   it('the filters no-match box starts with a spoken "No match" label', async () => {

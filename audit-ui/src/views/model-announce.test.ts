@@ -53,10 +53,10 @@ describe('announce()', () => {
     });
   });
 
-  it('Young Frankenstein unconfigured: the connector\'s own words, no model name', () => {
+  it('Young unconfigured: the connector\'s own words, no model name', () => {
     const a = announce({ register: 'young-frankenstein', status: { state: 'ok', data: STATUS }, served: null });
     expect(a).toMatchObject({
-      state: 'unconfigured', position: 'young-frankenstein', label: 'YOUNG FRANKENSTEIN',
+      state: 'unconfigured', position: 'young-frankenstein', label: 'YOUNG',
       model: 'Not configured', provider: '', source: YF_UNSET.error,
     });
   });
@@ -64,7 +64,7 @@ describe('announce()', () => {
   it('a voice the connector reports no route for is said in words', () => {
     const data = { ...STATUS, registers: { movie: MOVIE, book: BOOK } };
     expect(announce({ register: 'young-frankenstein', status: { state: 'ok', data }, served: null })).toMatchObject({
-      state: 'unconfigured', source: 'The connector reports no route for Young Frankenstein.',
+      state: 'unconfigured', source: 'The connector reports no route for Young.',
     });
   });
 

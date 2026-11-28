@@ -225,6 +225,99 @@
   color: var(--error);
 }
 
+/* ---- The big Frankenstein picker: the middle of the page before the
+   first turn. Three big tiles, one per voice, each with its own icon.
+   The transcript is the middle of the column (flex: 1), so margin auto
+   centres the picker in it. A tile wears its own voice's accent. */
+
+.frankenstein-picker {
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s4);
+  padding: var(--s4) 0;
+}
+
+.frankenstein-heading {
+  margin: 0;
+  font-family: var(--display);
+  font-size: var(--t-headline-xl-size);
+  line-height: var(--t-headline-xl-lh);
+  font-weight: var(--t-headline-xl-wt);
+  letter-spacing: var(--t-headline-xl-ls);
+  text-align: center;
+  color: var(--text);
+}
+
+.frankenstein-tiles {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--s3);
+}
+
+.frankenstein-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s2);
+  width: 9rem;
+  padding: var(--s4) var(--s2) var(--s3);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-lg);
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.frankenstein-tile svg {
+  width: 56px;
+  height: 56px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.frankenstein-tag {
+  font-family: var(--mono);
+  font-size: var(--t-label-md-size);
+  line-height: var(--t-label-md-lh);
+  font-weight: 700;
+  letter-spacing: var(--t-label-md-ls);
+  text-transform: uppercase;
+}
+
+.frankenstein-year {
+  font-family: var(--mono);
+  font-size: var(--t-label-md-size);
+  line-height: var(--t-label-md-lh);
+  font-weight: var(--t-label-md-wt);
+  letter-spacing: var(--t-label-md-ls);
+  color: var(--faint);
+}
+
+.frankenstein-tile:hover {
+  border-color: var(--text);
+  color: var(--text);
+}
+
+.frankenstein-tile:hover .frankenstein-year {
+  color: var(--muted);
+}
+
+.frankenstein-tile[aria-checked='true'] {
+  border-color: var(--voice-accent);
+  color: var(--voice-accent);
+  box-shadow: 0 0 0 1px var(--voice-accent);
+}
+
+.frankenstein-tile[aria-checked='true'] .frankenstein-year {
+  color: var(--voice-accent);
+}
+
 /* The composer: one rounded box, the send button inside it on the right. */
 .chat-composer {
   display: flex;

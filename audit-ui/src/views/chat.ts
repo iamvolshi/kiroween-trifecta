@@ -7,7 +7,7 @@ import { ChatLog } from './chat-log.ts';
 import { renderChatTurn } from './chat-turn.ts';
 import { syncEngineBoxes } from './engine-boxes.ts';
 import { engineFocusChannel } from '../shell/engine-focus-channel.ts';
-import { renderVoicePicker } from './voice-picker.ts';
+import { renderVoicePicker, renderBigVoicePicker } from './voice-picker.ts';
 import { offeredVoices, VOICE_LABELS } from './voices.ts';
 import { attachTypewriter } from '../shell/typewriter.ts';
 import { renderRepoTurn } from './repo-panel.ts';
@@ -179,15 +179,18 @@ export class ChatView implements View {
     // voice is picked the announcement is null and the row is chips only.
     const announcement = announce({ register: voice, status: this.status, served: voice ? this.served.get(voice) ?? null : null });
     slot.replaceChildren(
-      renderVoicePicker(voices, voice, (v) => {
-        const switched = this.log.voice() !== null && this.log.voice() !== v;
-        this.log.setVoice(v);
-        this.renderControls(true);
-        // A switch re-reads the live map, so a config change shows up.
-        if (switched) this.loadStatus(false);
-      }, announcement),
+      renderVoicePicker(voices, voice, (v) => this.chooseVoice(v), announcement),
     );
     if (focus || hadFocus) slot.querySelector<HTMLButtonElement>('[tabindex="0"]')?.focus();
+  }
+
+  /** One pick, from either the big tiles or the small chips. */
+  private chooseVoice(v: Register): void {
+    const switched = this.log.voice() !== null && this.log.voice() !== v;
+    this.log.setVoice(v);
+    this.renderControls(true);
+    // A switch re-reads the live map, so a config change shows up.
+    if (switched) this.loadStatus(false);
   }
 
   /** Accent, picker, composer and the model in the picker row follow the picked voice. */
@@ -206,6 +209,13 @@ export class ChatView implements View {
       this.input.placeholder = this.repoMode() ? `Ask ${this.repo?.status?.repo ?? 'your repo'}` : ready && voice ? `Message ${VOICE_LABELS[voice].name}` : (this.compact ? AWAITING_MASK_COMPACT : AWAITING_MASK);
     }
     if (this.sendBtn) this.sendBtn.disabled = !ready || this.pending;
+    // The big picker lives in the transcript: re-render it while the
+    // transcript holds it (or nothing yet), so it appears once the voices
+    // load and follows a pick.
+    const box = this.transcript;
+    if (box && (box.querySelector('.frankenstein-picker') !== null || box.childNodes.length === 0)) {
+      this.renderTranscript();
+    }
   }
 
   private renderTranscript(): void {
@@ -222,6 +232,13 @@ export class ChatView implements View {
     });
     // A sent message shows at once, with a thinking row, until its turn lands.
     if (this.pendingMessage !== null) nodes.push(...this.renderPending(this.pendingMessage));
+    // Nothing to show yet: the big Frankenstein picker fills the middle of
+    // the page (full chat only; the mini chat keeps its chips). It appears
+    // once the voices are known, and a pick re-renders it picked.
+    if (nodes.length === 0 && !this.compact && this.voices.length > 0) {
+      box.replaceChildren(renderBigVoicePicker(this.voices, this.log.voice(), (v) => this.chooseVoice(v)));
+      return;
+    }
     box.replaceChildren(...nodes);
   }
 

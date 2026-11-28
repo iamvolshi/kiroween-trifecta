@@ -19,7 +19,7 @@ export interface VoiceLabel {
 export const VOICE_LABELS: Record<Register, VoiceLabel> = {
   book: { tag: 'BOOK', year: '1818', name: 'Book' },
   movie: { tag: 'MOVIE', year: '1931', name: 'Movie' },
-  'young-frankenstein': { tag: 'YOUNG FRANKENSTEIN', year: '1974', name: 'Young Frankenstein' },
+  'young-frankenstein': { tag: 'YOUNG', year: '1974', name: 'Young' },
 };
 
 /** The order the chips sit in. */
