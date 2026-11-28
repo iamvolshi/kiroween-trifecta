@@ -74,7 +74,7 @@
 
   /* Families: Space Grotesk / Geist / JetBrains Mono from Google Fonts
      (index.html); offline, the system stacks behind them. */
-  --display: 'Space Grotesk', system-ui, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --display: 'Space Grotesk', system-ui, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
   --sans: 'Geist', ui-sans-serif, system-ui, 'Segoe UI', Roboto, sans-serif;
   --mono: 'JetBrains Mono', ui-monospace, 'Cascadia Mono', 'Cascadia Code', 'SF Mono', Consolas,
     'Liberation Mono', monospace;

@@ -127,6 +127,27 @@ describe('SplashStory (unit)', () => {
   });
 });
 
+// @ts-expect-error node types are not installed in this project;
+// vitest runs the import fine, tsc just cannot see the module.
+import { readFileSync } from 'node:fs';
+
+// Paths are relative to the package root, where vitest runs.
+const splashCss = readFileSync('src/styles/splash-story.css', 'utf8');
+const appCss = readFileSync('src/style.css', 'utf8');
+
+describe('SplashStory type (Darren: no Arial or common bullshit)', () => {
+  it('names no Arial anywhere in the splash or the app font stacks', () => {
+    expect(splashCss).not.toContain('Arial');
+    expect(appCss).not.toContain('Arial');
+  });
+
+  it('sets the announcement in the display face and the lines in the sans face', () => {
+    expect(splashCss).toContain('.splash-headline');
+    expect(splashCss).toContain('font-family: var(--display)');
+    expect(splashCss).toContain('font-family: var(--sans)');
+  });
+});
+
 describe('SplashStory at boot', () => {
   let router: Router | undefined;
   let app: HTMLElement | undefined;

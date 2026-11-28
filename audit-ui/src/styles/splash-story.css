@@ -24,7 +24,7 @@
 
 .splash-wordmark {
   margin: 0;
-  font-family: var(--mono);
+  font-family: var(--display);
   font-size: var(--t-label-sm-size);
   font-weight: 700;
   letter-spacing: var(--t-label-sm-ls);
@@ -46,8 +46,8 @@
 
 .splash-headline {
   margin: 0;
-  font-family: var(--mono);
-  font-size: 2rem;
+  font-family: var(--display);
+  font-size: 2.5rem;
   font-weight: 700;
   line-height: 1.2;
   color: var(--text);
@@ -63,12 +63,14 @@
 
 .splash-opening p {
   margin: 0;
+  font-family: var(--sans);
   line-height: 1.5;
   color: var(--text);
 }
 
 .splash-beat {
   margin: 0;
+  font-family: var(--sans);
   font-size: 1.125rem;
   line-height: 1.6;
   color: var(--text);
