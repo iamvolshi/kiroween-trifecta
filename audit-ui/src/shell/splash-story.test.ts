@@ -1,15 +1,16 @@
 /**
- * The first-load splash story: the announcement first, short beats
- * about three seconds each, looping back to the announcement, click
- * to enter always present and entering at once. Nothing in it waits
- * on or mentions the backend.
+ * The first-load splash story: the announcement first, short beats,
+ * looping back to the announcement, click to enter always present and
+ * entering at once. Each screen stays up at least one second per three
+ * words (Nielsen Norman Group's rule for auto-advancing slides).
+ * Nothing in it waits on or mentions the backend.
  */
 import { describe, it, expect, afterEach, vi } from 'vitest';
 import { createRecordStub, createFailingStub, deferred, tick } from '../test-helpers.ts';
 import { boot } from '../boot.ts';
 import {
   SplashStory,
-  SPLASH_BEAT_MS,
+  SPLASH_SCREEN_MS,
   SPLASH_HEADLINE,
   SPLASH_OPENING,
   SPLASH_BEATS,
@@ -32,10 +33,10 @@ describe('SplashStory (unit)', () => {
     splash = undefined;
   });
 
-  function setup(beatMs = 30): void {
+  function setup(screenMs: number[] = [30, 30, 30, 30]): void {
     host = document.createElement('div');
     document.body.append(host);
-    splash = new SplashStory(host, { beatMs });
+    splash = new SplashStory(host, { screenMs });
   }
 
   function opening(): string[] {
@@ -51,25 +52,54 @@ describe('SplashStory (unit)', () => {
     expect(enter?.textContent).toBe(SPLASH_ENTER_LABEL);
   });
 
-  it('advances about every beat, and the loop opens and closes on the announcement', () => {
+  it('gives each screen at least one second per three words', () => {
+    const screens = [[SPLASH_HEADLINE, ...SPLASH_OPENING].join(' '), ...SPLASH_BEATS];
+    expect(SPLASH_SCREEN_MS.length).toBe(screens.length);
+    screens.forEach((text, i) => {
+      const words = text.split(/\s+/).filter(Boolean).length;
+      expect(SPLASH_SCREEN_MS[i]).toBeGreaterThanOrEqual(Math.ceil(words / 3) * 1000);
+    });
+    // The 11-app beat is short on words but long on names: it still gets
+    // the 8-second floor, not its 6-second word count.
+    expect(SPLASH_SCREEN_MS).toEqual([8000, 8000, 8000, 10000]);
+  });
+
+  it('advances per screen, and the loop opens and closes on the announcement', () => {
     vi.useFakeTimers();
     try {
-      setup(3000);
-      expect(SPLASH_BEAT_MS).toBe(3000);
+      setup([30, 30, 30, 30]);
       expect(host.querySelector('.splash-headline')).not.toBeNull();
-      vi.advanceTimersByTime(3000);
+      vi.advanceTimersByTime(30);
       expect(host.querySelector('.splash-beat')?.textContent).toBe(SPLASH_BEATS[0]);
       expect(host.querySelector('.splash-enter')).not.toBeNull();
-      vi.advanceTimersByTime(3000);
+      vi.advanceTimersByTime(30);
       expect(host.querySelector('.splash-beat')?.textContent).toBe(SPLASH_BEATS[1]);
       expect(host.querySelector('.splash-beat')?.textContent).toContain(
         'ERIE, KATIE, ELLE, ARCHE, SHERLOCK, PEEP, RATR, CURATOR, WATSON, ROSIE, TEMPE',
       );
-      vi.advanceTimersByTime(3000);
+      vi.advanceTimersByTime(30);
       expect(host.querySelector('.splash-beat')?.textContent).toBe(SPLASH_BEATS[2]);
-      vi.advanceTimersByTime(3000);
+      vi.advanceTimersByTime(30);
       expect(host.querySelector('.splash-headline')?.textContent).toBe(SPLASH_HEADLINE);
       expect(opening()).toEqual(SPLASH_OPENING);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('a longer screen stays up longer than a short one', () => {
+    vi.useFakeTimers();
+    try {
+      setup([30, 30, 30, 90]);
+      vi.advanceTimersByTime(30);
+      vi.advanceTimersByTime(30);
+      vi.advanceTimersByTime(30);
+      expect(host.querySelector('.splash-beat')?.textContent).toBe(SPLASH_BEATS[2]);
+      vi.advanceTimersByTime(30);
+      // The last beat gets 90, so after 30 more it is still showing.
+      expect(host.querySelector('.splash-beat')?.textContent).toBe(SPLASH_BEATS[2]);
+      vi.advanceTimersByTime(60);
+      expect(host.querySelector('.splash-headline')).not.toBeNull();
     } finally {
       vi.useRealTimers();
     }
@@ -78,8 +108,8 @@ describe('SplashStory (unit)', () => {
   it('enter removes it at once and stops the loop', () => {
     vi.useFakeTimers();
     try {
-      setup(3000);
-      vi.advanceTimersByTime(3000);
+      setup([30, 30, 30, 30]);
+      vi.advanceTimersByTime(30);
       expect(host.querySelector('.splash-beat')).not.toBeNull();
       (host.querySelector('.splash-enter') as HTMLButtonElement).click();
       expect(host.querySelector('.splash-story')).toBeNull();
