@@ -14,6 +14,7 @@ import { ResearchView } from '../views/research.ts';
 import { CorpusView, CORPUS_TABS, type CorpusTab } from '../views/corpus.ts';
 import { LessonsView } from '../views/lessons.ts';
 import { CuratorView } from '../views/curator.ts';
+import { InvestigationLog, SherlockWatsonView } from '../views/sherlock-watson.ts';
 import { createShell, setViewLabel, type ShellSlots } from '../shell/shell.ts';
 import { Inspector } from '../inspector/drawer.ts';
 import { createTrifactaClient, type TrifactaClient } from '../inspector/trifacta.ts';
@@ -58,14 +59,19 @@ export class Router {
   private loadingModal: LoadingModal | null = null;
   /** Where the chat reads its voices and models; undefined = the connector (GET /models). */
   private models: ModelSource | undefined;
+  /** Who speaks in Chat: the connector's /chat (personas). Defaults to the one adapter. */
+  private chatAdapter: SeamAdapter;
+  /** The Sherlock & Watson page's investigations, kept across navigation. */
+  private investigations = new InvestigationLog();
   /** The PEEP / RATR inspector drawer. */
   readonly inspector: Inspector;
 
   /** The attached GitHub repo, shared by the chat and the mini chat. */
   private repo: RepoSession;
 
-  constructor(adapter: SeamAdapter, container: HTMLElement, models?: ModelSource, trifacta?: TrifactaClient, repo?: RepoSession) {
+  constructor(adapter: SeamAdapter, container: HTMLElement, models?: ModelSource, trifacta?: TrifactaClient, repo?: RepoSession, chatAdapter?: SeamAdapter) {
     this.adapter = adapter;
+    this.chatAdapter = chatAdapter ?? adapter;
     this.models = models;
     this.repo = repo ?? new RepoSession(createGithubClient(SHERLOCK_URL));
     // A person who attached a repo before finds it again after a reload.
@@ -197,7 +203,7 @@ export class Router {
     this.miniHost = document.createElement('div');
     this.miniHost.className = 'mini-chat';
     right.appendChild(this.miniHost);
-    this.miniChat = new ChatView(this.adapter, this.chatLog, this.models, this.repo);
+    this.miniChat = new ChatView(this.chatAdapter, this.chatLog, this.models, this.repo);
     this.miniChat.mount(this.miniHost);
   }
 
@@ -220,7 +226,11 @@ export class Router {
     }
 
     if (path === '/chat') {
-      return new ChatView(this.adapter, this.chatLog, this.models, this.repo);
+      return new ChatView(this.chatAdapter, this.chatLog, this.models, this.repo);
+    }
+
+    if (path === '/investigate') {
+      return new SherlockWatsonView(this.adapter, this.chatAdapter, this.chatLog, this.investigations, this.repo, this.models);
     }
 
     if (path === '/research') {

@@ -3,6 +3,7 @@ import type { Panel } from './panel.ts';
 import { LeftPanel } from './left.ts';
 import type { RepoSession } from '../views/repo-session.ts';
 import { AuditPanel, LessonsPanel, ResearchPanel } from './rail-panels.ts';
+import { InvestigatePanel } from './investigate-panel.ts';
 import { stripBase } from '../util/base.ts';
 
 /**
@@ -19,7 +20,7 @@ import { stripBase } from '../util/base.ts';
 export function onKtiePage(path: string): boolean {
   return path === '/calendar' || path.startsWith('/calendar/');
 }
-export type RailKey = 'chat' | 'audit' | 'research' | 'lessons' | 'curator';
+export type RailKey = 'chat' | 'audit' | 'research' | 'lessons' | 'curator' | 'investigate';
 
 /** Where an icon takes the center, and how to tell it is already there. */
 const PAGE: Record<RailKey, { path: string; here: (path: string) => boolean }> = {
@@ -28,10 +29,11 @@ const PAGE: Record<RailKey, { path: string; here: (path: string) => boolean }> =
   research: { path: '/research', here: (p) => p === '/research' },
   lessons: { path: '/lessons', here: (p) => p === '/lessons' },
   curator: { path: '/curator', here: (p) => p === '/curator' },
+  investigate: { path: '/investigate', here: (p) => p === '/investigate' },
 };
 
 /** The list column's caption per panel (Chat keeps the column's own name). */
-const CAPTION: Record<RailKey, string> = { chat: 'Chat', audit: 'Audit', research: 'Research', lessons: 'Lessons', curator: 'Curator' };
+const CAPTION: Record<RailKey, string> = { chat: 'Chat', audit: 'Audit', research: 'Research', lessons: 'Lessons', curator: 'Curator', investigate: 'Sherlock & Watson' };
 
 export const RAIL: ReadonlyArray<{ key: RailKey; label: string; icon: string }> = [
   // Speech bubble.
@@ -44,6 +46,8 @@ export const RAIL: ReadonlyArray<{ key: RailKey; label: string; icon: string }> 
   { key: 'lessons', label: 'Lessons', icon: 'M9 17h6M10 20h4M12 3a6 6 0 0 0-3.5 10.9V17h7v-3.1A6 6 0 0 0 12 3z' },
   // Open book.
   { key: 'curator', label: 'Curator', icon: 'M12 6v14M12 6C10 4.5 6.5 4 3 4.5v14c3.5-.5 7 0 9 1.5 2-1.5 5.5-2 9-1.5v-14C17.5 4 14 4.5 12 6z' },
+  // Magnifier over a check: an investigation with a conclusion.
+  { key: 'investigate', label: 'Sherlock & Watson', icon: 'M10 3a6 6 0 1 1 0 12 6 6 0 0 1 0-12zM14.5 14.5 21 21M7.5 9l2 2 3.5-4' },
 ];
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -80,6 +84,7 @@ export class RailPanel implements Panel {
       research: new ResearchPanel(adapter),
       lessons: new LessonsPanel(adapter),
       curator: new LeftPanel(adapter, false),
+      investigate: new InvestigatePanel(),
     };
   }
 

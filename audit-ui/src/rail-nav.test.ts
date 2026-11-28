@@ -1,5 +1,5 @@
 /**
- * The rail icons are the navigation: five of them, each in its engine's
+ * The rail icons are the navigation: six of them, each in its engine's
  * color; no directories list; every destination still reachable.
  */
 import { describe, it, expect, afterEach } from 'vitest';
@@ -49,8 +49,8 @@ describe('rail navigation', () => {
     expect(list().querySelector('.nav-link')).toBeNull();
   });
 
-  it('five icons in order', () => {
-    expect(RAIL.map((r) => r.key)).toEqual(['chat', 'audit', 'research', 'lessons', 'curator']);
+  it('six icons in order', () => {
+    expect(RAIL.map((r) => r.key)).toEqual(['chat', 'audit', 'research', 'lessons', 'curator', 'investigate']);
   });
 
   it.each([

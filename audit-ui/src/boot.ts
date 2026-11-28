@@ -10,9 +10,9 @@ import { stripBase, withBase } from './util/base.ts';
  * it), via replaceState before the Router is constructed: no NotFound flash
  * and no extra history entry.
  */
-export function boot(adapter: SeamAdapter, appEl: HTMLElement): Router {
+export function boot(adapter: SeamAdapter, appEl: HTMLElement, chatAdapter?: SeamAdapter): Router {
   if (stripBase(window.location.pathname) === '/') {
     window.history.replaceState({}, '', withBase('/chat'));
   }
-  return new Router(adapter, appEl);
+  return new Router(adapter, appEl, undefined, undefined, undefined, chatAdapter);
 }
