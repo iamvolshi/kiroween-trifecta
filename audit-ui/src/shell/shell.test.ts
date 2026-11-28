@@ -1,5 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { createShell } from './shell.ts';
+import { SPLASH_MARK_KEY } from './mark-color.ts';
 import { Router } from '../router/router.ts';
 import type { SeamAdapter, Entry, ChatTurn } from '../adapter/seam.ts';
 import { makeEntry, assemblyNotUsed, tick } from '../test-helpers.ts';
@@ -125,6 +126,27 @@ describe('Router shell', () => {
     router!.getChatLog().push({} as ChatTurn);
     await settle();
     expect(folderNames()).toEqual(['order-1042', 'parcel-77']);
+  });
+
+  it('the header mark wears the splash color, then the page color once you enter', async () => {
+    entries = [makeEntry({ id: 'a', subject: 'order-1042.delivery_date' })];
+    // The last splash was cyan, so this one is gold; the splash is still up.
+    sessionStorage.setItem(SPLASH_MARK_KEY, '1');
+    const r = start('/chat');
+    await settle();
+    const mark = () => container.querySelector('.brand-mark-img') as HTMLImageElement;
+    expect(mark().getAttribute('src')).toBe('/favicon-gold.png');
+    (container.querySelector('.splash-enter') as HTMLButtonElement).click();
+    await settle();
+    // Inside the site, /chat is cyan.
+    expect(mark().getAttribute('src')).toBe('/favicon-cyan.png');
+    r.navigate('/research');
+    await settle();
+    expect(mark().getAttribute('src')).toBe('/favicon-gold.png');
+    r.navigate('/lessons');
+    await settle();
+    expect(mark().getAttribute('src')).toBe('/favicon-green.png');
+    sessionStorage.removeItem(SPLASH_MARK_KEY);
   });
 
   it('/record/:account renders the record view in the center', async () => {

@@ -11,6 +11,8 @@ export interface ShellSlots {
   right: HTMLElement;
   /** The header's "View: <name>" label; set by `setViewLabel`. */
   view: HTMLElement;
+  /** The header's monster mark; its color follows the splash, then the page. */
+  mark: HTMLImageElement;
 }
 
 /**
@@ -75,7 +77,7 @@ export function createShell(container: HTMLElement): ShellSlots {
 
   shell.append(skip, brand, rail, left, center, right);
   container.appendChild(shell);
-  return { shell, rail, left, center, right, view };
+  return { shell, rail, left, center, right, view, mark: markImg };
 }
 
 /**

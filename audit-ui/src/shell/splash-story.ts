@@ -1,4 +1,5 @@
 import { withBase } from '../util/base.ts';
+import { nextSplashColor, markFile, type MarkColor } from './mark-color.ts';
 
 /**
  * The first-load splash story: the app announcement, the first thing
@@ -70,9 +71,17 @@ export class SplashStory {
   private index = 0;
   private gone = false;
   private screenMs: number[];
+  private onEnter: (() => void) | undefined;
+  /** This splash's color: the next step in the palette, a new one each load. */
+  readonly markColor: MarkColor;
 
-  constructor(host: HTMLElement, opts?: { screenMs?: number[] }) {
+  constructor(
+    host: HTMLElement,
+    opts?: { screenMs?: number[]; markColor?: MarkColor; onEnter?: () => void },
+  ) {
     this.screenMs = opts?.screenMs ?? SPLASH_SCREEN_MS;
+    this.markColor = opts?.markColor ?? nextSplashColor();
+    this.onEnter = opts?.onEnter;
 
     const overlay = document.createElement('div');
     overlay.className = 'splash-story';
@@ -85,7 +94,7 @@ export class SplashStory {
 
     const mark = document.createElement('img');
     mark.className = 'splash-mark';
-    mark.src = withBase('/favicon.png');
+    mark.src = withBase(markFile(this.markColor));
     mark.alt = '';
 
     const wordmark = document.createElement('p');
@@ -159,5 +168,6 @@ export class SplashStory {
     if (this.timer !== null) clearTimeout(this.timer);
     this.timer = null;
     this.el.remove();
+    this.onEnter?.();
   }
 }

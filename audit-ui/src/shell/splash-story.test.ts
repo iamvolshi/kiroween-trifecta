@@ -36,10 +36,10 @@ describe('SplashStory (unit)', () => {
     splash = undefined;
   });
 
-  function setup(screenMs: number[] = [30, 30, 30, 30, 30]): void {
+  function setup(screenMs: number[] = [30, 30, 30, 30, 30], markColor: 'rose' | 'cyan' | 'gold' | 'green' | 'purple' = 'rose'): void {
     host = document.createElement('div');
     document.body.append(host);
-    splash = new SplashStory(host, { screenMs });
+    splash = new SplashStory(host, { screenMs, markColor });
   }
 
   function identity(): string[] {
@@ -66,6 +66,12 @@ describe('SplashStory (unit)', () => {
     expect(img.getAttribute('src')).toBe('/favicon.png');
     expect(img.alt).toBe('');
     expect(host.querySelector('.splash-wordmark')?.textContent).toBe('Hackenstein');
+  });
+
+  it('wears the given splash color instead of rose', () => {
+    setup([30, 30, 30, 30, 30], 'purple');
+    const img = host.querySelector('.splash-mark') as HTMLImageElement;
+    expect(img.getAttribute('src')).toBe('/favicon-purple.png');
   });
 
   it('gives each screen at least one second per three words', () => {

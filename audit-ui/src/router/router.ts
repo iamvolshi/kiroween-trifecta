@@ -19,6 +19,7 @@ import { createShell, setViewLabel, type ShellSlots } from '../shell/shell.ts';
 import { Inspector } from '../inspector/drawer.ts';
 import { createTrifactaClient, type TrifactaClient } from '../inspector/trifacta.ts';
 import { SplashStory } from '../shell/splash-story.ts';
+import { applyMarkColor, pageMarkColor } from '../shell/mark-color.ts';
 import { stripBase, withBase } from '../util/base.ts';
 import { RailPanel } from '../shell/rail.ts';
 import { TelemetryPanel } from '../shell/telemetry.ts';
@@ -90,8 +91,16 @@ export class Router {
     this.leftPanel = left;
     left.mount();
     // First load: the splash story introduces the app. It waits on
-    // nothing: the record service boots behind it on its own.
-    this.splash = new SplashStory(container);
+    // nothing: the record service boots behind it on its own. Every
+    // new splash gets a new color, and the header mark wears it until
+    // you enter; entering switches the mark to the page's color.
+    this.splash = new SplashStory(container, {
+      onEnter: () => {
+        this.splash = null;
+        this.applyPageMark();
+      },
+    });
+    applyMarkColor(this.slots, this.splash.markColor);
     this.unsubscribeLog = this.chatLog.subscribe(() => this.leftPanel.refresh());
     // Right column: Curator + ELLE telemetry. It subscribes to the log itself.
     this.layout = new ShellLayout(this.slots);
@@ -165,8 +174,16 @@ export class Router {
     this.currentView = view;
     this.currentView.mount(this.slots.center);
     setViewLabel(this.slots);
+    // Inside the site the mark matches the page. While the splash is
+    // still up it keeps the splash color instead.
+    if (this.splash === null) this.applyPageMark();
     this.leftPanel.refresh();
     this.swapRight(isChatPath(path));
+  }
+
+  /** The header mark (and the tab favicon) wear the current page's color. */
+  private applyPageMark(): void {
+    applyMarkColor(this.slots, pageMarkColor(window.location.pathname));
   }
 
   /**
