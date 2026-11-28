@@ -8,7 +8,7 @@
  * Widths live in two inline CSS variables on the shell (--left-width,
  * --right-width) that shell.css feeds into grid-template-columns. They are
  * set only once a panel has been resized: until then shell.css's own
- * defaults apply (16 / 20rem, or 14 / 15.5rem at 1100px and under). A
+ * defaults apply (16 / 36rem, or 14 / 15.5rem at 1100px and under). A
  * width never squeezes the center column under MIN_CENTER_REM, and is
  * re-clamped when the window resizes. The terminal state lives in
  * data-terminal on the shell.
@@ -25,7 +25,7 @@ export type TerminalState = 'normal' | 'minimized' | 'maximized';
 /** Ranges in rem. */
 export const RANGES: Record<Side, { min: number; max: number; def: number }> = {
   left: { min: 12, max: 24, def: 16 },
-  right: { min: 14, max: 36, def: 20 },
+  right: { min: 14, max: 36, def: 36 },
 };
 
 const VAR: Record<Side, string> = { left: '--left-width', right: '--right-width' };

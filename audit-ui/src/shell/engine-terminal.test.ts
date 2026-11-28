@@ -218,7 +218,7 @@ describe('the layout: drag grips and the terminal window', () => {
     expect(grip('left').getAttribute('aria-label')).toBe('Resize left panel');
     expect(grip('right').getAttribute('aria-label')).toBe('Resize right panel');
     expect([grip('left').getAttribute('aria-valuemin'), grip('left').getAttribute('aria-valuemax'), grip('left').getAttribute('aria-valuenow')]).toEqual(['12', '24', '16']);
-    expect([grip('right').getAttribute('aria-valuemin'), grip('right').getAttribute('aria-valuemax'), grip('right').getAttribute('aria-valuenow')]).toEqual(['14', '36', '20']);
+    expect([grip('right').getAttribute('aria-valuemin'), grip('right').getAttribute('aria-valuemax'), grip('right').getAttribute('aria-valuenow')]).toEqual(['14', '36', '36']);
     expect(container.querySelector('.shell-rail .shell-grip')).toBeNull();
   });
 
@@ -233,10 +233,11 @@ describe('the layout: drag grips and the terminal window', () => {
     pointer(window, 'pointerup', 300 + 1000);
     pointer(window, 'pointermove', 0); // the drag ended: nothing moves
     expect(shell.style.getPropertyValue('--left-width')).toBe('24rem');
-    // The terminal's grip is its left edge: dragging left widens it.
+    // The terminal's grip is its left edge: dragging left widens it. The
+    // default is already the max, so this drag clamps there.
     pointer(grip('right'), 'pointerdown', 1000);
     pointer(window, 'pointermove', 1000 - 128);
-    expect(shell.style.getPropertyValue('--right-width')).toBe('28rem');
+    expect(shell.style.getPropertyValue('--right-width')).toBe(`${RANGES.right.max}rem`);
     pointer(window, 'pointermove', 5000);
     expect(shell.style.getPropertyValue('--right-width')).toBe(`${RANGES.right.min}rem`);
     pointer(window, 'pointerup', 5000);
@@ -253,10 +254,10 @@ describe('the layout: drag grips and the terminal window', () => {
     expect(grip('left').getAttribute('aria-valuenow')).toBe('13');
     key(grip('left'), 'ArrowLeft', true);
     expect(grip('left').getAttribute('aria-valuenow')).toBe('12'); // clamped
-    key(grip('right'), 'ArrowLeft', true); // the terminal's edge moves left: wider
-    expect(shell.style.getPropertyValue('--right-width')).toBe('24rem');
+    key(grip('right'), 'ArrowLeft', true); // the terminal's edge moves left: wider, clamped at the max
+    expect(shell.style.getPropertyValue('--right-width')).toBe('36rem');
     key(grip('right'), 'ArrowRight');
-    expect(grip('right').getAttribute('aria-valuenow')).toBe('23');
+    expect(grip('right').getAttribute('aria-valuenow')).toBe('35');
   });
 
   it('window controls sit in the telemetry heading row; which show follows the state', async () => {
@@ -285,9 +286,9 @@ describe('the layout: drag grips and the terminal window', () => {
     const shell = await start();
     const center = container.querySelector('.shell-center')!.firstElementChild;
     pointer(grip('right'), 'pointerdown', 1000);
-    pointer(window, 'pointermove', 1000 - 160); // +10rem
-    pointer(window, 'pointerup', 1000 - 160);
-    expect(shell.style.getPropertyValue('--right-width')).toBe('30rem');
+    pointer(window, 'pointermove', 1000 + 160); // -10rem: a dragged width distinct from the 36rem default
+    pointer(window, 'pointerup', 1000 + 160);
+    expect(shell.style.getPropertyValue('--right-width')).toBe('26rem');
     ctl('Minimize terminal').click();
     expect(grip('right').hidden).toBe(true);
     expect(grip('left').hidden).toBe(false);
@@ -300,7 +301,7 @@ describe('the layout: drag grips and the terminal window', () => {
     expect(container.querySelector('.shell-center')!.firstElementChild).toBe(center);
     ctl('Restore terminal').click();
     expect(shell.dataset.terminal).toBe('normal');
-    expect(shell.style.getPropertyValue('--right-width')).toBe('30rem');
+    expect(shell.style.getPropertyValue('--right-width')).toBe('26rem');
     expect(grip('right').hidden).toBe(false);
     expect(grip('left').hidden).toBe(false);
   });

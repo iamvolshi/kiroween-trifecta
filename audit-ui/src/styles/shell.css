@@ -8,12 +8,14 @@
   display: grid;
   /* rail 56px / list w-64 / 1fr / w-80, header h-14. */
   /* The side widths come from the drag grips (shell/layout.ts: --left-width,
-     --right-width), defaulting to 17rem / 20rem. The left default is 17rem
+     --right-width), defaulting to 17rem / 36rem. The left default is 17rem
      (not 16) so a 10-char folder head like "chapter-10" fits in full: at
      16rem the link was 109px and the name 110px, and the ellipsis ate the
-     number that tells the folders apart. */
+     number that tells the folders apart. The right default is 36rem (the
+     drag max): Darren's call Nov 27, the wide mini-chat column is the
+     default, it only gets narrower by dragging. */
   --lw: var(--left-width, 17rem);
-  --rw: var(--right-width, 20rem);
+  --rw: var(--right-width, 36rem);
   position: relative;
   grid-template-columns: 56px var(--lw) minmax(0, 1fr) var(--rw);
   grid-template-rows: 56px minmax(0, 1fr);
