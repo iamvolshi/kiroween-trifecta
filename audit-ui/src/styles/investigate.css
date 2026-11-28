@@ -1,0 +1,18 @@
+/* Sherlock & Watson: the deep-investigation page. Reuses the chat column and bubbles. */
+.sw-title { margin: 0 0 var(--s2); font-size: 20px; font-weight: 600; color: var(--text); }
+.sw-purpose { margin: 0 0 var(--s2); color: var(--muted); max-width: 70ch; line-height: 1.5; }
+.sw-source { margin: 0 0 var(--s3); font-family: var(--mono); font-size: 12px; color: var(--primary); }
+.sw-turn { display: flex; flex-direction: column; gap: var(--s2); margin-bottom: var(--s4); }
+.sw-voice-name { margin: 0 0 var(--s1); font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); }
+.sw-provenance { padding: var(--s2) var(--s3); border: 1px solid var(--line); border-left: 3px solid var(--accent); background: var(--surface); }
+.sw-heading { margin: 0 0 var(--s2); font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.sw-citations { margin: 0; padding-left: var(--s4); display: flex; flex-direction: column; gap: var(--s2); }
+.sw-path { font-family: var(--mono); color: var(--text); overflow-wrap: anywhere; }
+.sw-kid { font-family: var(--mono); font-size: 12px; color: var(--primary); }
+.sw-excerpt { margin: var(--s1) 0 0; padding-left: var(--s3); border-left: 2px solid var(--line); color: var(--muted); font-size: 13px; }
+.sw-report { padding: var(--s1) var(--s3); border: 1px solid var(--line); background: var(--surface); color: var(--muted); }
+.sw-report summary { cursor: pointer; font-family: var(--mono); font-size: 12px; }
+.sw-report-text { margin: var(--s2) 0; color: var(--text); }
+.investigate-panel { padding: var(--s3); color: var(--muted); }
+.investigate-panel h2 { margin: 0 0 var(--s2); font-size: 14px; color: var(--text); }
+.investigate-panel p { margin: 0 0 var(--s2); line-height: 1.5; }

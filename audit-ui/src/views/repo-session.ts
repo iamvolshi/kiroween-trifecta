@@ -101,6 +101,11 @@ export class RepoSession {
     return '';
   }
 
+  /** Ask the attached repo without keeping the turn: the Sherlock & Watson page keeps its own. */
+  askQuiet(message: string): ReturnType<GithubClient['ask']> {
+    return this.client.ask(message);
+  }
+
   setSource(s: Source): void {
     if (s === 'repo' && !this.ready) return;
     this.source = s;

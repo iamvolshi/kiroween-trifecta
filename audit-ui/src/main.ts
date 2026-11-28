@@ -16,17 +16,22 @@ import './styles/lessons.css';
 import './styles/curator.css';
 import './styles/inspector.css';
 import './styles/watson.css';
+import './styles/investigate.css';
 import './styles/stitch-system.css';
 import { createSherlockAdapter } from './adapter/sherlock.ts';
 import { SHERLOCK_URL, SHERLOCK_CASE } from './adapter/sherlock-url.ts';
+import { createLiveAdapter } from './adapter/live.ts';
+import { CONNECTOR_URL } from './adapter/connector-url.ts';
 import { boot } from './boot.ts';
 
-// Live-only: one adapter, and every search goes through Sherlock at the build-time address.
+// Live-only. Every search goes through Sherlock at the build-time address.
 const adapter = createSherlockAdapter(SHERLOCK_URL, SHERLOCK_CASE);
+// Chat is a conversation: a normal turn goes to the connector's /chat (personas), never to Sherlock.
+const chatAdapter = createLiveAdapter(CONNECTOR_URL);
 const appEl = document.getElementById('app');
 
 if (!appEl) {
   throw new Error('No #app element found in index.html');
 }
 
-boot(adapter, appEl);
+boot(adapter, appEl, chatAdapter);

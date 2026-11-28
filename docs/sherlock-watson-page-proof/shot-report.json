@@ -1,0 +1,150 @@
+{
+  "chat_answered": true,
+  "chat_reply": {
+    "text": "Frankenstein (Movie) replied: Ughhh... Me creature. Want friend. No fire. Alone bad. You stay?",
+    "error": null,
+    "voice": "movie"
+  },
+  "page": {
+    "path": "/investigate",
+    "view": "View: Sherlock & Watson",
+    "purpose": "For deep investigations. Ask a question: Sherlock investigates the attached source and writes a clinical report, Watson turns it into a conclusion, and the voice you pick says it in its own words. Every answer shows the files and KIDs behind it. For a quick talk, use Chat.",
+    "source": "Sherlock will investigate the book (the Frankenstein case)."
+  },
+  "deep_done": true,
+  "deep": {
+    "voice": "Book",
+    "reply": "Victor Frankenstein made me upon a dreary November night, and he gave me life by means of a spark (KID K-0104). I know this only because I found his journal in the pocket of a dress taken from his laboratory, which recounted the whole of my accursed origin (KID K-0220). He himself named me the wretch whom he had created when he beheld me upon the ice (KID K-0154, KID 436). The precise manner of that spark's working is not recorded here; I cannot say more than this.",
+    "problems": [],
+    "cites": [
+      [
+        "k_record",
+        "K-0104, authority 8 of 9"
+      ],
+      [
+        "k_record",
+        "K-0220, authority 8 of 9"
+      ],
+      [
+        "k_record",
+        "K-0235, authority 8 of 9"
+      ],
+      [
+        "k_record",
+        "K-0154, authority 8 of 9"
+      ],
+      [
+        "frankenstein.txt",
+        "KID 436, authority 2 of 9"
+      ]
+    ],
+    "watson": "The available evidence supports the claims that victor creates the Creature on a dreary November night, bringing it to life with a spark. Quote: \"It was on a dreary night of November that I beheld the accomplishment of my toils.\", the creature discovers Victor's journal in the pocket of the dress taken from the laboratory. Quote: \"Soon after my arrival in the hovel I discovered some papers in the pocket of the dress which I had taken from your laboratory.\", the creature demands that Victor create a female companion for him so he can live in sympathy and avoid further misery. Quote: \"\"You must create a female for me with whom I can live in the interchange of those sympathies necessary for my being.\"\", the narrator recognized the figure as the wretch he had created, feeling terror and rage upon the realization. Quote: \"I perceived, as the shape came nearer (sight tremendous and abhorred!) that it was the wretch whom I had created.\", and as I said this I suddenly beheld the figure of a man, at some distance, advancing towards me with superhuman speed. He bounded over the crevices in the ice, among which I had walked with caution; his stature, also, as he approached, seemed to exceed that of man. I was troubled; a mist came over my eyes, and I felt a faintness seize me, but I was quickly restored by the cold gale of the mountains. I perceived, as the shape came nearer (sight tremendous and abhorred!) that it was the wretch whom I had created.",
+    "report": "[KID K-0104, Chapter 5] Victor creates the Creature on a dreary November night, bringing it to life with a spark. Quote: \"It was on a dreary night of November that I beheld the accomplishment of my toils.\" [KID K-0220, Chapter 15] The creature discovers Victor's journal in the pocket of the dress taken from the laboratory. Quote: \"Soon after my arrival in the hovel I discovered some papers in the pocket of the dress which I had taken from your laboratory.\" [KID K-0235, Chapter 17] The creature demands that Victor create a female companion for him so he can live in sympathy and avoid further misery. Quote: \"\"You must create a female for me with whom I can live in the interchange of those sympathies necessary for my being.\"\" [KID K-0154, Chapter 10] The narrator recognized the figure as the wretch he had created, feeling terror and rage upon the realization. Quote: \"I perceived, as the shape came nearer (sight tremendous and abhorred!) that it was the wretch whom I had created.\" [KID 436, Chapter 10] As I said this I suddenly beheld the figure of a man, at some distance, advancing towards me with superhuman speed. He bounded over the crevices in the ice, among which I had walked with caution; his stature, also, as he approached, seemed to exceed that of man. I was troubled; a mist came over my eyes, and I felt a faintness seize me, but I was quickly restored by the cold gale of the mountains. I perceived, as the shape came nearer (sight tremendous and abhorred!) that it was the wretch whom I had created."
+  },
+  "requests": [
+    {
+      "phase": "chat",
+      "service": "sherlock",
+      "method": "GET",
+      "path": "/api/search/cases",
+      "status": 200,
+      "ms": 246
+    },
+    {
+      "phase": "chat",
+      "service": "connector",
+      "method": "GET",
+      "path": "/models",
+      "status": 200,
+      "ms": 337
+    },
+    {
+      "phase": "chat",
+      "service": "sherlock",
+      "method": "GET",
+      "path": "/api/search/cases/frankenstein/entries",
+      "status": 200,
+      "ms": 288
+    },
+    {
+      "phase": "chat",
+      "service": "sherlock",
+      "method": "GET",
+      "path": "/api/search/cases/frankenstein/entries",
+      "status": 200,
+      "ms": 253
+    },
+    {
+      "phase": "chat",
+      "service": "sherlock",
+      "method": "GET",
+      "path": "/api/search/cases/frankenstein/entries",
+      "status": 200,
+      "ms": 406
+    },
+    {
+      "phase": "chat",
+      "service": "connector",
+      "method": "POST",
+      "path": "/chat",
+      "status": 200,
+      "ms": 8642
+    },
+    {
+      "phase": "chat",
+      "service": "sherlock",
+      "method": "GET",
+      "path": "/api/search/cases/frankenstein/entries",
+      "status": 200,
+      "ms": 373
+    },
+    {
+      "phase": "chat",
+      "service": "sherlock",
+      "method": "GET",
+      "path": "/api/search/cases/frankenstein/entries",
+      "status": 200,
+      "ms": 245
+    },
+    {
+      "phase": "page-open",
+      "service": "connector",
+      "method": "GET",
+      "path": "/models",
+      "status": 200,
+      "ms": 135
+    },
+    {
+      "phase": "page-open",
+      "service": "connector",
+      "method": "GET",
+      "path": "/models",
+      "status": 200,
+      "ms": 136
+    },
+    {
+      "phase": "deep",
+      "service": "sherlock",
+      "method": "POST",
+      "path": "/api/search/cases/frankenstein/ask",
+      "status": 200,
+      "ms": 865
+    },
+    {
+      "phase": "deep",
+      "service": "watson",
+      "method": "POST",
+      "path": "/report",
+      "status": 200,
+      "ms": 425
+    },
+    {
+      "phase": "deep",
+      "service": "connector",
+      "method": "POST",
+      "path": "/chat",
+      "status": 200,
+      "ms": 13439
+    }
+  ]
+}

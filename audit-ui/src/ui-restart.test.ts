@@ -49,13 +49,13 @@ describe('rename', () => {
 });
 
 describe('the rail', () => {
-  it('five icons in order: Chat, Audit, Research, Lessons, Curator; Chat is on at boot', async () => {
+  it('six icons in order: Chat, Audit, Research, Lessons, Curator, Sherlock & Watson; Chat is on at boot', async () => {
     await start('/chat');
     const buttons = Array.from(container.querySelectorAll<HTMLButtonElement>('.shell-rail .rail-button'));
-    expect(buttons.map((b) => b.getAttribute('aria-label'))).toEqual(['Chat', 'Audit', 'Research', 'Lessons', 'Curator']);
-    expect(RAIL.map((r) => r.key)).toEqual(['chat', 'audit', 'research', 'lessons', 'curator']);
+    expect(buttons.map((b) => b.getAttribute('aria-label'))).toEqual(['Chat', 'Audit', 'Research', 'Lessons', 'Curator', 'Sherlock & Watson']);
+    expect(RAIL.map((r) => r.key)).toEqual(['chat', 'audit', 'research', 'lessons', 'curator', 'investigate']);
     expect(buttons.every((b) => b.querySelector('svg') !== null)).toBe(true);
-    expect(buttons.map((b) => b.getAttribute('aria-pressed'))).toEqual(['true', 'false', 'false', 'false', 'false']);
+    expect(buttons.map((b) => b.getAttribute('aria-pressed'))).toEqual(['true', 'false', 'false', 'false', 'false', 'false']);
     // Icons, not engine names.
     expect(container.querySelector('.shell-rail')?.textContent).toBe('');
     expect(container.querySelector('.shell-rail')?.innerHTML).not.toMatch(/KATIE|ERIE|ELLE|ARCHE/);

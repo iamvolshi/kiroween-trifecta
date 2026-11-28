@@ -71,10 +71,11 @@ describe('Sherlock down: a clean failure in words, no fallback', () => {
 });
 
 describe('the app is wired to Sherlock only', () => {
-  it('main.ts builds the Sherlock adapter, not the connector one', () => {
+  it('main.ts builds the Sherlock adapter for every search; the connector adapter is only the chat voice', () => {
     const main = mainTs;
     expect(main).toContain('createSherlockAdapter');
-    expect(main).not.toContain('createLiveAdapter');
-    expect(main).not.toContain('CONNECTOR_URL');
+    expect(main).toContain('const chatAdapter = createLiveAdapter(CONNECTOR_URL);');
+    expect(main).toContain('boot(adapter, appEl, chatAdapter);');
+    expect(main.match(/createLiveAdapter\(/g)).toHaveLength(1);
   });
 });

@@ -55,12 +55,12 @@ describe('the shell has no directories list on any route; the rail is the naviga
     '/no-such-page',
   ];
   for (const path of paths) {
-    it(`${path} renders five rail icons and no directories nav`, async () => {
+    it(`${path} renders six rail icons and no directories nav`, async () => {
       start(path);
       await settle();
       expect(container.querySelectorAll('nav')).toHaveLength(0);
       expect(container.querySelector('.main-nav')).toBeNull();
-      expect(container.querySelectorAll('.shell-rail .rail-button')).toHaveLength(5);
+      expect(container.querySelectorAll('.shell-rail .rail-button')).toHaveLength(6);
     });
   }
 
