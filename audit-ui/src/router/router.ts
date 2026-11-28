@@ -107,7 +107,7 @@ export class Router {
     this.unsubscribeLog = this.chatLog.subscribe(() => this.leftPanel.refresh());
     // Right column: Curator + ELLE telemetry. It subscribes to the log itself.
     this.layout = new ShellLayout(this.slots);
-    this.rightPanel = new TelemetryPanel(adapter, this.chatLog, this.layout);
+    this.rightPanel = new TelemetryPanel(adapter, this.chatLog, this.layout, this.repo);
 
     this.clickHandler = (event: MouseEvent) => {
       // Only plain left clicks navigate in-app; modified and non-left clicks

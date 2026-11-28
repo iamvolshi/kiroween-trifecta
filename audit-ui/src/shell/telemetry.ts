@@ -1,5 +1,7 @@
 import type { Entry, SeamAdapter } from '../adapter/seam.ts';
 import type { ChatLog } from '../views/chat-log.ts';
+import type { RepoSession } from '../views/repo-session.ts';
+import { progressWords } from '../views/repo-panel.ts';
 import type { Panel } from './panel.ts';
 import { engineItems, feedItems, type FeedItem } from './activity-feed.ts';
 import { provenanceChannel, type ProvenanceTarget } from './provenance-channel.ts';
@@ -64,7 +66,10 @@ function renderItem(item: FeedItem): HTMLElement {
  * general feed for that engine's events on that turn (engineFocusChannel);
  * the focus holds across new turns until the user goes back. A provenance
  * link in the chat highlights its KATIE item through `provenanceChannel`.
- * Derived only from the ChatLog and the seam.
+ * Pinned above the feed, the attached repo's file scan: Sherlock reading
+ * the repo is machine state, so its progress lives here, in the right
+ * column, not in the left column's repo control. Derived only from the
+ * ChatLog, the seam, and the shared RepoSession.
  */
 export class TelemetryPanel implements Panel {
   private slot: HTMLElement | null = null;
@@ -73,10 +78,13 @@ export class TelemetryPanel implements Panel {
   private unsubscribe: (() => void) | null = null;
   private unsubscribeLinks: (() => void) | null = null;
   private unsubscribeFocus: (() => void) | null = null;
+  private unsubscribeRepo: (() => void) | null = null;
   private lastTarget: ProvenanceTarget | null = null;
   private adapter: SeamAdapter;
   private log: ChatLog;
   private layout: ShellLayout | null;
+  /** The shared attached-repo session, or null: its scan is the pinned line above the feed. */
+  private repo: RepoSession | null;
   /** False until the first record read answers: no empty-state claim before then. */
   private loaded = false;
   /** The last record read, kept so a focus change re-renders without a new read. */
@@ -104,10 +112,11 @@ export class TelemetryPanel implements Panel {
     if (this.focus === null) this.following = slot.scrollHeight - slot.scrollTop - slot.clientHeight <= FOLLOW_SLACK_PX;
   };
 
-  constructor(adapter: SeamAdapter, log: ChatLog, layout: ShellLayout | null = null) {
+  constructor(adapter: SeamAdapter, log: ChatLog, layout: ShellLayout | null = null, repo: RepoSession | null = null) {
     this.adapter = adapter;
     this.log = log;
     this.layout = layout;
+    this.repo = repo;
   }
 
   mount(slot: HTMLElement): void {
@@ -133,6 +142,7 @@ export class TelemetryPanel implements Panel {
     this.unsubscribe = this.log.subscribe(() => this.refresh());
     this.unsubscribeLinks = provenanceChannel.subscribe((t) => this.onLink(t));
     this.unsubscribeFocus = engineFocusChannel.subscribe((f) => this.setFocus(f));
+    this.unsubscribeRepo = this.repo?.subscribe(() => this.render()) ?? null;
     // Back from minimized: a following reader goes to the live end, any other back to their place.
     let prev = this.layout?.state() ?? 'normal';
     this.unsubscribeLayout = this.layout?.onChange((s) => {
@@ -230,6 +240,8 @@ export class TelemetryPanel implements Panel {
     this.unsubscribeLinks = null;
     this.unsubscribeFocus?.();
     this.unsubscribeFocus = null;
+    this.unsubscribeRepo?.();
+    this.unsubscribeRepo = null;
     this.unsubscribeLayout?.();
     this.unsubscribeLayout = null;
     this.slot?.removeEventListener('scroll', this.onScroll);
@@ -267,8 +279,32 @@ export class TelemetryPanel implements Panel {
     if (this.lastTarget) this.highlight(this.lastTarget, false);
   }
 
+  /**
+   * The attached repo's scan, pinned above the feed: the attaching send,
+   * then the /status progress, then the Ready summary (or the Could-not-read
+   * outcome when the scan failed). Nothing when no repo is attached.
+   * The words are the repo panel's words; the line just lives here.
+   */
+  private repoLine(): HTMLElement | null {
+    const repo = this.repo;
+    if (!repo) return null;
+    if (repo.attaching) {
+      const p = el('p', 'repo-progress', 'Sending the repo to Sherlock.');
+      p.setAttribute('role', 'status');
+      return p;
+    }
+    const s = repo.status;
+    if (!s || s.state === 'detached' || progressWords(s) === '') return null;
+    const p = el('p', 'repo-progress', progressWords(s));
+    p.dataset.state = s.state;
+    p.setAttribute('role', 'status');
+    return p;
+  }
+
   /** The general feed, oldest first. */
   private renderGeneral(root: HTMLElement): void {
+    const repo = this.repoLine();
+    if (repo) root.appendChild(repo);
     const items = feedItems(this.log.turns(), this.entries);
     if (items.length === 0 && this.readError === null && this.loaded) {
       const empty = el('p', 'empty-state', 'Nothing has happened yet. Each step the engines take shows up here.');

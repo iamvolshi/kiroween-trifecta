@@ -4,6 +4,8 @@ import { ChatLog } from '../views/chat-log.ts';
 import { makeEntry, tick, deferred } from '../test-helpers.ts';
 import { TelemetryPanel, WORK_HEADING } from './telemetry.ts';
 import { provenanceChannel } from './provenance-channel.ts';
+import { RepoSession } from '../views/repo-session.ts';
+import type { GithubClient, RepoStatus } from '../adapter/github-client.ts';
 
 const SUBJ = 'order-1042.delivery_date';
 
@@ -151,5 +153,82 @@ describe('TelemetryPanel: the work column', () => {
     provenanceChannel.publish({ kid: 4, subject: SUBJ, entry_id: 'e1' });
     await tick();
     expect(slot.innerHTML).toBe('');
+  });
+});
+
+describe('TelemetryPanel: the repo scan in the right column', () => {
+  let slot: HTMLElement;
+  beforeEach(() => {
+    slot = document.createElement('div');
+    document.body.innerHTML = '';
+    document.body.appendChild(slot);
+  });
+
+  function readyStatus(over: Partial<RepoStatus> = {}): RepoStatus {
+    return {
+      state: 'ready', repo: 'octo/hello', branch: 'main', folder: '', files_listed: 12, files_ingested: 10,
+      files_skipped: 2, passages: 31, truncated: false, error: null, ...over,
+    };
+  }
+
+  /** A session with no network: the status is set by hand and redrawn with an emit. */
+  function session(): RepoSession {
+    return new RepoSession({} as unknown as GithubClient, 60000);
+  }
+
+  function emit(repo: RepoSession): void {
+    (repo as unknown as { emit(): void }).emit();
+  }
+
+  function mount(repo: RepoSession | null): TelemetryPanel {
+    const panel = new TelemetryPanel(fake(ok([])), new ChatLog(), null, repo);
+    panel.mount(slot);
+    return panel;
+  }
+
+  it('pins the Ready summary above the feed, green when ready', async () => {
+    const repo = session();
+    repo.status = readyStatus();
+    mount(repo);
+    await tick();
+    const line = slot.querySelector<HTMLElement>('.telemetry .repo-progress');
+    expect(line?.getAttribute('data-state')).toBe('ready');
+    expect(line?.textContent).toMatch(/^Ready: octo\/hello \(main\)\. 10 files read, 2 skipped, 31 passages/);
+    expect(slot.querySelector('.telemetry-body')?.firstElementChild).toBe(line);
+  });
+
+  it('follows the scan: attaching, then fetching and indexing words, then ready', async () => {
+    const repo = session();
+    repo.attaching = true;
+    mount(repo);
+    await tick();
+    expect(slot.querySelector('.repo-progress')?.textContent).toBe('Sending the repo to Sherlock.');
+    repo.attaching = false;
+    repo.status = readyStatus({ state: 'fetching', files_ingested: 3, passages: 0 });
+    emit(repo);
+    await tick();
+    expect(slot.querySelector('.repo-progress')?.textContent).toMatch(/Fetching octo\/hello \(main\): 3 of 12 files read/);
+    repo.status = readyStatus({ state: 'indexing', files_ingested: 10, passages: 20 });
+    emit(repo);
+    await tick();
+    expect(slot.querySelector('.repo-progress')?.textContent).toMatch(/Indexing octo\/hello \(main\): 10 of 12 files read, 20 passages so far/);
+    repo.status = readyStatus();
+    emit(repo);
+    await tick();
+    expect(slot.querySelector('.repo-progress')?.textContent).toMatch(/^Ready: octo\/hello/);
+  });
+
+  it('says Could not read when the scan failed', async () => {
+    const repo = session();
+    repo.status = readyStatus({ state: 'failed', error: { code: 'repo_not_found', message: 'm' } });
+    mount(repo);
+    await tick();
+    expect(slot.querySelector('.repo-progress')?.textContent).toBe('Could not read octo/hello (main).');
+  });
+
+  it('shows nothing when no repo is attached', async () => {
+    mount(null);
+    await tick();
+    expect(slot.querySelector('.repo-progress')).toBeNull();
   });
 });

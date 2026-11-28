@@ -1,5 +1,6 @@
-// The "Attach GitHub repo" control above the composer: the form, the progress from
-// /status, the error in words, the source switch (book or repo) and Detach.
+// The "Attach GitHub repo" control above the composer: the form, the error
+// in words, the source switch (book or repo) and Detach. The scan's progress
+// is not here: it lives in the telemetry, in the right column.
 // Also how a repo answer is drawn: each citation shows its file path and KID.
 import type { AskResult } from '../adapter/seam.ts';
 import { errorWords, type RepoAnswer, type RepoStatus } from '../adapter/github-client.ts';
@@ -118,17 +119,6 @@ export function mountRepoPanel(slot: HTMLElement, repo: RepoSession): () => void
         void repo.attach(req);
       });
       nodes.push(form);
-    }
-
-    if (repo.attaching) {
-      const p = el('p', 'repo-progress', 'Sending the repo to Sherlock.');
-      p.setAttribute('role', 'status');
-      nodes.push(p);
-    } else if (s && s.state !== 'detached' && progressWords(s) !== '' && s.state !== 'failed') {
-      const p = el('p', 'repo-progress', progressWords(s));
-      p.dataset.state = s.state;
-      p.setAttribute('role', 'status');
-      nodes.push(p);
     }
     const bad = problem(repo);
     if (bad !== '') {

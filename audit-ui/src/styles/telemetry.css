@@ -47,6 +47,11 @@
 
 /* ---- The feed: lines, not cards --------------------------------------- */
 
+/* The attached repo's scan, pinned above the feed: one line of breathing
+   room between the scan and the first feed item. The colour comes from
+   .repo-progress (muted while it works, green when ready). */
+.telemetry .repo-progress { margin: 0 0 var(--s2); }
+
 .activity-feed {
   display: grid;
   gap: var(--s2);

@@ -45,7 +45,9 @@ describe('the GitHub panel is in the left column', () => {
     expect(left.querySelectorAll('.repo-slot')).toHaveLength(1);
     expect(left.querySelector('.repo-source-btn[data-source="repo"]')).not.toBeNull();
     expect(left.querySelector('.repo-attach-btn')!.textContent).toBe('Change repo');
-    expect(left.querySelector('.repo-progress')!.textContent).toMatch(/^Ready: octo\/hello/);
+    // The scan's progress lives in the telemetry, in the right column, not here.
+    expect(left.querySelector('.repo-progress')).toBeNull();
+    expect(container.querySelector('.shell-right .repo-progress')!.textContent).toMatch(/^Ready: octo\/hello/);
     const column = container.querySelector('.chat-column')!;
     expect(column.querySelector('.repo-slot, .repo-bar, .repo-form, .repo-progress')).toBeNull();
     expect(Array.from(column.querySelector('.chat-dock')!.children).map((c) => c.className)).toEqual(['voice-slot', 'chat-composer']);
@@ -65,7 +67,8 @@ describe('the GitHub panel is in the left column', () => {
     const left = container.querySelector('.shell-left')!;
     expect(left.querySelectorAll('.repo-slot')).toHaveLength(1);
     expect(left.querySelectorAll('.repo-bar')).toHaveLength(1);
-    expect(left.querySelector('.repo-progress')!.textContent).toMatch(/^Ready: octo\/hello/);
+    expect(left.querySelector('.repo-progress')).toBeNull();
+    expect(container.querySelector('.shell-right .repo-progress')!.textContent).toMatch(/^Ready: octo\/hello/);
     // One live subscription: a change draws once, into the one bar.
     repo.setSource('repo');
     expect(left.querySelectorAll('.repo-bar')).toHaveLength(1);
