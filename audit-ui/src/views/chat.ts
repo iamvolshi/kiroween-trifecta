@@ -39,9 +39,9 @@ function el<K extends keyof HTMLElementTagNameMap>(tag: K, className: string, te
 /**
  * The chat: a centered chat-app column. Messages as bubbles; the voice
  * picker and the composer pinned at the bottom; the picked voice's model
- * rides at the right end of the chip row. Before the first send the column
+ * rides under the icons. Before the first send the column
  * holds the picker and the composer and nothing else. The picked voice sets
- * the accent (data-voice on the view): picked chip, model name, replies.
+ * the accent (data-voice on the view): picked icon, model name, replies.
  */
 export class ChatView implements View {
   private adapter: SeamAdapter;
@@ -233,9 +233,10 @@ export class ChatView implements View {
     // A sent message shows at once, with a thinking row, until its turn lands.
     if (this.pendingMessage !== null) nodes.push(...this.renderPending(this.pendingMessage));
     // Nothing to show yet: the big Frankenstein picker fills the middle of
-    // the page (full chat only; the mini chat keeps its chips). It appears
-    // once the voices are known, and a pick re-renders it picked.
-    if (nodes.length === 0 && !this.compact && this.voices.length > 0) {
+    // the page (full chat only; the mini chat keeps its icons). It appears
+    // once the voices are known and no voice is picked; a pick flies the
+    // chosen tile into the chat box and the picker leaves.
+    if (nodes.length === 0 && !this.compact && this.voices.length > 0 && this.log.voice() === null) {
       box.replaceChildren(renderBigVoicePicker(this.voices, this.log.voice(), (v) => this.chooseVoice(v)));
       return;
     }

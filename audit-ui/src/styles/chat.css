@@ -1,11 +1,11 @@
 /*
  * Chat view: a standard chat-app column, centered in the pane (max 768px).
  * Bubbles: your messages on the right, the voice's replies on the left.
- * The voice picker and the composer are pinned at the bottom; the picked
- * voice's live model rides at the right end of the chip row. The engines'
- * work is not shown here (see the telemetry column on the right). The shape
- * took cues from a reference mockup (a three-column chat app); the code is
- * written fresh.
+ * The composer and the voice icons are pinned at the bottom, the icons to
+ * the composer's right; the picked voice's live model rides under the
+ * icons. The engines' work is not shown here (see the telemetry column
+ * on the right). The shape took cues from a reference mockup (a
+ * three-column chat app); the code is written fresh.
  */
 
 /* ---- Voice accent ------------------------------------------------------
@@ -145,17 +145,28 @@
   text-decoration-style: solid;
 }
 
-/* ---- The dock: picker, composer, band, pinned at the bottom ------------ */
+/* ---- The dock: composer and picture icons, pinned at the bottom ------ */
+/* The composer sits left and grows; the three picture icons sit to its
+   right (DOM order stays slot first, composer second). */
 
 .chat-dock {
   position: sticky;
   /* Stick over the column's bottom padding, so nothing shows beneath it. */
   bottom: calc(-1 * var(--s5));
-  display: grid;
-  gap: var(--s2);
+  display: flex;
+  align-items: flex-end;
+  gap: var(--s3);
   margin: var(--s3) 0 calc(-1 * var(--s5));
   padding: var(--s3) 0 var(--s4);
   background: var(--bg);
+}
+
+.voice-slot {
+  order: 2;
+  flex-shrink: 0;
+  /* The error words, when there are no voices to pick, wrap here instead
+     of squeezing the composer. */
+  max-width: 14rem;
 }
 
 .voice-slot:empty {
@@ -166,52 +177,47 @@
   margin: 0;
 }
 
-.voice-picker-label {
-  margin: 0 0 var(--s1);
-  color: var(--muted);
-  font-family: var(--mono);
-  font-size: var(--t-label-md-size);
-  line-height: var(--t-label-md-lh);
-  font-weight: var(--t-label-md-wt);
-  letter-spacing: var(--t-label-md-ls);
-  text-transform: uppercase;
-}
-
+/* Three little picture icons, one per voice, in a row. No words on them:
+   the pictures are the choice. The picked icon wears its voice's accent. */
 .voice-picker {
   display: flex;
   flex-wrap: wrap;
   gap: var(--s2);
 }
 
-.voice-chip {
-  padding: 2px var(--s2);
+.voice-icon {
+  flex-shrink: 0;
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
   border: 1px solid var(--line-strong);
   border-radius: var(--radius);
   background: transparent;
-  color: var(--muted);
-  font-family: var(--mono);
-  font-size: var(--t-label-md-size);
-  line-height: var(--t-label-md-lh);
-  font-weight: var(--t-label-md-wt);
-  letter-spacing: var(--t-label-md-ls);
-  text-transform: uppercase;
+  cursor: pointer;
+  overflow: hidden;
 }
 
-.voice-chip:hover {
+.voice-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.voice-icon:hover {
   border-color: var(--text);
-  color: var(--text);
 }
 
-.voice-chip[aria-checked='true'] {
+.voice-icon[aria-checked='true'] {
   border-color: var(--voice-accent);
-  color: var(--voice-accent);
+  box-shadow: 0 0 0 1px var(--voice-accent);
 }
 
-/* The picked voice's live model, at the chip row's right end. It wears the
+/* The picked voice's live model, under the icons. It wears the
    voice's accent; unreachable or unconfigured shows in the error colour. */
 .voice-model {
-  margin-left: auto;
-  align-self: center;
+  flex-basis: 100%;
+  text-align: right;
   color: var(--voice-accent);
   font-family: var(--mono);
   font-size: var(--t-label-md-size);
@@ -226,7 +232,7 @@
 }
 
 /* ---- The big Frankenstein picker: the middle of the page before the
-   first turn. Three big tiles, one per voice, each with its own icon.
+   first turn. Three big tiles, one per voice, each with its picture.
    The transcript is the middle of the column (flex: 1), so margin auto
    centres the picker in it. A tile wears its own voice's accent. */
 
@@ -316,8 +322,61 @@
   color: var(--voice-accent);
 }
 
+/* A pick: the heading and the two unpicked tiles fade; the picked tile
+   grows and flies down into the chat box as a fixed clone (fixed, so it
+   crosses the transcript's edge instead of clipping at it). */
+.frankenstein-picker.is-picking .frankenstein-heading {
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.frankenstein-picker.is-picking .frankenstein-tile.is-faded {
+  opacity: 0;
+  transform: scale(0.92);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.frankenstein-fly-clone {
+  position: fixed;
+  z-index: 50;
+  margin: 0;
+  pointer-events: none;
+}
+
+.frankenstein-fly-clone.is-flying {
+  animation: frankenstein-fly 0.6s cubic-bezier(0.3, 0.7, 0.4, 1) forwards;
+}
+
+@keyframes frankenstein-fly {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  25% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--fly-x, 0px), var(--fly-y, 0px)) scale(0.18);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .frankenstein-picker.is-picking .frankenstein-heading,
+  .frankenstein-picker.is-picking .frankenstein-tile.is-faded {
+    transition: none;
+  }
+  .frankenstein-fly-clone.is-flying {
+    animation: none;
+  }
+}
+
 /* The composer: one rounded box, the send button inside it on the right. */
 .chat-composer {
+  order: 1;
+  flex: 1;
+  min-width: 0;
   display: flex;
   align-items: center;
   gap: var(--s2);

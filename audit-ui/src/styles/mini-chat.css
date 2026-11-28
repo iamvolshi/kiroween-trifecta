@@ -44,17 +44,22 @@
 
 .mini-chat .chat-dock {
   position: static;
+  flex-direction: column;
+  align-items: stretch;
   margin: var(--s2) 0 0;
   padding: var(--s2) 0 0;
   background: transparent;
+}
+
+.mini-chat .voice-slot {
+  max-width: none;
 }
 
 .mini-chat .bubble {
   max-width: 100%;
 }
 
-.mini-chat .engine-boxes,
-.mini-chat .voice-picker-label {
+.mini-chat .engine-boxes {
   display: none;
 }
 

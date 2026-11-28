@@ -22,7 +22,7 @@ export const VOICE_LABELS: Record<Register, VoiceLabel> = {
   'young-frankenstein': { tag: 'YOUNG', year: '1974', name: 'Young' },
 };
 
-/** The order the chips sit in. */
+/** The order the icons sit in. */
 const ORDER: readonly Register[] = ['book', 'movie', 'young-frankenstein'];
 
 /**

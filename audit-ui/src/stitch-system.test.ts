@@ -168,8 +168,8 @@ describe('page titles', () => {
 });
 
 describe('which role key elements use', () => {
-  it('voice chips label-md, the composer telemetry-data, the feed text telemetry-data, section headings label-sm', () => {
-    expect(usesRole(rule(chatCss, '.voice-chip'), 'label-md')).toBe(true);
+  it('voice model label-md, the composer telemetry-data, the feed text telemetry-data, section headings label-sm', () => {
+    expect(usesRole(rule(chatCss, '.voice-model'), 'label-md')).toBe(true);
     expect(usesRole(rule(chatCss, '.chat-composer input'), 'telemetry-data')).toBe(true);
     expect(rule(chatCss, '.chat-column')).toContain('max-width: 768px;');
     expect(usesRole(rule(systemCss, '.feed-text'), 'telemetry-data')).toBe(true);
@@ -177,6 +177,12 @@ describe('which role key elements use', () => {
     expect(usesRole(rule(shellCss, '.shell-left::before'), 'label-sm')).toBe(true);
     expect(usesRole(rule(systemCss, '.telemetry-heading'), 'label-sm')).toBe(true);
     expect(usesRole(rule(styleCss, '.shell-center h1'), 'headline-sm')).toBe(true);
+  });
+
+  it('the dock puts the composer first and the picture icons to its right', () => {
+    expect(rule(chatCss, '.chat-dock')).toContain('display: flex;');
+    expect(rule(chatCss, '.chat-composer')).toContain('order: 1;');
+    expect(rule(chatCss, '.voice-slot')).toContain('order: 2;');
   });
 
   it('the rendered elements carry those classes', async () => {

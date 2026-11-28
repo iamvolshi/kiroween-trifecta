@@ -150,7 +150,7 @@ describe('ChatView: the model rides in the picker row', () => {
     for (let i = 0; i < 4; i++) await tick();
   };
 
-  it('switching voice changes the model at the row\'s right end', async () => {
+  it('switching voice changes the model under the icons', async () => {
     const live: ModelSource = { status: async () => ({ ok: true, data: STATUS }) };
     await mount(live, async () => new Response('{}', { status: 500 }));
     pick('movie');
@@ -159,7 +159,7 @@ describe('ChatView: the model rides in the picker row', () => {
     pick('book');
     expect(model()?.textContent).toBe('model-book-1');
     expect(model()?.dataset.state).toBe('live');
-    // The model sits in the chip row, after the chips.
+    // The model sits under the icons, after them.
     const row = slot.querySelector('.voice-picker')!;
     expect(row.lastElementChild).toBe(model());
   });
@@ -238,7 +238,7 @@ describe('ChatView: the model rides in the picker row', () => {
     expect(model()?.textContent).toBe('model-book-1');
   });
 
-  it('before a voice is picked the row is chips only: no model, no model slot', async () => {
+  it('before a voice is picked the row is icons only: no model, no model slot', async () => {
     const live: ModelSource = { status: async () => ({ ok: true, data: STATUS }) };
     await mount(live, async () => new Response('{}', { status: 500 }));
     expect(model()).toBeNull();
@@ -273,7 +273,7 @@ describe('ChatView: the model rides in the picker row', () => {
     up = false;
     pick('book');
     await tick(); await tick();
-    expect(slot.querySelectorAll('.voice-picker .voice-chip')).toHaveLength(3);
+    expect(slot.querySelectorAll('.voice-picker .voice-icon')).toHaveLength(3);
     expect(model()?.dataset.state).toBe('unreachable');
     expect(model()?.textContent).toBe('Model unknown');
   });
