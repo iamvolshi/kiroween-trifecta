@@ -13,11 +13,12 @@
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 1.25rem;
-  max-width: 34rem;
+  gap: 1rem;
+  max-width: 30rem;
   width: calc(100% - 2rem);
-  padding: 2rem 2.5rem 1.75rem;
+  padding: 2rem;
   border: 1px solid var(--line);
+  border-top: 2px solid var(--rose);
   border-radius: 0.5rem;
   background: var(--panel);
 }
@@ -25,23 +26,22 @@
 .splash-wordmark {
   margin: 0;
   font-family: var(--display);
-  font-size: var(--t-label-sm-size);
+  font-size: var(--t-label-md-size);
   font-weight: 700;
   letter-spacing: var(--t-label-sm-ls);
   text-transform: uppercase;
   color: var(--muted);
-  text-align: center;
+  text-align: left;
 }
 
 /* Tall enough for the announcement, so the panel never jumps as the
    story cycles between the announcement and the short beats. */
 .splash-screen {
-  min-height: 11rem;
+  min-height: 8.5rem;
   display: flex;
   flex-direction: column;
-  align-items: center;
   justify-content: center;
-  gap: 1rem;
+  gap: 0.75rem;
 }
 
 .splash-headline {
@@ -51,14 +51,14 @@
   font-weight: 700;
   line-height: 1.2;
   color: var(--text);
-  text-align: center;
+  text-align: left;
 }
 
 .splash-opening {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  text-align: center;
+  text-align: left;
 }
 
 .splash-opening p {
@@ -74,22 +74,23 @@
   font-size: 1.125rem;
   line-height: 1.6;
   color: var(--text);
-  text-align: center;
+  text-align: left;
 }
 
 .splash-enter {
-  align-self: center;
-  padding: 0.5rem 1.5rem;
-  border: 1px solid var(--line-strong);
+  align-self: flex-start;
+  padding: 0.625rem 1.75rem;
+  border: 1px solid var(--text);
   border-radius: 0.25rem;
-  background: transparent;
-  color: var(--text);
+  background: var(--text);
+  color: var(--panel);
   font: inherit;
   font-family: var(--mono);
+  font-weight: 700;
   letter-spacing: 0.08em;
   cursor: pointer;
 }
 
 .splash-enter:hover {
-  border-color: var(--text);
+  opacity: 0.88;
 }
