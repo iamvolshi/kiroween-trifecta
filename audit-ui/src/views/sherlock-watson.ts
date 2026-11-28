@@ -12,6 +12,9 @@ import { answerNotes, kidWords } from '../util/sherlock-notes.ts';
 import { investigate, type Investigation } from '../investigate/handoff.ts';
 import type { ModelSource } from './chat.ts';
 
+/** How long the page waits for Watson's bridge (a cold start on the host takes about 20 s). */
+export const WATSON_WAIT_MS = 60_000;
+
 /** What the header's view chip reads on this view. */
 export const SW_VIEW_NAME = 'Sherlock & Watson';
 /** The page's own words about what it is for. */
@@ -116,7 +119,7 @@ export class SherlockWatsonView implements View {
 
   constructor(
     sherlock: SeamAdapter, voiceAdapter: SeamAdapter, log: ChatLog, store: InvestigationLog,
-    repo: RepoSession | null = null, models: ModelSource = CONNECTOR_MODELS, bridge: WatsonBridge = createWatsonBridge(),
+    repo: RepoSession | null = null, models: ModelSource = CONNECTOR_MODELS, bridge: WatsonBridge = createWatsonBridge(undefined, undefined, WATSON_WAIT_MS),
   ) {
     this.sherlock = sherlock;
     this.voiceAdapter = voiceAdapter;

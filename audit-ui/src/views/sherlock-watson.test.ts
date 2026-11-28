@@ -235,3 +235,16 @@ describe('the Sherlock & Watson page', () => {
     expect(s.calls.connectorChat).toHaveLength(0);
   });
 });
+
+describe('the Watson bridge wait', () => {
+  const slow = (ms: number, body: unknown) => (_u: string, init?: RequestInit) => new Promise<Response>((res, rej) => {
+    const t = setTimeout(() => res(new Response(JSON.stringify(body))), ms);
+    init?.signal?.addEventListener('abort', () => { clearTimeout(t); rej(new Error('aborted')); });
+  });
+  it('a bridge that wakes slowly still answers when the wait is long enough, and gives null when it is not', async () => {
+    const { createWatsonBridge } = await import('../watson/bridge.ts');
+    const input = { question: 'q', answer: 'a', citations: [{ source: 's', content: 'c' }] };
+    expect(await createWatsonBridge('http://w', slow(60, CONCLUSION), 20).report(input)).toBeNull();
+    expect((await createWatsonBridge('http://w', slow(60, CONCLUSION), 500).report(input))?.summary).toBe(CONCLUSION.summary);
+  });
+});

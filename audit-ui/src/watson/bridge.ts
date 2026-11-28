@@ -70,14 +70,15 @@ export interface WatsonBridge {
   report(input: WatsonInput): Promise<WatsonConclusion | null>;
 }
 
-export function createWatsonBridge(baseUrl: string = WATSON_URL, fetchImpl?: FetchLike): WatsonBridge {
+/** 	imeoutMs: the hosted bridge can take ~20 s to wake, so the deep-investigation page asks for longer than the rail does. */
+export function createWatsonBridge(baseUrl: string = WATSON_URL, fetchImpl?: FetchLike, timeoutMs: number = TIMEOUT_MS): WatsonBridge {
   const base = baseUrl.trim().replace(/\/+$/, '');
   const doFetch: FetchLike = fetchImpl ?? ((url, init) => fetch(url, init));
   return {
     async report(input) {
       if (base === '' || input.citations.length === 0) return null;
       const ctl = typeof AbortController !== 'undefined' ? new AbortController() : null;
-      const timer = ctl ? setTimeout(() => ctl.abort(), TIMEOUT_MS) : null;
+      const timer = ctl ? setTimeout(() => ctl.abort(), timeoutMs) : null;
       try {
         const res = await doFetch(`${base}/report`, {
           method: 'POST',
