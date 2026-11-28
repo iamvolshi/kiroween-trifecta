@@ -1,3 +1,5 @@
+import { withBase } from '../util/base.ts';
+
 /**
  * The first-load splash story: the app announcement, the first thing
  * a user sees. It opens on what it is, eleven apps sewn together,
@@ -81,6 +83,11 @@ export class SplashStory {
     const card = document.createElement('div');
     card.className = 'splash-card';
 
+    const mark = document.createElement('img');
+    mark.className = 'splash-mark';
+    mark.src = withBase('/favicon.png');
+    mark.alt = '';
+
     const wordmark = document.createElement('p');
     wordmark.className = 'splash-wordmark';
     wordmark.textContent = 'Hackenstein';
@@ -95,7 +102,7 @@ export class SplashStory {
     enter.setAttribute('aria-label', 'Enter Hackenstein');
     enter.addEventListener('click', () => this.enter());
 
-    card.append(wordmark, screen, enter);
+    card.append(mark, wordmark, screen, enter);
     overlay.append(card);
     host.append(overlay);
 

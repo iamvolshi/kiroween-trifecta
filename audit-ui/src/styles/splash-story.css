@@ -23,6 +23,13 @@
   background: var(--panel);
 }
 
+.splash-mark {
+  align-self: center;
+  width: 64px;
+  height: 64px;
+  flex: none;
+}
+
 .splash-wordmark {
   margin: 0;
   font-family: var(--display);
@@ -31,7 +38,7 @@
   letter-spacing: var(--t-label-sm-ls);
   text-transform: uppercase;
   color: var(--muted);
-  text-align: left;
+  text-align: center;
 }
 
 /* Tall enough for the announcement, so the panel never jumps as the
@@ -86,7 +93,7 @@
 }
 
 .splash-enter {
-  align-self: flex-start;
+  align-self: center;
   padding: 0.625rem 1.75rem;
   border: 1px solid var(--text);
   border-radius: 0.25rem;

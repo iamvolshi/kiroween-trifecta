@@ -59,6 +59,15 @@ describe('SplashStory (unit)', () => {
     expect(enter?.textContent).toBe(SPLASH_ENTER_LABEL);
   });
 
+  it('carries the mono mark above the title, pointing at the favicon', () => {
+    setup();
+    const img = host.querySelector('.splash-mark') as HTMLImageElement;
+    expect(img).not.toBeNull();
+    expect(img.getAttribute('src')).toBe('/favicon.png');
+    expect(img.alt).toBe('');
+    expect(host.querySelector('.splash-wordmark')?.textContent).toBe('Hackenstein');
+  });
+
   it('gives each screen at least one second per three words', () => {
     const screens = SPLASH_SCREENS.map((s) =>
       [s.headline, ...s.lines].filter(Boolean).join(' '),
@@ -157,6 +166,16 @@ describe('SplashStory type (Darren: no Arial or common bullshit)', () => {
     expect(splashCss).toContain('.splash-headline');
     expect(splashCss).toContain('font-family: var(--display)');
     expect(splashCss).toContain('font-family: var(--sans)');
+  });
+
+  it('centers the title and the enter button, with the mark centered above', () => {
+    const wordmark = splashCss.match(/\.splash-wordmark \{[^}]*\}/)?.[0] ?? '';
+    expect(wordmark).toContain('text-align: center');
+    const enter = splashCss.match(/\.splash-enter \{[^}]*\}/)?.[0] ?? '';
+    expect(enter).toContain('align-self: center');
+    const mark = splashCss.match(/\.splash-mark \{[^}]*\}/)?.[0] ?? '';
+    expect(mark).toContain('align-self: center');
+    expect(mark).toContain('width: 64px');
   });
 });
 
