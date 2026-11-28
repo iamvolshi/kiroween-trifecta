@@ -68,7 +68,7 @@ describe('rail navigation', () => {
     ['--rail-audit', 'var(--engine-katie)'],
     ['--rail-research', 'var(--engine-erie)'],
     ['--rail-lessons', 'var(--engine-elle)'],
-    ['--rail-curator', '#a78bfa'],
+    ['--rail-curator', '#a855f7'],
   ])('%s is %s', (name, hex) => {
     expect(styleCss).toContain(`${name}: ${hex};`);
   });
