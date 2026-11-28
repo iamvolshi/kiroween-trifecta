@@ -68,6 +68,14 @@
   color: var(--text);
 }
 
+/* The identity stack: what the app is, shouted in caps. */
+.splash-identity {
+  font-size: 1.125rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
 .splash-beat {
   margin: 0;
   font-family: var(--sans);

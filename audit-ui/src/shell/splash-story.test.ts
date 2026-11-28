@@ -1,9 +1,10 @@
 /**
- * The first-load splash story: the announcement first, short beats,
- * looping back to the announcement, click to enter always present and
- * entering at once. Each screen stays up at least one second per three
- * words (Nielsen Norman Group's rule for auto-advancing slides).
- * Nothing in it waits on or mentions the backend.
+ * The first-load splash story: it opens on what it is, then the
+ * promise, then short beats, looping back to the announcement, click
+ * to enter always present and entering at once. Each screen stays up
+ * at least one second per three words (Nielsen Norman Group's rule
+ * for auto-advancing slides). Nothing in it waits on or mentions the
+ * backend.
  */
 import { describe, it, expect, afterEach, vi } from 'vitest';
 import { createRecordStub, createFailingStub, deferred, tick } from '../test-helpers.ts';
@@ -11,6 +12,8 @@ import { boot } from '../boot.ts';
 import {
   SplashStory,
   SPLASH_SCREEN_MS,
+  SPLASH_SCREENS,
+  SPLASH_IDENTITY,
   SPLASH_HEADLINE,
   SPLASH_OPENING,
   SPLASH_BEATS,
@@ -33,27 +36,33 @@ describe('SplashStory (unit)', () => {
     splash = undefined;
   });
 
-  function setup(screenMs: number[] = [30, 30, 30, 30]): void {
+  function setup(screenMs: number[] = [30, 30, 30, 30, 30]): void {
     host = document.createElement('div');
     document.body.append(host);
     splash = new SplashStory(host, { screenMs });
+  }
+
+  function identity(): string[] {
+    return [...host.querySelectorAll('.splash-identity')].map((p) => p.textContent ?? '');
   }
 
   function opening(): string[] {
     return [...host.querySelectorAll('.splash-opening p')].map((p) => p.textContent ?? '');
   }
 
-  it('opens on the announcement, enter always present', () => {
+  it('opens on what it is, enter always present', () => {
     setup();
     expect(host.querySelector('.splash-story')).not.toBeNull();
-    expect(host.querySelector('.splash-headline')?.textContent).toBe(SPLASH_HEADLINE);
-    expect(opening()).toEqual(SPLASH_OPENING);
+    expect(host.querySelector('.splash-headline')).toBeNull();
+    expect(identity()).toEqual(SPLASH_IDENTITY);
     const enter = host.querySelector('.splash-enter') as HTMLButtonElement;
     expect(enter?.textContent).toBe(SPLASH_ENTER_LABEL);
   });
 
   it('gives each screen at least one second per three words', () => {
-    const screens = [[SPLASH_HEADLINE, ...SPLASH_OPENING].join(' '), ...SPLASH_BEATS];
+    const screens = SPLASH_SCREENS.map((s) =>
+      [s.headline, ...s.lines].filter(Boolean).join(' '),
+    );
     expect(SPLASH_SCREEN_MS.length).toBe(screens.length);
     screens.forEach((text, i) => {
       const words = text.split(/\s+/).filter(Boolean).length;
@@ -61,17 +70,20 @@ describe('SplashStory (unit)', () => {
     });
     // The 11-app beat is short on words but long on names: it still gets
     // the 8-second floor, not its 6-second word count.
-    expect(SPLASH_SCREEN_MS).toEqual([8000, 8000, 8000, 10000]);
+    expect(SPLASH_SCREEN_MS).toEqual([8000, 8000, 8000, 8000, 10000]);
   });
 
-  it('advances per screen, and the loop opens and closes on the announcement', () => {
+  it('advances per screen, and the loop opens and closes on what it is', () => {
     vi.useFakeTimers();
     try {
-      setup([30, 30, 30, 30]);
-      expect(host.querySelector('.splash-headline')).not.toBeNull();
+      setup([30, 30, 30, 30, 30]);
+      expect(identity()).toEqual(SPLASH_IDENTITY);
+      vi.advanceTimersByTime(30);
+      expect(host.querySelector('.splash-headline')?.textContent).toBe(SPLASH_HEADLINE);
+      expect(opening()).toEqual(SPLASH_OPENING);
+      expect(host.querySelector('.splash-enter')).not.toBeNull();
       vi.advanceTimersByTime(30);
       expect(host.querySelector('.splash-beat')?.textContent).toBe(SPLASH_BEATS[0]);
-      expect(host.querySelector('.splash-enter')).not.toBeNull();
       vi.advanceTimersByTime(30);
       expect(host.querySelector('.splash-beat')?.textContent).toBe(SPLASH_BEATS[1]);
       expect(host.querySelector('.splash-beat')?.textContent).toContain(
@@ -80,8 +92,7 @@ describe('SplashStory (unit)', () => {
       vi.advanceTimersByTime(30);
       expect(host.querySelector('.splash-beat')?.textContent).toBe(SPLASH_BEATS[2]);
       vi.advanceTimersByTime(30);
-      expect(host.querySelector('.splash-headline')?.textContent).toBe(SPLASH_HEADLINE);
-      expect(opening()).toEqual(SPLASH_OPENING);
+      expect(identity()).toEqual(SPLASH_IDENTITY);
     } finally {
       vi.useRealTimers();
     }
@@ -90,7 +101,8 @@ describe('SplashStory (unit)', () => {
   it('a longer screen stays up longer than a short one', () => {
     vi.useFakeTimers();
     try {
-      setup([30, 30, 30, 90]);
+      setup([30, 30, 30, 30, 90]);
+      vi.advanceTimersByTime(30);
       vi.advanceTimersByTime(30);
       vi.advanceTimersByTime(30);
       vi.advanceTimersByTime(30);
@@ -99,7 +111,7 @@ describe('SplashStory (unit)', () => {
       // The last beat gets 90, so after 30 more it is still showing.
       expect(host.querySelector('.splash-beat')?.textContent).toBe(SPLASH_BEATS[2]);
       vi.advanceTimersByTime(60);
-      expect(host.querySelector('.splash-headline')).not.toBeNull();
+      expect(identity()).toEqual(SPLASH_IDENTITY);
     } finally {
       vi.useRealTimers();
     }
@@ -108,9 +120,9 @@ describe('SplashStory (unit)', () => {
   it('enter removes it at once and stops the loop', () => {
     vi.useFakeTimers();
     try {
-      setup([30, 30, 30, 30]);
+      setup([30, 30, 30, 30, 30]);
       vi.advanceTimersByTime(30);
-      expect(host.querySelector('.splash-beat')).not.toBeNull();
+      expect(host.querySelector('.splash-headline')).not.toBeNull();
       (host.querySelector('.splash-enter') as HTMLButtonElement).click();
       expect(host.querySelector('.splash-story')).toBeNull();
       vi.advanceTimersByTime(30000);
@@ -174,7 +186,7 @@ describe('SplashStory at boot', () => {
     );
     await sleep(400);
     expect(app.querySelector('.splash-story')).not.toBeNull();
-    expect(app.querySelector('.splash-headline')).not.toBeNull();
+    expect(app.querySelector('.splash-identity')).not.toBeNull();
     entriesGate.resolve({ ok: true, data: [] });
     lessonsGate.resolve({ ok: true, data: [] });
     await tick();
