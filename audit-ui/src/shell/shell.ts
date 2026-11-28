@@ -1,3 +1,5 @@
+import { withBase } from '../util/base.ts';
+
 export interface ShellSlots {
   /** The shell grid itself (the layout's widths and terminal state live on it). */
   shell: HTMLElement;
@@ -33,7 +35,11 @@ export function createShell(container: HTMLElement): ShellSlots {
   brand.className = 'shell-brand';
   const mark = document.createElement('span');
   mark.className = 'brand-mark';
-  mark.textContent = 'Hackenstein';
+  const markImg = document.createElement('img');
+  markImg.className = 'brand-mark-img';
+  markImg.src = withBase('/favicon.png');
+  markImg.alt = '';
+  mark.append(markImg, 'Hackenstein');
   const tag = document.createElement('span');
   tag.className = 'brand-tag';
   tag.textContent = 'Never lies. Learns lessons. Develops identity through use. Multiple persona options.';

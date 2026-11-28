@@ -5,7 +5,6 @@
  */
 import { describe, it, expect, afterEach } from 'vitest';
 import indexHtml from '../index.html?raw';
-import faviconSvg from '../public/favicon.svg?raw';
 import mainTs from './main.ts?raw';
 import { ChatView } from './views/chat.ts';
 import { ChatLog } from './views/chat-log.ts';
@@ -158,9 +157,9 @@ describe('LOW-1: Entry Detail always has its heading and question', () => {
 });
 
 describe('LOW-3: the tab title and favicon are ours', () => {
-  it('index.html title is "Hackenstein" and the favicon is not the Vite logo', () => {
+  it('index.html title is "Hackenstein" and the favicon is the monster mark', () => {
     expect(indexHtml).toContain('<title>Hackenstein</title>');
-    expect(faviconSvg).not.toContain('#863bff');
+    expect(indexHtml).toContain('<link rel="icon" type="image/png" href="/favicon.png" />');
   });
 });
 

@@ -14,6 +14,16 @@ describe('createShell', () => {
     expect(s.right.classList.contains('shell-right')).toBe(true);
     expect(s.right.children).toHaveLength(0);
   });
+
+  it('carries the monster mark in the header, pointing at the favicon', () => {
+    const c = document.createElement('div');
+    createShell(c);
+    const img = c.querySelector('.brand-mark-img') as HTMLImageElement;
+    expect(img).not.toBeNull();
+    expect(img.getAttribute('src')).toBe('/favicon.png');
+    expect(img.alt).toBe('');
+    expect(c.querySelector('.brand-mark')?.textContent).toContain('Hackenstein');
+  });
 });
 
 function fakeAdapter(entries: () => Entry[]): SeamAdapter {
