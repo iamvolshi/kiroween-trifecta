@@ -49,6 +49,22 @@ headline, Geist lines, JetBrains Mono enter, no Arial anywhere.
 Local proof shot of the new card (same CSS, same fonts) is
 `splash-look-left-aligned.png` in this folder.
 
+## v5 — it opens on what it is (Nov 28)
+
+Darren: "it should start with what it is," then dictated the
+opening: HACKENSTEIN / 11 APPS SEWN TOGETHER / 3 FRANKENSTEIN
+MONSTER PERSONAS / 1 INCREDIBLY USEFUL APPLICATION. The first
+screen is now exactly that, the identity stack shouting in caps.
+"Never lies." and its three lines move to the first beat, so the
+promise follows the identity instead of leading it. The screens
+are now one SPLASH_SCREENS list (identity, promise, three beats),
+one duration each: 8, 8, 8, 8 and 10 seconds under the
+one-second-per-three-words rule (12, 22, 24, 16 and 29 words).
+The card, the type and the timing rule are otherwise untouched.
+
+Local proof shot of the new opening is
+`splash-look-identity.png` in this folder.
+
 ## The screens (final)
 
 - Announcement (8s): "Never lies." / "Ask Frankenstein's monster
@@ -103,9 +119,10 @@ Local proof shot of the new card (same CSS, same fonts) is
 - `f5739d9` — splash screens stay up as long as their words need (v3)
 - `5e50d9e` — splash set in the display face, Arial out of the app
 - `ee9f479` — splash card reads like an announcement, not a modal (v4)
+- `6c01e8c` — splash opens on what it is, in Darren's words (v5)
 - Branch: `feat/preview-all`. Published to `gh-pages` at `0637ae5`
   (v1), `afdea3d` (v2), `10040c2` (v3), `40ab579` (type),
-  `cf08a18` (v4). Live at
+  `cf08a18` (v4), `d4bae4c` (v5). Live at
   https://iamvolshi.github.io/kiroween-trifecta/chat
 
 ## Sources for the timing rule
