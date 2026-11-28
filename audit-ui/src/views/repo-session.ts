@@ -98,7 +98,7 @@ export class RepoSession {
     this.emit();
   }
 
-  /** Ask the attached repo without keeping the turn: the Sherlock & Watson page keeps its own. */
+  /** Ask the attached repo without keeping the turn: the Detective screen keeps its own. */
   askQuiet(message: string): ReturnType<GithubClient['ask']> {
     return this.client.ask(message);
   }

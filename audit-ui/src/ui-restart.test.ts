@@ -49,10 +49,10 @@ describe('rename', () => {
 });
 
 describe('the rail', () => {
-  it('six icons in order: Chat, Audit, Research, Lessons, Curator, Sherlock & Watson; Chat is on at boot', async () => {
+  it('six icons in order: Chat, Audit, Research, Lessons, Curator, Detective; Chat is on at boot', async () => {
     await start('/chat');
     const buttons = Array.from(container.querySelectorAll<HTMLButtonElement>('.shell-rail .rail-button'));
-    expect(buttons.map((b) => b.getAttribute('aria-label'))).toEqual(['Chat', 'Audit', 'Research', 'Lessons', 'Curator', 'Sherlock & Watson']);
+    expect(buttons.map((b) => b.getAttribute('aria-label'))).toEqual(['Chat', 'Audit', 'Research', 'Lessons', 'Curator', 'Detective']);
     expect(RAIL.map((r) => r.key)).toEqual(['chat', 'audit', 'research', 'lessons', 'curator', 'investigate']);
     expect(buttons.every((b) => b.querySelector('svg') !== null)).toBe(true);
     expect(buttons.map((b) => b.getAttribute('aria-pressed'))).toEqual(['true', 'false', 'false', 'false', 'false', 'false']);

@@ -16,7 +16,7 @@ import type { ModelSource } from './chat.ts';
 export const WATSON_WAIT_MS = 60_000;
 
 /** What the header's view chip reads on this view. */
-export const SW_VIEW_NAME = 'Sherlock & Watson';
+export const SW_VIEW_NAME = 'Detective';
 /** The page's own words about what it is for. */
 export const SW_PURPOSE =
   'For deep investigations. Ask a question: Sherlock investigates the attached source and writes a clinical report, Watson turns it into a conclusion, and the voice you pick says it in its own words. Every answer shows the files and KIDs behind it. For a quick talk, use Chat.';

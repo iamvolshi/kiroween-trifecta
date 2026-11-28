@@ -1,6 +1,6 @@
 import type { Panel } from './panel.ts';
 
-/** The list column beside the Sherlock & Watson page: what the page does, in three plain lines. */
+/** The list column beside the Detective screen: what the page does, in three plain lines. */
 export class InvestigatePanel implements Panel {
   private slot: HTMLElement | null = null;
 
@@ -9,7 +9,7 @@ export class InvestigatePanel implements Panel {
     const box = document.createElement('section');
     box.className = 'investigate-panel';
     const h = document.createElement('h2');
-    h.textContent = 'Sherlock & Watson';
+    h.textContent = 'Detective';
     box.appendChild(h);
     for (const line of [
       'Sherlock investigates and writes the report.',

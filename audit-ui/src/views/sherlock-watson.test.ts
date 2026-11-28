@@ -1,6 +1,6 @@
 /**
  * OCME-014-hack: Chat is a conversation (the connector's /chat, no Sherlock call);
- * Sherlock & Watson is its own page for deep investigations. Every service is a double.
+ * the Detective screen is its own page for deep investigations. Every service is a double.
  */
 import { describe, it, expect, afterEach, vi } from 'vitest';
 import type { AdapterResult, AskResult, ChatTurn, SeamAdapter } from '../adapter/seam.ts';
@@ -190,7 +190,7 @@ describe('Chat is a conversation', () => {
   });
 });
 
-describe('the Sherlock & Watson page', () => {
+describe('the Detective screen', () => {
   it('has a rail entry and a route; the page says what it is for', async () => {
     expect(RAIL.map((r) => r.key)).toContain('investigate');
     const s = services();
@@ -199,9 +199,9 @@ describe('the Sherlock & Watson page', () => {
     container.querySelector<HTMLButtonElement>('.rail-button[data-rail="investigate"]')!.click();
     await tick(); await tick();
     expect(window.location.pathname).toBe('/investigate');
-    expect(container.querySelector('[data-view="Sherlock & Watson"]')).not.toBeNull();
+    expect(container.querySelector('[data-view="Detective"]')).not.toBeNull();
     expect(container.querySelector('.sw-purpose')!.textContent).toContain('deep investigations');
-    expect(container.querySelector('.shell-brand .brand-view')!.textContent).toContain('Sherlock & Watson');
+    expect(container.querySelector('.shell-brand .brand-view')!.textContent).toContain('Detective');
   });
 
   it('a deep question reaches Sherlock, then the connector with the report, and shows file path and KID', async () => {

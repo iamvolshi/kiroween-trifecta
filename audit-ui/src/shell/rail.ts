@@ -33,7 +33,7 @@ const PAGE: Record<RailKey, { path: string; here: (path: string) => boolean }> =
 };
 
 /** The list column's caption per panel (Chat keeps the column's own name). */
-const CAPTION: Record<RailKey, string> = { chat: 'Chat', audit: 'Audit', research: 'Research', lessons: 'Lessons', curator: 'Curator', investigate: 'Sherlock & Watson' };
+const CAPTION: Record<RailKey, string> = { chat: 'Chat', audit: 'Audit', research: 'Research', lessons: 'Lessons', curator: 'Curator', investigate: 'Detective' };
 
 export const RAIL: ReadonlyArray<{ key: RailKey; label: string; icon: string }> = [
   // Speech bubble.
@@ -47,7 +47,7 @@ export const RAIL: ReadonlyArray<{ key: RailKey; label: string; icon: string }> 
   // Open book.
   { key: 'curator', label: 'Curator', icon: 'M12 6v14M12 6C10 4.5 6.5 4 3 4.5v14c3.5-.5 7 0 9 1.5 2-1.5 5.5-2 9-1.5v-14C17.5 4 14 4.5 12 6z' },
   // Magnifier over a check: an investigation with a conclusion.
-  { key: 'investigate', label: 'Sherlock & Watson', icon: 'M10 3a6 6 0 1 1 0 12 6 6 0 0 1 0-12zM14.5 14.5 21 21M7.5 9l2 2 3.5-4' },
+  { key: 'investigate', label: 'Detective', icon: 'M10 3a6 6 0 1 1 0 12 6 6 0 0 1 0-12zM14.5 14.5 21 21M7.5 9l2 2 3.5-4' },
 ];
 
 const SVG_NS = 'http://www.w3.org/2000/svg';

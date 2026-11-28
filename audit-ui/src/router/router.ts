@@ -63,7 +63,7 @@ export class Router {
   private models: ModelSource | undefined;
   /** Who speaks in Chat: the connector's /chat (personas). Defaults to the one adapter. */
   private chatAdapter: SeamAdapter;
-  /** The Sherlock & Watson page's investigations, kept across navigation. */
+  /** The Detective screen's investigations, kept across navigation. */
   private investigations = new InvestigationLog();
   /** The PEEP / RATR inspector drawer. */
   readonly inspector: Inspector;
