@@ -1,6 +1,6 @@
 /* The Curator page: the folders Curator filed, and a chat to ask the
-   catalog. A tool, not an engine: it wears the plain text colour, no
-   engine colour. One view, no page scroll: each box scrolls inside. */
+   catalog. Its title wears the Curator purple, like every page's title
+   wears its icon's color. One view, no page scroll: each box scrolls inside. */
 
 .curator-page {
   display: flex;
@@ -21,7 +21,7 @@
   font-weight: var(--t-headline-xl-wt);
   letter-spacing: var(--t-headline-xl-ls);
   text-transform: uppercase;
-  color: var(--text);
+  color: var(--rail-curator);
 }
 
 /* The catalog on top, the chat below it with its composer at the foot. */

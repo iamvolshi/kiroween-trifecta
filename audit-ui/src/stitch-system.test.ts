@@ -19,6 +19,10 @@ const styleCss = read('./style.css');
 const shellCss = read('./styles/shell.css');
 const systemCss = read('./styles/stitch-system.css');
 const chatCss = read('./styles/chat.css');
+const curatorCss = read('./styles/curator.css');
+const researchCss = read('./styles/research.css');
+const lessonsCss = read('./styles/lessons.css');
+const calendarRailCss = read('./styles/calendar-rail.css');
 const mainTs = read('./main.ts');
 const CSS_FILES = ['./style.css', ...['calendar', 'calendar-rail', 'chat', 'curator', 'folders', 'lessons', 'record-card', 'research', 'shell', 'stitch-chat', 'stitch-system', 'telemetry'].map((f) => `./styles/${f}.css`)];
 
@@ -151,6 +155,15 @@ describe('the shell', () => {
   it('the breakpoints keep their structure', () => {
     expect(shellCss).toContain('@media (max-width: 1100px)');
     expect(shellCss).toContain('@media (max-width: 800px)');
+  });
+});
+
+describe('page titles', () => {
+  it("every page title wears its icon's color: ERIE gold, ELLE green, KTIE rose, Curator purple", () => {
+    expect(rule(researchCss, '.erie-head .erie-name')).toContain('color: var(--engine-erie);');
+    expect(rule(lessonsCss, '.elle-head .elle-name')).toContain('color: var(--engine-elle);');
+    expect(rule(calendarRailCss, '.ktie-head .ktie-name')).toContain('color: var(--engine-katie);');
+    expect(rule(curatorCss, '.curator-head .curator-name')).toContain('color: var(--rail-curator);');
   });
 });
 
