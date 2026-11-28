@@ -9,7 +9,6 @@ import type { AskResult, ChatTurn } from '../adapter/seam.ts';
 import { ChatLog } from '../views/chat-log.ts';
 import { ResearchView } from '../views/research.ts';
 import { resetGridState } from '../views/entry-grid.ts';
-import { ResearchPanel } from '../shell/rail-panels.ts';
 import { createRecordStub, makeEntry, tick } from '../test-helpers.ts';
 import { createWatsonBridge, type FetchLike } from './bridge.ts';
 import { watsonInput } from './conclusion.ts';
@@ -112,22 +111,6 @@ describe('an /ask answer to a Watson conclusion', () => {
     expect(texts(t, '.watson-confidence')).toEqual(['confidence 0.75']);
     expect(texts(t, '.watson-claim-text')).toEqual(['You must create a female for me', 'CHAPTER VII.']);
     expect(texts(t, '.watson-claim-kids')).toEqual(['KID 21', 'no KID']);
-  });
-
-  it('the rail search (/ask) shows the conclusion after its hits', async () => {
-    const bridge = bridgeStub();
-    const adapter = createRecordStub(ENTRIES, { ask: async () => ({ ok: true, data: ANSWER }) });
-    const panel = new ResearchPanel(adapter, createWatsonBridge('https://watson.stub', bridge.fetch));
-    container = document.createElement('div');
-    document.body.appendChild(container);
-    panel.mount(container);
-    const input = container.querySelector<HTMLInputElement>('#research-q')!;
-    input.value = ANSWER.question;
-    container.querySelector('form')!.dispatchEvent(new Event('submit', { cancelable: true }));
-    await settle();
-    expect(texts(container, '.research-excerpt')).toEqual(['You must create a female for me', 'CHAPTER VII.']);
-    expect(texts(container, '.watson-claim-kids')).toEqual(['KID 21', 'no KID']);
-    panel.unmount();
   });
 
   it('no answer, no call: a not-found turn is never sent', async () => {

@@ -222,7 +222,7 @@ describe('the way to the ERIE page', () => {
     expect(container.querySelector('.brand-view')?.textContent).toBe('View: Research');
   });
 
-  it('the Research icon takes the center to /research and shows the search, untouched', async () => {
+  it('the Research icon takes the center to /research and shows the corpus links, no search', async () => {
     await start('/chat');
     rail('research').click();
     for (let i = 0; i < 6; i++) await tick();
@@ -230,8 +230,10 @@ describe('the way to the ERIE page', () => {
     expect(container.querySelector('.shell-center .erie-page')).not.toBeNull();
     const list = container.querySelector<HTMLElement>('.shell-left')!;
     expect(list.dataset.panel).toBe('research');
-    expect(list.querySelector('#research-q')).not.toBeNull();
-    expect(list.querySelector('.research-form button')?.textContent).toBe('Search');
+    // The left column has no search box: asking goes through the chat on the right (Darren, Nov 27).
+    expect(list.querySelector('#research-q')).toBeNull();
+    expect(list.querySelector('.research-form')).toBeNull();
+    expect(Array.from(list.querySelectorAll('.research-corpus a')).map((a) => a.textContent)).toEqual(['Corpus overview', 'Nouns', 'Graph']);
   });
 
   it('tapping Research on the ERIE page does not remount it', async () => {

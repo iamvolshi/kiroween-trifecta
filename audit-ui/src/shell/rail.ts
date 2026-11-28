@@ -77,7 +77,7 @@ export class RailPanel implements Panel {
     this.panels = {
       chat: new LeftPanel(adapter, true, repo),
       audit: new AuditPanel(adapter),
-      research: new ResearchPanel(adapter),
+      research: new ResearchPanel(),
       lessons: new LessonsPanel(adapter),
       curator: new LeftPanel(adapter, false),
     };

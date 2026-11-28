@@ -135,32 +135,6 @@ describe('the rail', () => {
     expect(list().querySelector('.audit-accounts a')?.getAttribute('href')).toBe('/record/order-1042');
   });
 
-  it('Research asks ERIE over the live record and lists each hit with its source name', async () => {
-    const asked: string[] = [];
-    const adapter = createRecordStub(undefined, {
-      ask: async (question: string) => {
-        asked.push(question);
-        return {
-          ok: true as const,
-          data: {
-            question, state: 'found' as const, text: 'thunderstorms',
-            provenance: [{ source: 'K-record day 3 tick 7, Audit UI', content: 'e1', excerpt: 'I love thunderstorms at night' }],
-          },
-        };
-      },
-    });
-    await start('/chat', adapter);
-    rail('research').click();
-    const input = list().querySelector<HTMLInputElement>('#research-q')!;
-    input.value = 'thunderstorms';
-    list().querySelector<HTMLFormElement>('.research-form')!.requestSubmit();
-    for (let i = 0; i < 4; i++) await tick();
-    expect(asked).toEqual(['thunderstorms']);
-    const hit = list().querySelector('.research-hit')!;
-    expect(hit.querySelector('.research-source')?.textContent).toBe('K-record day 3 tick 7, Audit UI');
-    expect(hit.querySelector('.research-excerpt')?.textContent).toBe('I love thunderstorms at night');
-  });
-
   it('Lessons lists ELLE\'s lessons, learned ones first', async () => {
     const lessons = [lesson('1', 'held one', 'candidate'), lesson('2', 'learned one', 'promoted'), lesson('3', 'learned two', 'promoted')];
     await start('/chat', createRecordStub(undefined, { fetchLessons: async () => ({ ok: true as const, data: lessons }) }));
@@ -170,18 +144,14 @@ describe('the rail', () => {
     expect(promotedFirst(lessons).map((l) => l.event_id)).toEqual(['2', '3', '1']);
   });
 
-  it('a failed read on any panel says so in words', async () => {
+  it('a failed read on a panel says so in words', async () => {
     await start('/chat', createFailingStub('Connector unreachable: refused'));
     for (const key of ['audit', 'lessons'] as const) {
       rail(key).click();
       for (let i = 0; i < 4; i++) await tick();
       expect(list().textContent).toContain('Connector unreachable: refused');
     }
-    rail('research').click();
-    list().querySelector<HTMLInputElement>('#research-q')!.value = 'x';
-    list().querySelector<HTMLFormElement>('.research-form')!.requestSubmit();
-    for (let i = 0; i < 4; i++) await tick();
-    expect(list().querySelector('.research-results')?.textContent).toContain('Connector unreachable: refused');
+    // Research reads nothing now: links only, no search box (Darren, Nov 27).
   });
 });
 
@@ -228,20 +198,6 @@ describe('rail review-1 fixes', () => {
     expect(list().querySelector('.error-state')?.textContent).toBe('The lessons read failed: socket closed');
   });
 
-  it('the last search is kept across a rail switch', async () => {
-    const adapter = createRecordStub(undefined, {
-      ask: async (question: string) => ({ ok: true as const, data: { question, state: 'found' as const, text: '', provenance: [{ source: 'stub source', content: 'e', excerpt: 'stub excerpt' }] } }),
-    });
-    await start('/chat', adapter);
-    rail('research').click();
-    list().querySelector<HTMLInputElement>('#research-q')!.value = 'storm';
-    list().querySelector<HTMLFormElement>('.research-form')!.requestSubmit();
-    for (let i = 0; i < 4; i++) await tick();
-    rail('lessons').click();
-    rail('research').click();
-    expect(list().querySelector<HTMLInputElement>('#research-q')!.value).toBe('storm');
-    expect(list().querySelector('.research-source')?.textContent).toBe('stub source');
-  });
 });
 
 describe('boot and the banned list', () => {

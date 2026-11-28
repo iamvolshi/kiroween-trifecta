@@ -1,6 +1,8 @@
 /**
- * The corpus views (overview, nouns, graph) and the rail search, over a
- * Sherlock test double (sherlock-double.ts): the shapes are the contract's.
+ * The corpus views (overview, nouns, graph) over a Sherlock test double
+ * (sherlock-double.ts): the shapes are the contract's. The rail Research
+ * panel is links only, no search box: asking goes through the chat on the
+ * right (Darren, Nov 27).
  */
 import { afterEach, describe, expect, it } from 'vitest';
 import { createSherlockAdapter } from '../adapter/sherlock.ts';
@@ -10,9 +12,7 @@ import { CorpusView } from './corpus.ts';
 import { layout, pick } from './corpus-graph.ts';
 import { DOUBLE_GRAPH, SHERLOCK_BASE, createSherlockDouble } from '../sherlock-double.ts';
 import { createModelsStub, tick } from '../test-helpers.ts';
-import type { WatsonBridge } from '../watson/bridge.ts';
 
-const noWatson: WatsonBridge = { report: async () => { throw new Error('no watson in this test'); } } as unknown as WatsonBridge;
 const flush = async (): Promise<void> => { for (let i = 0; i < 8; i++) await tick(); };
 
 afterEach(() => { document.body.innerHTML = ''; });
@@ -73,37 +73,10 @@ describe('corpus views render from the contract shapes', () => {
   });
 });
 
-describe('rail Research search goes through Sherlock', () => {
-  function search(down: boolean) {
-    const d = createSherlockDouble({ down });
-    const slot = document.createElement('div');
-    document.body.appendChild(slot);
-    new ResearchPanel(createSherlockAdapter(SHERLOCK_BASE, '', d.fetch), noWatson).mount(slot);
-    slot.querySelector<HTMLInputElement>('#research-q')!.value = 'the ice';
-    slot.querySelector('form')!.dispatchEvent(new Event('submit', { cancelable: true }));
-    return { d, slot };
-  }
-
-  it('shows the answer with its KID, authority and excerpt', async () => {
-    const { d, slot } = search(false);
-    await flush();
-    expect(d.urls).toContain(`${SHERLOCK_BASE}/api/search/cases/double-case/ask`);
-    const hit = slot.querySelector('.research-hit')!.textContent ?? '';
-    expect(hit).toContain('KID 1');
-    expect(hit).toContain('authority 2 of 9');
-    expect(hit).toContain('the ice broke');
-  });
-
-  it('with Sherlock down it says so, and no other request is made', async () => {
-    const { d, slot } = search(true);
-    await flush();
-    expect(slot.querySelector('.error-state')?.textContent).toMatch(/^Sherlock unreachable: /);
-    expect(d.urls.every((u) => u.startsWith(`${SHERLOCK_BASE}/api/search/`))).toBe(true);
-  });
-
+describe('the Research panel links', () => {
   it('has no Sherlock button: the corpus links name the views, not her', () => {
     const slot = document.createElement('div');
-    new ResearchPanel(createSherlockAdapter(SHERLOCK_BASE, '', createSherlockDouble().fetch), noWatson).mount(slot);
+    new ResearchPanel().mount(slot);
     expect(slot.textContent ?? '').not.toMatch(/sherlock/i);
   });
 });

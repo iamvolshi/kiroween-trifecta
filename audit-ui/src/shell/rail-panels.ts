@@ -1,12 +1,9 @@
-import type { AdapterResult, AskResult, Entry, Lesson, SeamAdapter } from '../adapter/seam.ts';
+import type { Entry, Lesson, SeamAdapter } from '../adapter/seam.ts';
 import type { Panel } from './panel.ts';
 import { compareKStart } from '../util/interval.ts';
 import { compareNatural } from '../util/natural.ts';
 import { groupOf, renderLesson } from './subject-folders.ts';
 import { isWorkspace } from '../util/curator.ts';
-import { answerNotes, kidWords } from '../util/sherlock-notes.ts';
-import { WatsonCaller, renderConclusion } from '../watson/conclusion.ts';
-import { createWatsonBridge, type WatsonBridge } from '../watson/bridge.ts';
 
 /**
  * The list panels the rail swaps in besides Chat (the left column, see
@@ -127,113 +124,24 @@ function renderRecords(entries: Entry[]): HTMLElement[] {
 /** How many records the Audit list shows before its Show all control. */
 const RECORDS_SHOWN = 5;
 
-/** Research: ERIE's retrieval over the live record (POST /ask), each hit with its source name. */
+/** Research: the corpus views (overview, nouns, graph). Asking goes through the chat on the right, not a search box here (Darren, Nov 27). */
 export class ResearchPanel implements Panel {
-  private results: HTMLElement | null = null;
-  private token = 0;
-  /** The last search and its answer: kept across a rail switch, shown again on return. */
-  private last: { question: string; result: AdapterResult<AskResult> } | null = null;
-
-  private adapter: SeamAdapter;
-  /** Watson's conclusion beside each answer (never in it). */
-  private watson: WatsonCaller;
-
-  constructor(adapter: SeamAdapter, bridge: WatsonBridge = createWatsonBridge()) {
-    this.watson = new WatsonCaller(adapter, bridge);
-    this.adapter = adapter;
-  }
-
   mount(slot: HTMLElement): void {
     const box = el('section', 'list-section');
     box.appendChild(el('h2', '', 'Knowledge'));
-    const form = el('form', 'research-form');
-    const label = el('label', 'sr-only', 'Search the knowledge');
-    label.setAttribute('for', 'research-q');
-    const input = el('input', '');
-    input.type = 'search';
-    input.id = 'research-q';
-    input.autocomplete = 'off';
-    input.placeholder = 'Search';
-    const go = el('button', '', 'Search');
-    go.type = 'submit';
-    form.append(label, input, go);
-    this.results = el('div', 'research-results');
-    this.results.setAttribute('aria-live', 'polite');
-    form.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const q = input.value.trim();
-      if (q !== '') this.search(q);
-    });
     const views = el('ul', 'left-links research-corpus');
     for (const [href, text] of [['/research/overview', 'Corpus overview'], ['/research/nouns', 'Nouns'], ['/research/graph', 'Graph']] as const) {
       const li = el('li', '');
       li.appendChild(link(href, text));
       views.appendChild(li);
     }
-    box.append(form, this.results, views);
+    box.append(views);
     slot.replaceChildren(box);
-    if (this.last) {
-      input.value = this.last.question;
-      renderHits(this.results, this.last.result);
-      this.speak(this.results, this.last.result);
-    }
-  }
-
-  private search(question: string): void {
-    const out = this.results;
-    if (!out) return;
-    const token = ++this.token;
-    out.replaceChildren(el('p', 'prompt-state', 'Searching...'));
-    void this.adapter.ask(question).then(
-      (r) => {
-        // Kept even if the panel was switched away meanwhile: it shows on return.
-        if (token === this.token) this.last = { question, result: r };
-        if (token !== this.token || this.results !== out) return;
-        renderHits(out, r);
-        this.speak(out, r);
-      },
-      (e: unknown) => {
-        if (token === this.token && this.results === out) out.replaceChildren(el('p', 'error-state', failed('knowledge', e)));
-      },
-    );
-  }
-
-  /** Watson's conclusion after the hits; a failure shows nothing and touches nothing. */
-  private speak(out: HTMLElement, r: AdapterResult<AskResult>): void {
-    if (!r.ok) return;
-    const token = this.token;
-    void this.watson.conclude(r.data).then((c) => {
-      if (c && token === this.token && this.results === out) out.appendChild(renderConclusion(c));
-    });
   }
 
   refresh(): void {}
 
-  unmount(): void {
-    // The token stays: an answer still in flight is kept in `last` (not rendered).
-    this.results = null;
-  }
-}
-
-function renderHits(out: HTMLElement, r: AdapterResult<AskResult>): void {
-  if (!r.ok) {
-    out.replaceChildren(el('p', 'error-state', r.error));
-    return;
-  }
-  if (r.data.provenance.length === 0) {
-    out.replaceChildren(el('p', 'empty-state', 'Nothing found.'));
-    return;
-  }
-  const ul = el('ul', 'research-hits');
-  for (const p of r.data.provenance) {
-    const li = el('li', 'research-hit');
-    const k = kidWords(p);
-    const where = k === '' ? p.source : `${p.source}, ${k}`;
-    li.append(el('span', 'research-source', where), el('span', 'research-excerpt', p.excerpt));
-    ul.appendChild(li);
-  }
-  const notes = answerNotes(r.data);
-  out.replaceChildren(...(notes ? [notes, ul] : [ul]));
+  unmount(): void {}
 }
 
 /** Lessons: ELLE's lessons, live, learned ones first. */

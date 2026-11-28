@@ -7,16 +7,11 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { createSherlockAdapter } from '../adapter/sherlock.ts';
 import type { FetchLike } from '../adapter/sherlock-client.ts';
-import { ResearchPanel } from '../shell/rail-panels.ts';
 import { renderAnswer } from './curator.ts';
 import { renderRetrieval } from './research.ts';
 import { watsonInput } from '../watson/conclusion.ts';
 import { SHERLOCK_BASE, createSherlockDouble } from '../sherlock-double.ts';
-import { tick } from '../test-helpers.ts';
-import type { WatsonBridge } from '../watson/bridge.ts';
 
-const noWatson: WatsonBridge = { report: async () => { throw new Error('no watson here'); } } as unknown as WatsonBridge;
-const flush = async (): Promise<void> => { for (let i = 0; i < 8; i++) await tick(); };
 afterEach(() => { document.body.innerHTML = ''; });
 
 const K_HIT = {
@@ -40,26 +35,7 @@ function withAsk(body: unknown): FetchLike {
     : d.fetch(url, init);
 }
 
-async function search(body: unknown, down = false): Promise<HTMLElement> {
-  const slot = document.createElement('div');
-  document.body.appendChild(slot);
-  const f = down ? createSherlockDouble({ down: true }).fetch : withAsk(body);
-  new ResearchPanel(createSherlockAdapter(SHERLOCK_BASE, '', f), noWatson).mount(slot);
-  slot.querySelector<HTMLInputElement>('#research-q')!.value = 'why orkney';
-  slot.querySelector('form')!.dispatchEvent(new Event('submit', { cancelable: true }));
-  await flush();
-  return slot;
-}
-
 describe('K-entry hits', () => {
-  it('rail search shows the K label and authority', async () => {
-    const slot = await search(WEAK);
-    const hit = slot.querySelector('.research-hit')!.textContent ?? '';
-    expect(hit).toContain('K-0266');
-    expect(hit).toContain('authority 8 of 9');
-    expect(hit).not.toContain('KID 266');
-  });
-
   it('Research ask turn shows the K label and authority', async () => {
     const a = await createSherlockAdapter(SHERLOCK_BASE, '', withAsk(WEAK)).ask('q');
     if (!a.ok) throw new Error(a.error);
@@ -92,13 +68,6 @@ describe('K-entry hits', () => {
 });
 
 describe('low confidence', () => {
-  it('says in words that Sherlock is weakly sure, in the rail search', async () => {
-    const slot = await search(WEAK);
-    const weak = slot.querySelector('.sherlock-weak');
-    expect(weak?.textContent).toMatch(/weakly sure/);
-    expect(slot.querySelector('.sherlock-rerank')?.textContent).toContain('Reranked');
-  });
-
   it('says it in the Research ask turn and the Curator answer', async () => {
     const a = await createSherlockAdapter(SHERLOCK_BASE, '', withAsk(WEAK)).ask('q');
     if (!a.ok) throw new Error(a.error);
@@ -108,23 +77,19 @@ describe('low confidence', () => {
   });
 
   it('says when the reranker was not used', async () => {
-    const slot = await search({ ...WEAK, ranked_by: 'erie', rerank: { used: false, model: null, error: 'no key' } });
-    expect(slot.querySelector('.sherlock-rerank')?.textContent).toContain('Not reranked');
+    const a = await createSherlockAdapter(SHERLOCK_BASE, '', withAsk({ ...WEAK, ranked_by: 'erie', rerank: { used: false, model: null, error: 'no key' } })).ask('q');
+    if (!a.ok) throw new Error(a.error);
+    expect(renderRetrieval(a.data, 1, 'q').querySelector('.sherlock-rerank')?.textContent).toContain('Not reranked');
   });
 });
 
 describe('unchanged behaviour', () => {
   it('a plain passage answer shows KID and authority and no weak or rerank note', async () => {
-    const slot = await search(PLAIN);
-    const hit = slot.querySelector('.research-hit')!.textContent ?? '';
-    expect(hit).toContain('KID 1');
-    expect(hit).toContain('authority 2 of 9');
-    expect(slot.querySelector('.sherlock-notes')).toBeNull();
-  });
-
-  it('Sherlock down still says unreachable and shows no hits', async () => {
-    const slot = await search(null, true);
-    expect(slot.querySelector('.error-state')?.textContent).toMatch(/unreachable/i);
-    expect(slot.querySelector('.research-hit')).toBeNull();
+    const a = await createSherlockAdapter(SHERLOCK_BASE, '', withAsk(PLAIN)).ask('q');
+    if (!a.ok) throw new Error(a.error);
+    const turn = renderRetrieval(a.data, 1, 'q');
+    expect(turn.querySelector('.erie-KID .erie-value')?.textContent).toBe('1');
+    expect(turn.querySelector('.erie-authority .erie-value')?.textContent).toBe('2 of 9');
+    expect(turn.querySelector('.sherlock-notes')).toBeNull();
   });
 });

@@ -54,13 +54,3 @@
 .watson-claim-kids {
   color: var(--accent);
 }
-
-/* In the narrow rail, long book passages are cut to a few lines. */
-.research-results .watson-summary,
-.research-results .watson-claim-text {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 4;
-  line-clamp: 4;
-  overflow: hidden;
-}
